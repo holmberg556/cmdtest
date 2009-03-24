@@ -1,0 +1,384 @@
+
+Cmdtest User Guide
+==================
+
+.. contents::
+
+Introduction
+------------
+
+Cmdtest is a `unit testing`_ framework for testing commands (executable programs).
+In other test frameworks the "unit" tested is often a class (e.g. in Java's JUnit_ or
+Ruby's `Test::Unit`_), but in Cmdtest the unit is an executable. Apart from this
+difference Cmdtest borrows many ideas from the other frameworks.
+The program ``cmdtest`` runs the tests and reports the success or failure
+in different ways, e.g. by writing to standard output or producing an XML-file on
+Ant/JUnit format. The testcases are written in Ruby code. Assertions can
+be made about the side effects performed by a command:
+
+- the exit status
+
+- the content of standard output
+
+- the content of standard error
+
+- newly created/removed/changed files, or other changes to the
+  filesystem
+
+A simple example
+----------------
+
+::
+
+  $ cat CMDTEST_example.rb
+  class CMDTEST_example < Cmdtest::Testcase
+
+    def test_misc
+      cmd "echo hello world" do
+        stdout_equal "hello world\n"
+      end
+
+      cmd "touch foo.txt ; exit 7" do
+        created_files "foo.txt"
+        exit_status 7
+      end
+    end
+
+  end
+
+This example shows the basic structure of a testcase file. First we make a
+subclass of ``Cmdtest::Testcase``. All methods of the new class with a
+name like ``test_*`` will be considered testcases.
+Inside a method we can call the ``cmd`` method. It will
+execute the command given as argument and then check the assertions
+given in the do-block. When ``cmdtest`` is run, it will find all
+``CMDTEST_*.rb`` files in the current directory and run the tests in
+the files. The output looks like::
+
+  $ cmdtest
+  ### ======================================== CMDTEST_example.rb
+  ### echo hello world
+  ### touch foo.txt ; exit 7
+
+  ### 1 test classes, 1 test methods, 2 commands, 0 errors.
+
+If we change "7" to "8", "foo" to "bar" and "world" to "WORLD" in
+the example, we get the following errors::
+
+  $ cmdtest
+  ### ======================================== CMDTEST_example.rb
+  ### echo hello WORLD
+  --- ERROR: wrong stdout
+  ---        actual: hello WORLD
+  ---        expect: hello world
+  ### touch bar.txt ; exit 8
+  --- ERROR: created files
+  ---        actual: ["bar.txt"]
+  ---        expect: ["foo.txt"]
+  --- ERROR: expected 7 exit status, got 8
+
+  --- 1 test classes, 1 test methods, 2 commands, 2 errors.
+
+The following sections will describe in more detail what can be done
+with Cmdtest. See also the ``examples`` directory of the Cmdtest project,
+where some larger examples of Cmdtest usage can be found.
+
+Reporting format
+----------------
+
+Normally Cmdtest writes lines on standard output to show the progress of the
+testing. As long as no error occurs, the lines will be prefixed by
+"###". Error messages will instead have a "---" prefix. This makes it easy
+to spot errors just by looking in the left margin. Each call to ``cmd``
+will give one line on standard output. Normally the command executed will be
+shown (after the "###" prefix). But one can also replace the string
+written by calling the ``comment`` method inside the do-block of a ``cmd``
+call.
+
+When an error occurs in a test-method, the rest of the method will be
+skipped. But all errors occurring at the same command will be reported.
+
+Cmdtest can also be directed to write an XML file on the same format as
+that used by Ant/JUnit. This makes it possible to use Cmdtest together
+with `continuous integration`_ servers like Hudson_.
+
+Structure of a test-file
+------------------------
+
+Each test-file can contain one or more subclasses to
+``Cmdtest::Testcase``. The methods that are special are:
+
+``test_*``
+  These are the methods that will run tests.
+  For each method, a newly created object of the class will be used.
+
+``setup``
+  This method is called before each ``test_*`` method is called.
+  It gives the user a chance to initialize the "environment" of all
+  the ``test_*`` methods of the class. It can be seen as a "user level"
+  constructor.
+
+``teardown``
+  This method is called after each ``test_*`` method was called.  It
+  gives the user a chance to cleanup the "environment" of all the
+  ``test_*`` methods of the class, e.g. release some resource acquired
+  by the ``setup`` method. It can be seen as a "user level" destructor.
+
+Structure of a test-method
+--------------------------
+
+Each test-method (named ``test_*``) should contain a number of calls to
+the ``cmd`` method. Inside the do-block of the ``cmd`` calls, a number of
+assertions can be made about the outcome of the command. The simplest
+possible call looks like::
+
+  cmd "true" do
+  end
+
+Here no explicit assertions have been given. In that case Cmdtest
+applies some implicit assertions. The code above is equivalent to the
+following more explicit one::
+
+  cmd "true" do
+    exit_zero
+    stdout_equal ""
+    stderr_equal ""
+    created_files []
+    modified_files []
+    removed_files []
+  end
+
+The idea is that all differences in behaviour from the trivial ``true``
+command should be described as an assertion in the do-block. The list
+of possible assertions includes: ``exit_zero``, ``exit_nonzero``,
+``exit_status``, ``created_files``, ``modified_files``, ``removed_files``,
+``written_files``, ``affected_files``, ``file_equal``, ``stdout_equal``
+and ``stderr_equal``.
+
+In addition to the assertions there are other helper-functions to set
+up the "environment" for the commands and assertions. An example is
+the creation of files::
+
+  ...
+  create_file "foo.txt", "abc\ndef\n"
+  cmd "cat -n foo.txt" do
+    stdout_equal [
+      "     1\tabc",
+      "     2\tdef",
+    ]
+  end
+  ...
+
+The list of such helper functions includes:
+``create_file``, ``touch_file``, ``import_file`` and ``ignore_file``.
+Beside these methods the test can of course also contain arbitrary Ruby-code.
+
+
+Work directory
+--------------
+
+All tests are performed in a "clean" temporary directory, here called the "work directory".
+When the ``setup``, ``test_*`` and ``teardown`` methods are called the current directory
+will be the "work directory" (unless ``Dir.chdir`` is called by the methods themselves).
+
+Several of the assertions and helper functions take filename arguments
+that are evaluated relative to the "work directory" (or sometimes the
+current directory if they differ).
+
+Matching standard output content
+--------------------------------
+
+An assertion like ``stdout_equal`` compares the actual standard output of a
+command with the expected outcome. The expected value can be specified
+in different ways, and is best explained by example::
+
+  cmd "echo hello ; echo world" do
+    stdout_equal "hello\nworld\n"            # 1
+    stdout_equal [                           # 2
+      "hello",
+      "world"
+    ]
+    stdout_equal /orld/                      # 3
+    stdout_equal [                           # 4
+      "hello",
+      /world|earth/
+    ]
+  end
+
+In the example we see how the content can be specified:
+
+1) as a string, with a newline (``\n``) character for each new line
+
+2) as an array of lines
+
+3) as a regexp that should match the file content given as a string
+
+4) as an array of lines where some lines should match a regexp rather than be compared
+   for string equality
+
+Invoking ``cmdtest``
+--------------------
+
+``cmdtest`` can be called without any arguments at all. It will then look
+for ``CMDTEST_*.rb`` files in the following places:
+
+1) first ``t/CMDTEST_*.rb``
+
+2) otherwise ``CMDTEST_*.rb``
+
+If some command line arguments have been given, ``cmdtest`` will use
+them instead of searching by itself. Some examples::
+
+  $ cmdtest CMDTEST_foo.rb                   # just one file
+  $ cmdtest CMDTEST_foo.rb CMDTEST_bar.rb    # two files
+  $ cmdtest t                                # all CMDTEST_*.rb files in "t" dir
+  $ cmdtest . t                              # all CMDTEST_*.rb files in both dirs
+
+
+Reference Part
+--------------
+
+cmd
++++
+
+The ``cmd`` method is the central method of the whole Cmdtest framework.
+It should always be called with a block like this::
+
+  cmd "some_prog ..." do
+    assertion1 ...
+    ...
+    assertionN ...
+  end
+
+A block is used to make it easy to know when the last assertion has
+been found.  The do-block should only contain assertions.  Cmdtest
+applies some implicit assertions if the do-block is empty or misses
+some kind of assertion::
+
+  # all assertions implicit
+  cmd "true" do
+  end
+
+  # exit status assertion explicit, but other assertions implicit
+  cmd "true" do
+    exit_zero
+  end
+
+See also the example in the `Structure of a test-method`_ section above.
+
+
+Assertions - exit status
+++++++++++++++++++++++++
+
+``exit_nonzero``
+    The command should have exited with a non-zero exit status (i.e. it
+    should have failed).
+
+``exit_status(status)``
+    The command should have exited with the specified exit status.
+
+``exit_zero``
+    The command should have exited with a zero exit status (i.e. it
+    should have succeeded). This is the default if none of the other
+    exit-related methods have been called.
+
+Assertions - files
+++++++++++++++++++
+
+``affected_files(file1,...,fileN)``
+    The specified files should have been created, removed or modified by the
+    command. This assertion can be used when it doesn't matter which
+    of ``created_files``, ``removed_files`` or ``modified_files`` that apply
+    (cf. ``written_files``).
+
+``created_files(file1,...,fileN)``
+    The specified files should have been created by the command.
+
+``modified_files(file1,...,fileN)``
+    The specified files should have been modified by the command. A
+    file is considered modified if it existed before the command, and
+    something about the file has changed after the command (inode
+    number, modification date or content).
+
+``removed_files(file1,...,fileN)``
+    The specified files should have been removed by the command.
+
+``written_files(file1,...,fileN)``
+    The specified files should have been created or modified by the
+    command. This assertion can be used when it doesn't matter which
+    of ``created_files`` or ``modified_files`` that apply. A typical scenario is
+    in a test method where repeated operations are done on the same
+    file. By using ``written_files`` we don't have to treat the first
+    case special (when the file is created).
+
+Assertions - stdout/stderr/file content
++++++++++++++++++++++++++++++++++++++++
+
+``file_equal(file, content)``
+    Assert that the specified file matches the given content.
+    See "stdout_equal" for how "content" can be specified.
+
+``file_not_equal(file, content)``
+    Like ``file_equal`` but with inverted test.
+
+``stderr_equal(content)``
+    Assert that the standard error of the command matches the given content.
+    See "stdout_equal" for how "content" can be specified.
+
+``stderr_not_equal(content)``
+    Like ``stderr_equal`` but with inverted test.
+
+``stdout_equal(content)``
+    Assert that the standard output of the command matches the given content.
+    The content can be given in several different forms: 1) as a
+    string that should be equal to the entire file, 2) as an array of
+    lines that should be equal to the entire file, 3) as a regexp that
+    should match the entire file (given as one string).
+    For more details and examples see the section "Matching standard output content".
+
+``stdout_not_equal(content)``
+    Like ``stdout_equal`` but with inverted test.
+
+
+Assertions - misc
++++++++++++++++++
+
+``assert(flag, msg=nil)``
+    Assert that ``flag`` is true. This assertion is a last resort, when no other
+    assertion fits. Should normally not be used.
+
+
+Helper functions
+++++++++++++++++
+
+``create_file(filename, content)``
+    Create a file inside the "work directory".
+    The content can be specified either as an array of lines or as
+    a string with the content of the whole file.
+    The filename is evaluated relative to the current directory at the
+    time of the call.
+
+``ignore_file(file)``
+    Ignore the specified file when looking for differences in the filesystem.
+
+``ignore_files(file1, ..., fileN)``
+    Ignore the specified files when looking for differences in the filesystem.
+
+``import_file(src, tgt)``
+    Copy a file from outside of the "work directory" to inside.
+    The ``src`` path is evaluated relative to the current directory
+    when ``cmdtest`` was called. The ``tgt`` is evaluated relative to
+    the current directory inside the "work directory" at the time
+    of the call.
+
+``touch_file(filename)``
+    "touch" a file inside the "work directory".
+    The filename is evaluated relative to the current directory at the
+    time of the call.
+
+.. _`unit testing`: http://en.wikipedia.org/wiki/Unit_testing
+.. _`junit`:        http://en.wikipedia.org/wiki/JUnit
+.. _`Test::Unit`:   http://www.ruby-doc.org/stdlib/libdoc/test/unit/rdoc/classes/Test/Unit.html
+
+.. _`continuous integration`: http://en.wikipedia.org/wiki/Continuous_integration
+.. _Hudson: https://hudson.dev.java.net

@@ -1,0 +1,667 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.6: http://docutils.sourceforge.net/" />
+<title>Cmdtest User Guide</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 5631 2008-08-24 13:01:23Z goodger $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left {
+  clear: left }
+
+img.align-right {
+  clear: right }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+tt.literal {
+  color: #b33;
+}
+
+pre.literal-block, pre.doctest-block {
+  margin-left: 2em ;
+  x-background-color: #ddd;
+  background-color: #fec;
+  padding: 0.5em;
+  outline-style: dashed;
+  outline-width: 0.1em;
+  margin-right: 2em }
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="cmdtest-user-guide">
+<h1 class="title">Cmdtest User Guide</h1>
+
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#introduction" id="id1">Introduction</a></li>
+<li><a class="reference internal" href="#a-simple-example" id="id2">A simple example</a></li>
+<li><a class="reference internal" href="#reporting-format" id="id3">Reporting format</a></li>
+<li><a class="reference internal" href="#structure-of-a-test-file" id="id4">Structure of a test-file</a></li>
+<li><a class="reference internal" href="#structure-of-a-test-method" id="id5">Structure of a test-method</a></li>
+<li><a class="reference internal" href="#work-directory" id="id6">Work directory</a></li>
+<li><a class="reference internal" href="#matching-standard-output-content" id="id7">Matching standard output content</a></li>
+<li><a class="reference internal" href="#invoking-cmdtest" id="id8">Invoking <tt class="docutils literal"><span class="pre">cmdtest</span></tt></a></li>
+<li><a class="reference internal" href="#reference-part" id="id9">Reference Part</a><ul>
+<li><a class="reference internal" href="#cmd" id="id10">cmd</a></li>
+<li><a class="reference internal" href="#assertions-exit-status" id="id11">Assertions - exit status</a></li>
+<li><a class="reference internal" href="#assertions-files" id="id12">Assertions - files</a></li>
+<li><a class="reference internal" href="#assertions-stdout-stderr-file-content" id="id13">Assertions - stdout/stderr/file content</a></li>
+<li><a class="reference internal" href="#assertions-misc" id="id14">Assertions - misc</a></li>
+<li><a class="reference internal" href="#helper-functions" id="id15">Helper functions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h1><a class="toc-backref" href="#id1">Introduction</a></h1>
+<p>Cmdtest is a <a class="reference external" href="http://en.wikipedia.org/wiki/Unit_testing">unit testing</a> framework for testing commands (executable programs).
+In other test frameworks the &quot;unit&quot; tested is often a class (e.g. in Java's <a class="reference external" href="http://en.wikipedia.org/wiki/JUnit">JUnit</a> or
+Ruby's <a class="reference external" href="http://www.ruby-doc.org/stdlib/libdoc/test/unit/rdoc/classes/Test/Unit.html">Test::Unit</a>), but in Cmdtest the unit is an executable. Apart from this
+difference Cmdtest borrows many ideas from the other frameworks.
+The program <tt class="docutils literal"><span class="pre">cmdtest</span></tt> runs the tests and reports the success or failure
+in different ways, e.g. by writing to standard output or producing an XML-file on
+Ant/JUnit format. The testcases are written in Ruby code. Assertions can
+be made about the side effects performed by a command:</p>
+<ul class="simple">
+<li>the exit status</li>
+<li>the content of standard output</li>
+<li>the content of standard error</li>
+<li>newly created/removed/changed files, or other changes to the
+filesystem</li>
+</ul>
+</div>
+<div class="section" id="a-simple-example">
+<h1><a class="toc-backref" href="#id2">A simple example</a></h1>
+<pre class="literal-block">
+$ cat CMDTEST_example.rb
+class CMDTEST_example &lt; Cmdtest::Testcase
+
+  def test_misc
+    cmd &quot;echo hello world&quot; do
+      stdout_equal &quot;hello world\n&quot;
+    end
+
+    cmd &quot;touch foo.txt ; exit 7&quot; do
+      created_files &quot;foo.txt&quot;
+      exit_status 7
+    end
+  end
+
+end
+</pre>
+<p>This example shows the basic structure of a testcase file. First we make a
+subclass of <tt class="docutils literal"><span class="pre">Cmdtest::Testcase</span></tt>. All methods of the new class with a
+name like <tt class="docutils literal"><span class="pre">test_*</span></tt> will be considered testcases.
+Inside a method we can call the <tt class="docutils literal"><span class="pre">cmd</span></tt> method. It will
+execute the command given as argument and then check the assertions
+given in the do-block. When <tt class="docutils literal"><span class="pre">cmdtest</span></tt> is run, it will find all
+<tt class="docutils literal"><span class="pre">CMDTEST_*.rb</span></tt> files in the current directory and run the tests in
+the files. The output looks like:</p>
+<pre class="literal-block">
+$ cmdtest
+### ======================================== CMDTEST_example.rb
+### echo hello world
+### touch foo.txt ; exit 7
+
+### 1 test classes, 1 test methods, 2 commands, 0 errors.
+</pre>
+<p>If we change &quot;7&quot; to &quot;8&quot;, &quot;foo&quot; to &quot;bar&quot; and &quot;world&quot; to &quot;WORLD&quot; in
+the example, we get the following errors:</p>
+<pre class="literal-block">
+$ cmdtest
+### ======================================== CMDTEST_example.rb
+### echo hello WORLD
+--- ERROR: wrong stdout
+---        actual: hello WORLD
+---        expect: hello world
+### touch bar.txt ; exit 8
+--- ERROR: created files
+---        actual: [&quot;bar.txt&quot;]
+---        expect: [&quot;foo.txt&quot;]
+--- ERROR: expected 7 exit status, got 8
+
+--- 1 test classes, 1 test methods, 2 commands, 2 errors.
+</pre>
+<p>The following sections will describe in more detail what can be done
+with Cmdtest. See also the <tt class="docutils literal"><span class="pre">examples</span></tt> directory of the Cmdtest project,
+where some larger examples of Cmdtest usage can be found.</p>
+</div>
+<div class="section" id="reporting-format">
+<h1><a class="toc-backref" href="#id3">Reporting format</a></h1>
+<p>Normally Cmdtest writes lines on standard output to show the progress of the
+testing. As long as no error occurs, the lines will be prefixed by
+&quot;###&quot;. Error messages will instead have a &quot;---&quot; prefix. This makes it easy
+to spot errors just by looking in the left margin. Each call to <tt class="docutils literal"><span class="pre">cmd</span></tt>
+will give one line on standard output. Normally the command executed will be
+shown (after the &quot;###&quot; prefix). But one can also replace the string
+written by calling the <tt class="docutils literal"><span class="pre">comment</span></tt> method inside the do-block of a <tt class="docutils literal"><span class="pre">cmd</span></tt>
+call.</p>
+<p>When an error occurs in a test-method, the rest of the method will be
+skipped. But all errors occurring at the same command will be reported.</p>
+<p>Cmdtest can also be directed to write an XML file on the same format as
+that used by Ant/JUnit. This makes it possible to use Cmdtest together
+with <a class="reference external" href="http://en.wikipedia.org/wiki/Continuous_integration">continuous integration</a> servers like <a class="reference external" href="https://hudson.dev.java.net">Hudson</a>.</p>
+</div>
+<div class="section" id="structure-of-a-test-file">
+<h1><a class="toc-backref" href="#id4">Structure of a test-file</a></h1>
+<p>Each test-file can contain one or more subclasses to
+<tt class="docutils literal"><span class="pre">Cmdtest::Testcase</span></tt>. The methods that are special are:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">test_*</span></tt></dt>
+<dd>These are the methods that will run tests.
+For each method, a newly created object of the class will be used.</dd>
+<dt><tt class="docutils literal"><span class="pre">setup</span></tt></dt>
+<dd>This method is called before each <tt class="docutils literal"><span class="pre">test_*</span></tt> method is called.
+It gives the user a chance to initialize the &quot;environment&quot; of all
+the <tt class="docutils literal"><span class="pre">test_*</span></tt> methods of the class. It can be seen as a &quot;user level&quot;
+constructor.</dd>
+<dt><tt class="docutils literal"><span class="pre">teardown</span></tt></dt>
+<dd>This method is called after each <tt class="docutils literal"><span class="pre">test_*</span></tt> method was called.  It
+gives the user a chance to cleanup the &quot;environment&quot; of all the
+<tt class="docutils literal"><span class="pre">test_*</span></tt> methods of the class, e.g. release some resource acquired
+by the <tt class="docutils literal"><span class="pre">setup</span></tt> method. It can be seen as a &quot;user level&quot; destructor.</dd>
+</dl>
+</div>
+<div class="section" id="structure-of-a-test-method">
+<h1><a class="toc-backref" href="#id5">Structure of a test-method</a></h1>
+<p>Each test-method (named <tt class="docutils literal"><span class="pre">test_*</span></tt>) should contain a number of calls to
+the <tt class="docutils literal"><span class="pre">cmd</span></tt> method. Inside the do-block of the <tt class="docutils literal"><span class="pre">cmd</span></tt> calls, a number of
+assertions can be made about the outcome of the command. The simplest
+possible call looks like:</p>
+<pre class="literal-block">
+cmd &quot;true&quot; do
+end
+</pre>
+<p>Here no explicit assertions have been given. In that case Cmdtest
+applies some implicit assertions. The code above is equivalent to the
+following more explicit one:</p>
+<pre class="literal-block">
+cmd &quot;true&quot; do
+  exit_zero
+  stdout_equal &quot;&quot;
+  stderr_equal &quot;&quot;
+  created_files []
+  modified_files []
+  removed_files []
+end
+</pre>
+<p>The idea is that all differences in behaviour from the trivial <tt class="docutils literal"><span class="pre">true</span></tt>
+command should be described as an assertion in the do-block. The list
+of possible assertions includes: <tt class="docutils literal"><span class="pre">exit_zero</span></tt>, <tt class="docutils literal"><span class="pre">exit_nonzero</span></tt>,
+<tt class="docutils literal"><span class="pre">exit_status</span></tt>, <tt class="docutils literal"><span class="pre">created_files</span></tt>, <tt class="docutils literal"><span class="pre">modified_files</span></tt>, <tt class="docutils literal"><span class="pre">removed_files</span></tt>,
+<tt class="docutils literal"><span class="pre">written_files</span></tt>, <tt class="docutils literal"><span class="pre">affected_files</span></tt>, <tt class="docutils literal"><span class="pre">file_equal</span></tt>, <tt class="docutils literal"><span class="pre">stdout_equal</span></tt>
+and <tt class="docutils literal"><span class="pre">stderr_equal</span></tt>.</p>
+<p>In addition to the assertions there are other helper-functions to set
+up the &quot;environment&quot; for the commands and assertions. An example is
+the creation of files:</p>
+<pre class="literal-block">
+...
+create_file &quot;foo.txt&quot;, &quot;abc\ndef\n&quot;
+cmd &quot;cat -n foo.txt&quot; do
+  stdout_equal [
+    &quot;     1\tabc&quot;,
+    &quot;     2\tdef&quot;,
+  ]
+end
+...
+</pre>
+<p>The list of such helper functions includes:
+<tt class="docutils literal"><span class="pre">create_file</span></tt>, <tt class="docutils literal"><span class="pre">touch_file</span></tt>, <tt class="docutils literal"><span class="pre">import_file</span></tt> and <tt class="docutils literal"><span class="pre">ignore_file</span></tt>.
+Beside these methods the test can of course also contain arbitrary Ruby-code.</p>
+</div>
+<div class="section" id="work-directory">
+<h1><a class="toc-backref" href="#id6">Work directory</a></h1>
+<p>All tests are performed in a &quot;clean&quot; temporary directory, here called the &quot;work directory&quot;.
+When the <tt class="docutils literal"><span class="pre">setup</span></tt>, <tt class="docutils literal"><span class="pre">test_*</span></tt> and <tt class="docutils literal"><span class="pre">teardown</span></tt> methods are called the current directory
+will be the &quot;work directory&quot; (unless <tt class="docutils literal"><span class="pre">Dir.chdir</span></tt> is called by the methods themselves).</p>
+<p>Several of the assertions and helper functions take filename arguments
+that are evaluated relative to the &quot;work directory&quot; (or sometimes the
+current directory if they differ).</p>
+</div>
+<div class="section" id="matching-standard-output-content">
+<h1><a class="toc-backref" href="#id7">Matching standard output content</a></h1>
+<p>An assertion like <tt class="docutils literal"><span class="pre">stdout_equal</span></tt> compares the actual standard output of a
+command with the expected outcome. The expected value can be specified
+in different ways, and is best explained by example:</p>
+<pre class="literal-block">
+cmd &quot;echo hello ; echo world&quot; do
+  stdout_equal &quot;hello\nworld\n&quot;            # 1
+  stdout_equal [                           # 2
+    &quot;hello&quot;,
+    &quot;world&quot;
+  ]
+  stdout_equal /orld/                      # 3
+  stdout_equal [                           # 4
+    &quot;hello&quot;,
+    /world|earth/
+  ]
+end
+</pre>
+<p>In the example we see how the content can be specified:</p>
+<ol class="arabic simple">
+<li>as a string, with a newline (<tt class="docutils literal"><span class="pre">\n</span></tt>) character for each new line</li>
+<li>as an array of lines</li>
+<li>as a regexp that should match the file content given as a string</li>
+<li>as an array of lines where some lines should match a regexp rather than be compared
+for string equality</li>
+</ol>
+</div>
+<div class="section" id="invoking-cmdtest">
+<h1><a class="toc-backref" href="#id8">Invoking <tt class="docutils literal"><span class="pre">cmdtest</span></tt></a></h1>
+<p><tt class="docutils literal"><span class="pre">cmdtest</span></tt> can be called without any arguments at all. It will then look
+for <tt class="docutils literal"><span class="pre">CMDTEST_*.rb</span></tt> files in the following places:</p>
+<ol class="arabic simple">
+<li>first <tt class="docutils literal"><span class="pre">t/CMDTEST_*.rb</span></tt></li>
+<li>otherwise <tt class="docutils literal"><span class="pre">CMDTEST_*.rb</span></tt></li>
+</ol>
+<p>If some command line arguments have been given, <tt class="docutils literal"><span class="pre">cmdtest</span></tt> will use
+them instead of searching by itself. Some examples:</p>
+<pre class="literal-block">
+$ cmdtest CMDTEST_foo.rb                   # just one file
+$ cmdtest CMDTEST_foo.rb CMDTEST_bar.rb    # two files
+$ cmdtest t                                # all CMDTEST_*.rb files in &quot;t&quot; dir
+$ cmdtest . t                              # all CMDTEST_*.rb files in both dirs
+</pre>
+</div>
+<div class="section" id="reference-part">
+<h1><a class="toc-backref" href="#id9">Reference Part</a></h1>
+<div class="section" id="cmd">
+<h2><a class="toc-backref" href="#id10">cmd</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">cmd</span></tt> method is the central method of the whole Cmdtest framework.
+It should always be called with a block like this:</p>
+<pre class="literal-block">
+cmd &quot;some_prog ...&quot; do
+  assertion1 ...
+  ...
+  assertionN ...
+end
+</pre>
+<p>A block is used to make it easy to know when the last assertion has
+been found.  The do-block should only contain assertions.  Cmdtest
+applies some implicit assertions if the do-block is empty or misses
+some kind of assertion:</p>
+<pre class="literal-block">
+# all assertions implicit
+cmd &quot;true&quot; do
+end
+
+# exit status assertion explicit, but other assertions implicit
+cmd &quot;true&quot; do
+  exit_zero
+end
+</pre>
+<p>See also the example in the <a class="reference internal" href="#structure-of-a-test-method">Structure of a test-method</a> section above.</p>
+</div>
+<div class="section" id="assertions-exit-status">
+<h2><a class="toc-backref" href="#id11">Assertions - exit status</a></h2>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">exit_nonzero</span></tt></dt>
+<dd>The command should have exited with a non-zero exit status (i.e. it
+should have failed).</dd>
+<dt><tt class="docutils literal"><span class="pre">exit_status(status)</span></tt></dt>
+<dd>The command should have exited with the specified exit status.</dd>
+<dt><tt class="docutils literal"><span class="pre">exit_zero</span></tt></dt>
+<dd>The command should have exited with a zero exit status (i.e. it
+should have succeeded). This is the default if none of the other
+exit-related methods have been called.</dd>
+</dl>
+</div>
+<div class="section" id="assertions-files">
+<h2><a class="toc-backref" href="#id12">Assertions - files</a></h2>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">affected_files(file1,...,fileN)</span></tt></dt>
+<dd>The specified files should have been created, removed or modified by the
+command. This assertion can be used when it doesn't matter which
+of <tt class="docutils literal"><span class="pre">created_files</span></tt>, <tt class="docutils literal"><span class="pre">removed_files</span></tt> or <tt class="docutils literal"><span class="pre">modified_files</span></tt> that apply
+(cf. <tt class="docutils literal"><span class="pre">written_files</span></tt>).</dd>
+<dt><tt class="docutils literal"><span class="pre">created_files(file1,...,fileN)</span></tt></dt>
+<dd>The specified files should have been created by the command.</dd>
+<dt><tt class="docutils literal"><span class="pre">modified_files(file1,...,fileN)</span></tt></dt>
+<dd>The specified files should have been modified by the command. A
+file is considered modified if it existed before the command, and
+something about the file has changed after the command (inode
+number, modification date or content).</dd>
+<dt><tt class="docutils literal"><span class="pre">removed_files(file1,...,fileN)</span></tt></dt>
+<dd>The specified files should have been removed by the command.</dd>
+<dt><tt class="docutils literal"><span class="pre">written_files(file1,...,fileN)</span></tt></dt>
+<dd>The specified files should have been created or modified by the
+command. This assertion can be used when it doesn't matter which
+of <tt class="docutils literal"><span class="pre">created_files</span></tt> or <tt class="docutils literal"><span class="pre">modified_files</span></tt> that apply. A typical scenario is
+in a test method where repeated operations are done on the same
+file. By using <tt class="docutils literal"><span class="pre">written_files</span></tt> we don't have to treat the first
+case special (when the file is created).</dd>
+</dl>
+</div>
+<div class="section" id="assertions-stdout-stderr-file-content">
+<h2><a class="toc-backref" href="#id13">Assertions - stdout/stderr/file content</a></h2>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">file_equal(file,</span> <span class="pre">content)</span></tt></dt>
+<dd>Assert that the specified file matches the given content.
+See &quot;stdout_equal&quot; for how &quot;content&quot; can be specified.</dd>
+<dt><tt class="docutils literal"><span class="pre">file_not_equal(file,</span> <span class="pre">content)</span></tt></dt>
+<dd>Like <tt class="docutils literal"><span class="pre">file_equal</span></tt> but with inverted test.</dd>
+<dt><tt class="docutils literal"><span class="pre">stderr_equal(content)</span></tt></dt>
+<dd>Assert that the standard error of the command matches the given content.
+See &quot;stdout_equal&quot; for how &quot;content&quot; can be specified.</dd>
+<dt><tt class="docutils literal"><span class="pre">stderr_not_equal(content)</span></tt></dt>
+<dd>Like <tt class="docutils literal"><span class="pre">stderr_equal</span></tt> but with inverted test.</dd>
+<dt><tt class="docutils literal"><span class="pre">stdout_equal(content)</span></tt></dt>
+<dd>Assert that the standard output of the command matches the given content.
+The content can be given in several different forms: 1) as a
+string that should be equal to the entire file, 2) as an array of
+lines that should be equal to the entire file, 3) as a regexp that
+should match the entire file (given as one string).
+For more details and examples see the section &quot;Matching standard output content&quot;.</dd>
+<dt><tt class="docutils literal"><span class="pre">stdout_not_equal(content)</span></tt></dt>
+<dd>Like <tt class="docutils literal"><span class="pre">stdout_equal</span></tt> but with inverted test.</dd>
+</dl>
+</div>
+<div class="section" id="assertions-misc">
+<h2><a class="toc-backref" href="#id14">Assertions - misc</a></h2>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">assert(flag,</span> <span class="pre">msg=nil)</span></tt></dt>
+<dd>Assert that <tt class="docutils literal"><span class="pre">flag</span></tt> is true. This assertion is a last resort, when no other
+assertion fits. Should normally not be used.</dd>
+</dl>
+</div>
+<div class="section" id="helper-functions">
+<h2><a class="toc-backref" href="#id15">Helper functions</a></h2>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">create_file(filename,</span> <span class="pre">content)</span></tt></dt>
+<dd>Create a file inside the &quot;work directory&quot;.
+The content can be specified either as an array of lines or as
+a string with the content of the whole file.
+The filename is evaluated relative to the current directory at the
+time of the call.</dd>
+<dt><tt class="docutils literal"><span class="pre">ignore_file(file)</span></tt></dt>
+<dd>Ignore the specified file when looking for differences in the filesystem.</dd>
+<dt><tt class="docutils literal"><span class="pre">ignore_files(file1,</span> <span class="pre">...,</span> <span class="pre">fileN)</span></tt></dt>
+<dd>Ignore the specified files when looking for differences in the filesystem.</dd>
+<dt><tt class="docutils literal"><span class="pre">import_file(src,</span> <span class="pre">tgt)</span></tt></dt>
+<dd>Copy a file from outside of the &quot;work directory&quot; to inside.
+The <tt class="docutils literal"><span class="pre">src</span></tt> path is evaluated relative to the current directory
+when <tt class="docutils literal"><span class="pre">cmdtest</span></tt> was called. The <tt class="docutils literal"><span class="pre">tgt</span></tt> is evaluated relative to
+the current directory inside the &quot;work directory&quot; at the time
+of the call.</dd>
+<dt><tt class="docutils literal"><span class="pre">touch_file(filename)</span></tt></dt>
+<dd>&quot;touch&quot; a file inside the &quot;work directory&quot;.
+The filename is evaluated relative to the current directory at the
+time of the call.</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr class="footer" />
+<a class="reference external" href="cmdtest.txt">View document source</a>.
+Generated on: 2009-03-24.
+Generated by <a class="reference external" href="http://docutils.sourceforge.net/">Docutils</a> from <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> source.
+
+</div>
+</body>
+</html>
