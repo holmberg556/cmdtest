@@ -286,10 +286,11 @@ for prefix, code, stdout in tests
         next
     end
 
-    if code.join("\n") =~ /SKIP \s+ (\S+)/x
-        skip = $1
-        if RUBY_PLATFORM.index(skip)
-            puts "### #{iii}: SKIP: %s ..." % [code[0].chomp]
+    code_str = code.join("\n")
+    if code_str =~ /REQUIRE: \s+ (.*)/x
+        expr = $1
+        if ! eval(expr)
+            puts "### #{iii}: SKIP: %s: %s ..." % [expr, code[0].chomp]
             act.add(prefix, code, stdout)
             next
         end
