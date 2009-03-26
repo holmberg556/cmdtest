@@ -146,7 +146,8 @@ end
 
 #-----------------------------------
 # file_equal -- other error
-# SKIP mswin32
+#
+# REQUIRE: RUBY_PLATFORM !~ /mswin32/
 
 File.symlink "foo", "foo"
 

@@ -613,7 +613,8 @@ end
 # symlinks in tree -- should work
 # TODO: this test should be improved to actually trigger the difference
 # between lstat/stat in "_update_hardlinks".
-# SKIP mswin32
+#
+# REQUIRE: RUBY_PLATFORM !~ /mswin32/
 
 File.symlink "non-existing", "non-existing-link"
 
