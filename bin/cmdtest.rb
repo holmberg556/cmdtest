@@ -160,8 +160,18 @@ module Cmdtest
       end
     end
 
+    def prepend_path_dirs(path_dirs)
+      full_path_dirs = path_dirs.map {|dir| File.expand_path(dir, @orig_cwd) }
+      new_env_path = (full_path_dirs + [@orig_envpath]).join(Config::CONFIG["PATH_SEPARATOR"])
+      if new_env_path != ENV["PATH"]
+        ENV["PATH"] = new_env_path
+      end
+    end
+
     def run
+      @orig_cwd = Dir.pwd
       ENV["PATH"] = Dir.pwd + Config::CONFIG["PATH_SEPARATOR"] + ENV["PATH"]
+      @orig_envpath = ENV["PATH"]
       @n_assert_failures  = 0
       @n_assert_errors    = 0
       @n_assert_successes = 0

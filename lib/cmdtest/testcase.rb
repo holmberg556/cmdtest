@@ -68,6 +68,7 @@ module Cmdtest
       @_work_dir = Workdir.new(runner)
       @_in_cmd = false
       @_comment_str = nil
+      @_prepend_path_dirs = []
     end
 
     #------------------------------
@@ -129,6 +130,15 @@ module Cmdtest
       for file in files.flatten
         @_work_dir.ignore_file(file)
       end
+    end
+
+    #------------------------------
+    # Prepend the given directory to the PATH before running commands.
+    # The path is evaluated realtive to the current directory when 'cmdtest'
+    # was started.
+
+    def prepend_path(dir)
+      @_prepend_path_dirs.unshift(dir)
     end
 
     #==============================
@@ -470,6 +480,7 @@ module Cmdtest
 
       @_runner.notify("cmdline", @_cmdline, @_comment_str)
       @_comment_str = nil
+      @_runner.prepend_path_dirs(@_prepend_path_dirs)
       @_effects = @_work_dir.run_cmd(@_cmdline)
 
       @_checked_status = false
