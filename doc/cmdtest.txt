@@ -371,6 +371,13 @@ Helper functions
     the current directory inside the "work directory" at the time
     of the call.
 
+``prepend_path(dir)``
+    Prepend the given directory to the ``PATH`` so commands executed via ``cmd``
+    are looked up using the modified ``PATH``. A typical use is to add the directory
+    where the executable tested is located. The argument ``dir`` is evaluated
+    relative to the current directory  in effect when ``cmdtest`` was invoked.
+
+
 ``touch_file(filename)``
     "touch" a file inside the "work directory".
     The filename is evaluated relative to the current directory at the
