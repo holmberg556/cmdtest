@@ -12,7 +12,8 @@ Documentation
 
 A "Cmdtest User Guide" can be found in the file `<doc/cmdtest.html>`_.
 It is generated from the file "cmdtest.txt" which is written in
-reStructuredText format.
+reStructuredText format. There is also an `<examples>`_ directory with
+some real-world examples of using "cmdtest".
 
 Installation
 ------------

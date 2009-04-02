@@ -80,7 +80,7 @@ the example, we get the following errors::
   --- 1 test classes, 1 test methods, 2 commands, 2 errors.
 
 The following sections will describe in more detail what can be done
-with Cmdtest. See also the ``examples`` directory of the Cmdtest project,
+with Cmdtest. See also the `examples directory <../examples>`_ of the Cmdtest project,
 where some larger examples of Cmdtest usage can be found.
 
 Reporting format
