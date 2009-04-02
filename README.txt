@@ -4,15 +4,13 @@ Cmdtest - a program for testing executable programs
 
 "cmdtest" is a program to test executable programs. Tests are written in
 an "xunit style", using assertions about created files, content of
-standard output, exit code, etc.
-
-"cmdtest" is written in Ruby. It consists of a main program and a
-number of library files.
+standard output, exit code, etc. "cmdtest" is written in Ruby.
+It consists of a main program and a number of library files.
 
 Documentation
 -------------
 
-A "Cmdtest User Guide" can be found in the file "doc/cmdtest.html".
+A "Cmdtest User Guide" can be found in the file `<doc/cmdtest.html>`_.
 It is generated from the file "cmdtest.txt" which is written in
 reStructuredText format.
 
@@ -24,6 +22,7 @@ No installation is needed to use "cmdtest". The file
 
 But the program can also be installed. Use the following command::
 
+  $ svn co http://cmdtest.googlecode.com/svn/trunk cmdtest
   $ cd cmdtest
   $ ruby setup.rb            # sudo may be needed
 
@@ -34,7 +33,7 @@ License
 -------
 
 "cmdtest" is released under the GNU General Public License version 3.
-For details see the file "COPYING.txt" in the same directory as this file.
+For details see the file `<COPYING.txt>`_ in the same directory as this file.
 
 History
 -------
