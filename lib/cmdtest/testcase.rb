@@ -92,7 +92,7 @@ module Cmdtest
     # time of the call.
 
     def create_file(filename, lines)
-      Util.wait_for_new_second
+      #Util.wait_for_new_second
       FileUtils.mkdir_p( File.dirname(filename) )
       File.open(filename, "w") do |f|
         case lines
@@ -110,7 +110,7 @@ module Cmdtest
     # time of the call.
 
     def touch_file(filename)
-      Util.wait_for_new_second
+      #Util.wait_for_new_second
       FileUtils.touch(filename)
     end
 
