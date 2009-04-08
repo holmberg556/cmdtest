@@ -497,7 +497,29 @@ module Cmdtest
 
     #------------------------------
 
+    def _args_to_quoted_string(args)
+      quoted_args = []
+      for arg in args
+        if arg =~ /[;&()><\\| $"]/
+          quoted_arg = arg.dup
+          quoted_arg.gsub!(/\\/, "\\\\")
+          quoted_arg.gsub!(/"/, "\\\"")
+          quoted_arg.gsub!(/\$/, "\\$")
+         quoted_arg.gsub!(/`/, "\\\\`")
+          quoted_args << '"' + quoted_arg + '"'
+        else
+          quoted_args << arg
+        end
+      end
+      quoted_args.join(" ")
+    end
+
+    #------------------------------
+
     def cmd(cmdline)
+      if Array === cmdline
+        cmdline = _args_to_quoted_string(cmdline)
+      end
       Util.wait_for_new_second
       _update_hardlinks
       @_cmdline = cmdline
