@@ -500,15 +500,28 @@ module Cmdtest
     def _args_to_quoted_string(args)
       quoted_args = []
       for arg in args
-        if arg =~ /[;&()><\\| $"]/
-          quoted_arg = arg.dup
-          quoted_arg.gsub!(/\\/, "\\\\")
-          quoted_arg.gsub!(/"/, "\\\"")
-          quoted_arg.gsub!(/\$/, "\\$")
-         quoted_arg.gsub!(/`/, "\\\\`")
-          quoted_args << '"' + quoted_arg + '"'
+        if RUBY_PLATFORM =~ /mswin32/
+          if arg =~ /[;&()><\\| $%"]/
+            quoted_arg = arg.dup
+            # \  --- no change needed
+            quoted_arg.gsub!(/"/, "\"\"")
+            # \" --- TODO: handle this
+            # %  --- don't try to handle this
+            quoted_args << '"' + quoted_arg + '"'
+          else
+            quoted_args << arg
+          end
         else
-          quoted_args << arg
+          if arg =~ /[;&()><\\| $"]/
+            quoted_arg = arg.dup
+            quoted_arg.gsub!(/\\/, "\\\\")
+            quoted_arg.gsub!(/"/, "\\\"")
+            quoted_arg.gsub!(/\$/, "\\$")
+            quoted_arg.gsub!(/`/, "\\\\`")
+            quoted_args << '"' + quoted_arg + '"'
+          else
+            quoted_args << arg
+          end
         end
       end
       quoted_args.join(" ")
