@@ -112,7 +112,7 @@ class ActualRegression
     def add(prefix, code, stdout)
         prefix   = prefix.map {|line| line.chomp }
         code     = code  .map {|line| line.chomp }
-        stdout   = stdout.map {|line| line.chomp }
+        stdout   = stdout.map {|line| line.to_s.chomp }
 
         @o2.add(prefix,code,stdout)
 
