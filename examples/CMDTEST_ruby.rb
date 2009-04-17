@@ -47,7 +47,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
     ]
 
     # with -n
-    cmd %Q|#{ruby} -na -e "p $F" a.txt| do
+    cmd ["#{ruby}", "-na",  "-e",  "p $F", "a.txt"] do
       stdout_equal [
         '["a", "1", "x"]',
         '["b", "2", "y"]',
@@ -56,8 +56,12 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
     end
 
     # with -p
-    cmd %Q|#{ruby} -pa -e "$_ = $F.inspect" a.txt| do
-      stdout_equal '["a", "1", "x"]["b", "2", "y"]["c", "3"]'
+    cmd ["#{ruby}", "-pa", "-e", "$_ = $F.inspect; $_ << 10", "a.txt"] do
+      stdout_equal [
+        '["a", "1", "x"]',
+        '["b", "2", "y"]',
+        '["c", "3"]',
+      ]
     end
 
   end
@@ -113,7 +117,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
     end
 
     # several -e options
-    cmd %Q|#{ruby} -e "puts :hello" -e "puts :world" -e "puts 123"| do
+    cmd "#{ruby} -e 'puts :hello' -e 'puts :world' -e 'puts 123'" do
       stdout_equal [
         "hello",
         "world",
@@ -122,14 +126,15 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
     end
 
     # ARGV as usual
-    cmd %Q|#{ruby} -e "p ARGV" 11 22 33| do
+    cmd "#{ruby} -e 'p ARGV' 11 22 33" do
       stdout_equal [
         '["11", "22", "33"]',
       ]
     end
 
     # side effects seen in later -e
-    cmd %Q|#{ruby} -e "a = []" -e "a << 11" -e "a << 22" -e "p a"| do
+    cmd ["#{ruby}",  "-e",  "a = []", "-e",  "a << 11",
+      "-e", "a << 22", "-e", "p a"] do
       stdout_equal [
         '[11, 22]',
       ]
@@ -187,7 +192,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
     ]
 
     # one-line script
-    cmd %Q|#{ruby} -p -e "puts $_ if /[13]/" a.txt| do
+    cmd "#{ruby} -p -e 'puts $_ if /[13]/' a.txt" do
       stdout_equal [
         'line 1',
         'line 1',
@@ -212,7 +217,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
     end
 
     # modifying $_ before automatic print
-    cmd %Q|#{ruby} -p -e "$_ = '...' + $_" a.txt| do
+    cmd ["#{ruby}",  "-p", "-e", "$_ = '...' + $_", "a.txt"] do
       stdout_equal [
         '...line 1',
         '...line 2',
