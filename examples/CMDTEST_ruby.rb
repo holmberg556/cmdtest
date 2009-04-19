@@ -193,7 +193,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
   end
 
   #--------------------
-  # -a   auto-split (used with -n or -p)
+  # -a              autosplit mode with -n or -p (splits $_ into $F)
 
   def test_option_a
     create_file "a.txt", [
@@ -223,7 +223,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
   end
 
   #--------------------
-  # -c   check syntax only
+  # -c              check syntax only
 
   def test_option_c
     # script with no syntax errors
@@ -245,7 +245,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
   end
 
   #--------------------
-  # -d   debug option & $DEBUG
+  # -d              set debugging flags (set $DEBUG to true)
 
   def test_option_d
     create_file "script.rb", [
@@ -264,7 +264,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
   end
 
   #--------------------
-  # -e   one-line program
+  # -e 'command'    one line of script. Several -e's allowed. Omit [programfile]
 
   def test_option_e
     # simple case
@@ -307,7 +307,96 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
   end
 
   #--------------------
-  # -n   non-printing loop
+  # -i[extension]   edit ARGV files in place (make backup if extension supplied)
+
+  def test_option_i_bak
+    create_file "file.txt", "alpha\nbeta\ngamma\n"
+
+    create_file "script.rb", [
+      "$_.gsub!(/a/, 'A')",
+      "$_.gsub!(/this/, 'THIS')",
+    ]
+    cmd "#{ruby} -i.bak -p script.rb file.txt"  do
+      changed_files "file.txt"
+      file_equal "file.txt", "AlphA\nbetA\ngAmmA\n"
+
+      created_files "file.txt.bak"
+      file_equal "file.txt.bak", "alpha\nbeta\ngamma\n"
+    end
+
+    create_file "file1.txt", "this is file1.txt\n"
+    create_file "file2.txt", "this is file2.txt\n"
+    create_file "file3.txt", "this is file3.txt\n"
+
+    # several input files
+    cmd "#{ruby} -i.bak -p script.rb file1.txt file2.txt file3.txt"  do
+      changed_files "file1.txt", "file2.txt", "file3.txt"
+      file_equal "file1.txt", "THIS is file1.txt\n"
+      file_equal "file2.txt", "THIS is file2.txt\n"
+      file_equal "file3.txt", "THIS is file3.txt\n"
+
+      created_files "file1.txt.bak", "file2.txt.bak", "file3.txt.bak"
+      file_equal "file1.txt.bak", "this is file1.txt\n"
+      file_equal "file2.txt.bak", "this is file2.txt\n"
+      file_equal "file3.txt.bak", "this is file3.txt\n"
+    end
+  end
+
+  def test_option_i
+    create_file "file.txt", "alpha\nbeta\ngamma\n"
+
+    create_file "script.rb", [
+      "$_.gsub!(/a/, 'A')",
+      "$_.gsub!(/this/, 'THIS')",
+    ]
+    cmd "#{ruby} -i -p script.rb file.txt"  do
+      changed_files "file.txt"
+      file_equal "file.txt", "AlphA\nbetA\ngAmmA\n"
+    end
+
+    create_file "file1.txt", "this is file1.txt\n"
+    create_file "file2.txt", "this is file2.txt\n"
+    create_file "file3.txt", "this is file3.txt\n"
+
+    # several input files
+    cmd "#{ruby} -i -p script.rb file1.txt file2.txt file3.txt"  do
+      changed_files "file1.txt", "file2.txt", "file3.txt"
+      file_equal "file1.txt", "THIS is file1.txt\n"
+      file_equal "file2.txt", "THIS is file2.txt\n"
+      file_equal "file3.txt", "THIS is file3.txt\n"
+    end
+  end
+
+  #--------------------
+  # -l              enable line ending processing
+  def test_option_l
+    create_file "file.txt", [
+      "aaa",
+      "bbb",
+    ]
+    create_file "script.rb", [
+      "p $_",
+    ]
+
+    # without -l
+    cmd "#{ruby} -n script.rb file.txt" do
+      stdout_equal [
+        '"aaa\n"',
+        '"bbb\n"',
+      ]
+    end
+
+    # with -l
+    cmd "#{ruby} -l -n script.rb file.txt" do
+      stdout_equal [
+        '"aaa"',
+        '"bbb"',
+      ]
+    end
+  end
+
+  #--------------------
+  # -n              assume 'while gets(); ... end' loop around your script
 
   def test_option_n
     create_file "a.txt", [
@@ -338,7 +427,7 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
   end
 
   #--------------------
-  # -p   printing loop
+  # -p              assume loop like -n but print line also like sed
 
   def test_option_p
     create_file "a.txt", [
@@ -383,10 +472,66 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
   end
 
   #--------------------
+  # -rlibrary       require the library, before executing your script
+
+  def test_option_r
+    create_file "dir1/bbb.rb", [
+      "puts 'this is dir1/bbb.rb'",
+    ]
+    create_file "aaa.rb", [
+      "puts 'this is aaa.rb'",
+    ]
+
+    cmd "#{ruby} -Idir1 -rbbb aaa.rb" do
+      comment "with -rbbb option"
+      stdout_equal [
+        "this is dir1/bbb.rb",
+        "this is aaa.rb",
+      ]
+    end
+  end
+
+  #--------------------
+  # -s              enable some switch parsing for switches after script name
+
+  def test_option_s
+    create_file "file.txt", [
+      "abc",
+      "def-ghi",
+    ]
+    create_file "script.rb", [
+      "#!ruby -p",
+      "$_.tr!('a-z', 'A-Z')",
+    ]
+
+    cmd "#{ruby} script.rb file.txt" do
+      comment "with -p option in script header"
+      stdout_equal [
+        "ABC",
+        "DEF-GHI",
+      ]
+    end
+  end
+
+  #--------------------
+  # -v              print version number, then turn on verbose mode
 
   def test_option_v
     cmd "#{ruby} -v" do
       stdout_equal [ /^ruby / ]
+    end
+
+    create_file "script.rb", [
+      "p $VERBOSE",
+      "exit 34",
+    ]
+
+    cmd "#{ruby} -v script.rb" do
+      exit_status 34
+      stdout_equal [
+        /ruby/,
+        "true",
+      ]
     end
   end
 
