@@ -132,7 +132,7 @@ module Cmdtest
 
   class Runner
 
-    attr_reader :opts
+    attr_reader :opts, :orig_cwd
 
     def initialize(project_dir, opts)
       @project_dir = project_dir
@@ -160,8 +160,7 @@ module Cmdtest
       end
     end
 
-    def prepend_path_dirs(path_dirs)
-      full_path_dirs = path_dirs.map {|dir| File.expand_path(dir, @orig_cwd) }
+    def prepend_path_dirs(full_path_dirs)
       new_env_path = (full_path_dirs + [@orig_envpath]).join(Config::CONFIG["PATH_SEPARATOR"])
       if new_env_path != ENV["PATH"]
         ENV["PATH"] = new_env_path
