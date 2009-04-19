@@ -115,7 +115,7 @@ module Cmdtest
     end
 
     #------------------------------
-    # Dont count the specified file when calculating the "side effects"
+    # Don't count the specified file when calculating the "side effects"
     # of a command.
 
     def ignore_file(file)
@@ -123,7 +123,7 @@ module Cmdtest
     end
 
     #------------------------------
-    # Dont count the specified file when calculating the "side effects"
+    # Don't count the specified file when calculating the "side effects"
     # of a command.
 
     def ignore_files(*files)
@@ -134,11 +134,20 @@ module Cmdtest
 
     #------------------------------
     # Prepend the given directory to the PATH before running commands.
-    # The path is evaluated realtive to the current directory when 'cmdtest'
+    # The path is evaluated relative to the current directory when 'cmdtest'
     # was started.
 
     def prepend_path(dir)
-      @_prepend_path_dirs.unshift(dir)
+      @_prepend_path_dirs.unshift(File.expand_path(dir, @_runner.orig_cwd))
+    end
+
+    #------------------------------
+    # Prepend the given directory to the PATH before running commands.
+    # The path is evaluated relative to the current directory at the time
+    # of the call was started.
+
+    def prepend_local_path(dir)
+      @_prepend_path_dirs.unshift(File.expand_path(dir, Dir.pwd))
     end
 
     #==============================
