@@ -13,17 +13,18 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
   end
 
   #--------------------
-  # -C   chdir to a directory before running script
+  # -Cdirectory     cd to directory, before executing your script
 
   def test_option_C
     create_file "some/dir/script.rb", [
       'puts "cwd = " + Dir.pwd',
     ]
+    cwd = Dir.pwd
 
     # chdir before script
     cmd "#{ruby} -Csome/dir script.rb" do
       stdout_equal [
-        /^cwd = .*some\/dir$/,
+        /^cwd = #{cwd}\/some\/dir$/,
       ]
     end
 
@@ -34,6 +35,161 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
         /Can't chdir/,
       ]
     end
+  end
+
+  #--------------------
+  # -Fpattern       split() pattern for autosplit (-a)
+
+  def test_option_F
+    create_file "file.txt", [
+      "123delimiter456 delimiter 789",
+      "delimiterHELLOdelimiterWORLD",
+    ]
+    create_file "script.rb", [
+      "p $F",
+    ]
+
+    cmd "#{ruby} -na -Fdelimiter script.rb file.txt" do
+      stdout_equal [
+        '["123", "456 ", " 789\n"]',
+        '["", "HELLO", "WORLD\n"]',
+      ]
+    end
+  end
+
+  #--------------------
+  # -Idirectory     specify $LOAD_PATH directory (may be used more than once)
+
+  def test_option_I
+    create_file "some/dir1/req1.rb", [
+      "puts 'This is ' + __FILE__",
+    ]
+    create_file "some/dir1/req2.rb", [
+      "puts 'This is ' + __FILE__",
+    ]
+    create_file "some/dir2/req1.rb", [
+      "puts 'This is ' + __FILE__",
+    ]
+
+    create_file "script.rb", [
+      "require 'req1'",
+      "require 'req2'",
+    ]
+
+    cmd "#{ruby} script.rb" do
+      exit_nonzero
+      stderr_equal /no such file to load/
+    end
+
+    cmd "#{ruby} -I some/dir1 script.rb" do
+      stdout_equal [
+        "This is ./some/dir1/req1.rb",
+        "This is ./some/dir1/req2.rb",
+      ]
+    end
+
+    cmd "#{ruby} -I some/dir2 -I some/dir1 script.rb" do
+      stdout_equal [
+        "This is ./some/dir2/req1.rb",
+        "This is ./some/dir1/req2.rb",
+      ]
+    end
+  end
+
+  #--------------------
+  # -Kkcode         specifies KANJI (Japanese) code-set
+
+  def test_option_K
+    # TODO: how to test this ?
+  end
+
+  #--------------------
+  # -S              look for the script using PATH environment variable
+
+  def test_option_S
+    create_file "some/dir/script.rb", [
+      "puts 'this is script.rb'",
+    ]
+    prepend_local_path "some/dir"
+
+    cmd "#{ruby} script.rb" do
+      exit_nonzero
+      stderr_equal /No such file or directory/
+    end
+
+    cmd "#{ruby} -S script.rb" do
+      stdout_equal "this is script.rb\n"
+    end
+  end
+
+  #--------------------
+  # -T[level]       turn on tainting checks
+
+  def test_option_T
+    # TODO: how to test this ?
+  end
+
+  #--------------------
+  # -W[level]       set warning level; 0=silence, 1=medium, 2=verbose (default)
+
+  def test_option_W
+    create_file "script.rb", [
+      "exit @x ? 11 : 22",
+    ]
+
+    cmd "#{ruby} -w -W0 script.rb" do
+      exit_status 22
+    end
+
+    cmd "#{ruby} -w -W2 script.rb" do
+      stderr_equal /warning: instance variable @x not initialized/
+      exit_status 22
+    end
+
+    # -W2 is default
+    cmd "#{ruby} -w script.rb" do
+      stderr_equal /warning: instance variable @x not initialized/
+      exit_status 22
+    end
+  end
+
+  #--------------------
+  # -0[octal]       specify record separator (\0, if no argument)
+
+  def test_option_0
+    create_file "file.txt", "abxc\0dexf\0ghxi\0"
+
+    create_file "script.rb", [
+      "puts $_.chomp"
+    ]
+
+    cmd "#{ruby} -0 -n script.rb file.txt" do
+      stdout_equal [
+        "abxc",
+        "dexf",
+        "ghxi",
+      ]
+    end
+
+    create_file "file.txt", "abxcydexfyghxiy"
+
+    cmd "#{ruby} -0171 -n script.rb file.txt" do
+      stdout_equal [
+        "abxc",
+        "dexf",
+        "ghxi",
+      ]
+    end
+
+    cmd "#{ruby} -0170 -n script.rb file.txt" do
+      stdout_equal [
+        "ab",
+        "cyde",
+        "fygh",
+        "iy",
+      ]
+    end
+
   end
 
   #--------------------
