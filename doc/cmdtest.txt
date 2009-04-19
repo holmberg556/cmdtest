@@ -371,6 +371,12 @@ Helper functions
     the current directory inside the "work directory" at the time
     of the call.
 
+``prepend_local_path(dir)``
+    Prepend the given directory to the ``PATH`` so commands executed via ``cmd``
+    are looked up using the modified ``PATH``. The argument ``dir`` is evaluated
+    relative to the current directory in effect at the time of the call
+    (i.e. typically the "work directory" during the test).
+
 ``prepend_path(dir)``
     Prepend the given directory to the ``PATH`` so commands executed via ``cmd``
     are looked up using the modified ``PATH``. A typical use is to add the directory
