@@ -58,7 +58,11 @@ module Cmdtest
     end
 
     def skip?
-      @runner.method_filter.skip?(*method_id)
+      patterns = @runner.opts.patterns
+      selected = (patterns.size == 0 ||
+                    patterns.any? {|pattern| pattern =~ @test_method } )
+
+      !selected || @runner.method_filter.skip?(*method_id)
     end
 
     def run
@@ -279,7 +283,7 @@ module Cmdtest
 
   class Main
 
-    attr_reader :tests, :quiet, :verbose, :fast, :ruby_s, :incremental
+    attr_reader :tests, :quiet, :verbose, :fast, :ruby_s, :incremental, :patterns
 
     def initialize
       @tests = []
@@ -289,6 +293,7 @@ module Cmdtest
       @xml = nil
       @ruby_s = false
       @incremental = false
+      @patterns = []
 
       _update_cmdtest_level
     end
@@ -321,6 +326,8 @@ module Cmdtest
           files << opt
         when File.directory?(opt)
           files << opt
+        when opt =~ /^\/(.+)\/$/
+          @patterns  << $1
         else
           puts "ERROR: unknown argument: #{opt}"
           puts
@@ -328,6 +335,14 @@ module Cmdtest
           puts
           exit 1
         end
+      end
+
+      begin
+        @patterns.map! {|pattern| Regexp.new(pattern) }
+      rescue RegexpError => e
+        puts "ERROR: syntax error in regexp?"
+        puts "DETAILS: " + e.message
+        exit(1)
       end
 
       Util.opts = self
