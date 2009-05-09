@@ -294,30 +294,35 @@ module Cmdtest
     end
 
     def run
-      while ! ARGV.empty? && ARGV[0] =~ /^-/
+      files = []
+      while ! ARGV.empty?
         opt = ARGV.shift
-        case opt
-        when /^--test=(.*)/
+        case
+        when opt =~ /^--test=(.*)/
           @tests << $1
-        when /^--quiet$/
+        when opt =~ /^--quiet$/
           @quiet = true
-        when /^--verbose$/
+        when opt =~ /^--verbose$/
           @verbose = true
-        when /^--fast$/
+        when opt =~ /^--fast$/
           @fast = true
-        when /^--xml=(.+)$/
+        when opt =~ /^--xml=(.+)$/
           @xml = $1
-        when /^--ruby_s$/
+        when opt =~ /^--ruby_s$/
           @ruby_s = true
-        when /^-r$/
+        when opt =~ /^-r$/
           @incremental = true
-        when /^--help$/, /^-h$/
+        when opt =~ /^--help$/ || opt =~ /^-h$/
           puts
           _show_options
           puts
           exit 0
+        when File.file?(opt)
+          files << opt
+        when File.directory?(opt)
+          files << opt
         else
-          puts "ERROR: unknown option: #{opt}"
+          puts "ERROR: unknown argument: #{opt}"
           puts
           _show_options
           puts
@@ -326,7 +331,7 @@ module Cmdtest
       end
 
       Util.opts = self
-      @project_dir = ProjectDir.new(ARGV)
+      @project_dir = ProjectDir.new(files)
       @runner = Runner.new(@project_dir, self)
       logger = ConsoleLogger.new(self)
       @runner.add_listener(logger)
