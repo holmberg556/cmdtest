@@ -117,10 +117,11 @@ module Cmdtest
       end
 
       def write(f)
-        f.put '  <testsuite errors="%d" failures="%d" name="%s" package="%s">', [
+        f.put '  <testsuite errors="%d" failures="%d" name="%s" tests="%d" package="%s">', [
           0,
           @testcases.grep(ErrTestcase).size,
           @name,
+          @testcases.size,
           @package,
         ]
         for testcase in @testcases
