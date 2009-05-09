@@ -328,6 +328,7 @@ module Cmdtest
       puts "  --verbose         be more verbose"
       puts "  --fast            run fast without waiting for unique mtime:s"
       puts "  --test=NAME       only run named test"
+      puts "  --xml=FILE        write summary on JUnit format"
     end
 
   end
