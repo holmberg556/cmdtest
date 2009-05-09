@@ -34,11 +34,13 @@ require "cmdtest/consolelogger"
 require "cmdtest/junitlogger"
 require "cmdtest/testcase"
 require "cmdtest/workdir"
+require "cmdtest/methodfilter"
 require "cmdtest/util"
 require "set"
 require "stringio"
 require "fileutils"
 require "find"
+require "digest/md5"
 require "rbconfig"
 
 module Cmdtest
@@ -51,6 +53,14 @@ module Cmdtest
       @test_method, @test_class, @runner = test_method, test_class, runner
     end
 
+    def method_id
+      [@test_class.file, @test_class.testcase_class, @test_method]
+    end
+
+    def skip?
+      @runner.method_filter.skip?(*method_id)
+    end
+
     def run
       @runner.notify("testmethod", @test_method) do
         obj = @test_class.testcase_class.new(self, @runner)
@@ -61,6 +71,7 @@ module Cmdtest
             @runner.assert_success
           rescue Cmdtest::AssertFailed => e
             @runner.assert_failure(e.message)
+            @runner.method_filter.error(*method_id)
           rescue => e
             io = StringIO.new
             io.puts "CAUGHT EXCEPTION:"
@@ -68,6 +79,7 @@ module Cmdtest
             io.puts "BACKTRACE:"
             io.puts e.backtrace.map {|line| "  " + line }
             @runner.assert_error(io.string)
+            @runner.method_filter.error(*method_id)
           end
           obj.teardown
         end
@@ -80,7 +92,7 @@ module Cmdtest
 
   class TestClass
 
-    attr_reader :testcase_class
+    attr_reader :testcase_class, :file
 
     def initialize(testcase_class, file, runner)
       @testcase_class, @file, @runner = testcase_class, file, runner
@@ -89,7 +101,8 @@ module Cmdtest
     def run
       @runner.notify("testclass", @testcase_class) do
         get_test_methods.each do |method|
-          TestMethod.new(method, self, @runner).run
+          test_method = TestMethod.new(method, self, @runner)
+          test_method.run unless test_method.skip?
         end
       end
     end
@@ -107,15 +120,17 @@ module Cmdtest
 
   class TestFile
 
-    def initialize(file)
-      @file = file
+    attr_reader :path
+
+    def initialize(path)
+      @path = path
     end
 
     def run(runner)
       @runner = runner
-      @runner.notify("testfile", @file) do
+      @runner.notify("testfile", @path) do
         testcase_classes = Cmdtest::Testcase.new_subclasses do
-          Kernel.load(@file, true)
+          Kernel.load(@path, true)
         end
         for testcase_class in testcase_classes
           test_class = TestClass.new(testcase_class, self, @runner)
@@ -132,12 +147,15 @@ module Cmdtest
 
   class Runner
 
-    attr_reader :opts, :orig_cwd
+    attr_reader :opts, :orig_cwd, :method_filter
+
+    FILTER_FILENAME = ".cmdtest-filter"
 
     def initialize(project_dir, opts)
       @project_dir = project_dir
       @listeners = []
       @opts = opts
+      @method_filter = MethodFilter.new(FILTER_FILENAME, self)
     end
 
     def add_listener(listener)
@@ -179,6 +197,7 @@ module Cmdtest
           test_file.run(self)
         end
       end
+      @method_filter.write
     end
 
     def assert_success
@@ -260,7 +279,7 @@ module Cmdtest
 
   class Main
 
-    attr_reader :tests, :quiet, :verbose, :fast, :ruby_s
+    attr_reader :tests, :quiet, :verbose, :fast, :ruby_s, :incremental
 
     def initialize
       @tests = []
@@ -269,6 +288,7 @@ module Cmdtest
       @fast = false
       @xml = nil
       @ruby_s = false
+      @incremental = false
 
       _update_cmdtest_level
     end
@@ -289,6 +309,8 @@ module Cmdtest
           @xml = $1
         when /^--ruby_s$/
           @ruby_s = true
+        when /^-r$/
+          @incremental = true
         when /^--help$/, /^-h$/
           puts
           _show_options
