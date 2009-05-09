@@ -210,6 +210,14 @@ end
 
 #----------------------------------------------------------------------
 
+def indent_lines(level, lines)
+    lines.map do |line|
+        "  " * level + line
+    end
+end
+
+#----------------------------------------------------------------------
+
 def matching_arrays(a,b)
     return false if a.size != b.size
     a.each_index do |i|
@@ -303,9 +311,9 @@ for prefix, code, stdout in tests
     lines << ""
     lines << "class TC_foo < Cmdtest::Testcase"
     lines << ""
-    lines << "    def test_foo"
-    lines << code
-    lines << "    end"
+    lines << "  def test_foo"
+    lines << indent_lines(2, code)
+    lines << "  end"
     lines << ""
     lines << "end"
     lines << ""
