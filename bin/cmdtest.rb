@@ -350,6 +350,8 @@ module Cmdtest
     end
 
     def _show_options
+      puts "Usage: cmdtest [options] [files/directories]"
+      puts
       puts "  --help            show this help"
       puts "  --quiet           be more quiet"
       puts "  --verbose         be more verbose"
