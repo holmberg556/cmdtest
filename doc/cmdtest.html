@@ -449,14 +449,14 @@ cmd &quot;true&quot; do
   stdout_equal &quot;&quot;
   stderr_equal &quot;&quot;
   created_files []
-  modified_files []
+  changed_files []
   removed_files []
 end
 </pre>
 <p>The idea is that all differences in behaviour from the trivial <tt class="docutils literal"><span class="pre">true</span></tt>
 command should be described as an assertion in the do-block. The list
 of possible assertions includes: <tt class="docutils literal"><span class="pre">exit_zero</span></tt>, <tt class="docutils literal"><span class="pre">exit_nonzero</span></tt>,
-<tt class="docutils literal"><span class="pre">exit_status</span></tt>, <tt class="docutils literal"><span class="pre">created_files</span></tt>, <tt class="docutils literal"><span class="pre">modified_files</span></tt>, <tt class="docutils literal"><span class="pre">removed_files</span></tt>,
+<tt class="docutils literal"><span class="pre">exit_status</span></tt>, <tt class="docutils literal"><span class="pre">created_files</span></tt>, <tt class="docutils literal"><span class="pre">changed_files</span></tt>, <tt class="docutils literal"><span class="pre">removed_files</span></tt>,
 <tt class="docutils literal"><span class="pre">written_files</span></tt>, <tt class="docutils literal"><span class="pre">affected_files</span></tt>, <tt class="docutils literal"><span class="pre">file_equal</span></tt>, <tt class="docutils literal"><span class="pre">stdout_equal</span></tt>
 and <tt class="docutils literal"><span class="pre">stderr_equal</span></tt>.</p>
 <p>In addition to the assertions there are other helper-functions to set
@@ -616,21 +616,21 @@ exit-related methods have been called.</dd>
 <dt><tt class="docutils literal"><span class="pre">affected_files(file1,...,fileN)</span></tt></dt>
 <dd>The specified files should have been created, removed or modified by the
 command. This assertion can be used when it doesn't matter which
-of <tt class="docutils literal"><span class="pre">created_files</span></tt>, <tt class="docutils literal"><span class="pre">removed_files</span></tt> or <tt class="docutils literal"><span class="pre">modified_files</span></tt> that apply
+of <tt class="docutils literal"><span class="pre">created_files</span></tt>, <tt class="docutils literal"><span class="pre">removed_files</span></tt> or <tt class="docutils literal"><span class="pre">changed_files</span></tt> that apply
 (cf. <tt class="docutils literal"><span class="pre">written_files</span></tt>).</dd>
-<dt><tt class="docutils literal"><span class="pre">created_files(file1,...,fileN)</span></tt></dt>
-<dd>The specified files should have been created by the command.</dd>
-<dt><tt class="docutils literal"><span class="pre">modified_files(file1,...,fileN)</span></tt></dt>
+<dt><tt class="docutils literal"><span class="pre">changed_files(file1,...,fileN)</span></tt></dt>
 <dd>The specified files should have been modified by the command. A
 file is considered modified if it existed before the command, and
 something about the file has changed after the command (inode
 number, modification date or content).</dd>
+<dt><tt class="docutils literal"><span class="pre">created_files(file1,...,fileN)</span></tt></dt>
+<dd>The specified files should have been created by the command.</dd>
 <dt><tt class="docutils literal"><span class="pre">removed_files(file1,...,fileN)</span></tt></dt>
 <dd>The specified files should have been removed by the command.</dd>
 <dt><tt class="docutils literal"><span class="pre">written_files(file1,...,fileN)</span></tt></dt>
 <dd>The specified files should have been created or modified by the
 command. This assertion can be used when it doesn't matter which
-of <tt class="docutils literal"><span class="pre">created_files</span></tt> or <tt class="docutils literal"><span class="pre">modified_files</span></tt> that apply. A typical scenario is
+of <tt class="docutils literal"><span class="pre">created_files</span></tt> or <tt class="docutils literal"><span class="pre">changed_files</span></tt> that apply. A typical scenario is
 in a test method where repeated operations are done on the same
 file. By using <tt class="docutils literal"><span class="pre">written_files</span></tt> we don't have to treat the first
 case special (when the file is created).</dd>

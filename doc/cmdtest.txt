@@ -144,14 +144,14 @@ following more explicit one::
     stdout_equal ""
     stderr_equal ""
     created_files []
-    modified_files []
+    changed_files []
     removed_files []
   end
 
 The idea is that all differences in behaviour from the trivial ``true``
 command should be described as an assertion in the do-block. The list
 of possible assertions includes: ``exit_zero``, ``exit_nonzero``,
-``exit_status``, ``created_files``, ``modified_files``, ``removed_files``,
+``exit_status``, ``created_files``, ``changed_files``, ``removed_files``,
 ``written_files``, ``affected_files``, ``file_equal``, ``stdout_equal``
 and ``stderr_equal``.
 
@@ -318,17 +318,17 @@ Assertions - files
 ``affected_files(file1,...,fileN)``
     The specified files should have been created, removed or modified by the
     command. This assertion can be used when it doesn't matter which
-    of ``created_files``, ``removed_files`` or ``modified_files`` that apply
+    of ``created_files``, ``removed_files`` or ``changed_files`` that apply
     (cf. ``written_files``).
 
-``created_files(file1,...,fileN)``
-    The specified files should have been created by the command.
-
-``modified_files(file1,...,fileN)``
+``changed_files(file1,...,fileN)``
     The specified files should have been modified by the command. A
     file is considered modified if it existed before the command, and
     something about the file has changed after the command (inode
     number, modification date or content).
+
+``created_files(file1,...,fileN)``
+    The specified files should have been created by the command.
 
 ``removed_files(file1,...,fileN)``
     The specified files should have been removed by the command.
@@ -336,7 +336,7 @@ Assertions - files
 ``written_files(file1,...,fileN)``
     The specified files should have been created or modified by the
     command. This assertion can be used when it doesn't matter which
-    of ``created_files`` or ``modified_files`` that apply. A typical scenario is
+    of ``created_files`` or ``changed_files`` that apply. A typical scenario is
     in a test method where repeated operations are done on the same
     file. By using ``written_files`` we don't have to treat the first
     case special (when the file is created).
