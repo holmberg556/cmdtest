@@ -547,7 +547,7 @@ $ cmdtest . t                              # all CMDTEST_*.rb files in both dirs
 <td>Be more verbose.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--fast</span></kbd></td>
-<td>Run fast without ensuring that timestamps of newly created/modfied
+<td>Run fast without ensuring that timestamps of newly created/modified
 files are unique. This could make it impossible for Cmdtest to detect
 all side-effects of commands.</td></tr>
 <tr><td class="option-group">
@@ -556,11 +556,11 @@ all side-effects of commands.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--xml=<var>FILE</var></span></kbd></td>
 <td>Write summary on JUnit XML format.
-Useful when running under a continuouos integration server that
+Useful when running under a continuous integration server that
 understands JUnit reports.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-i</span></kbd></td>
-<td>Run in &quot;incermental&quot; mode. <strong>experimental</strong>
+<td>Run in &quot;incremental&quot; mode. <strong>experimental</strong>
 Cmdtest will try to run only those test methods that are failed or
 have changed since last time.</td></tr>
 </tbody>
@@ -666,6 +666,9 @@ For more details and examples see the section &quot;Matching standard output con
 <dt><tt class="docutils literal"><span class="pre">assert(flag,</span> <span class="pre">msg=nil)</span></tt></dt>
 <dd>Assert that <tt class="docutils literal"><span class="pre">flag</span></tt> is true. This assertion is a last resort, when no other
 assertion fits. Should normally not be used.</dd>
+<dt><tt class="docutils literal"><span class="pre">time(interval)</span></tt></dt>
+<dd>Assert that executing the command took a number of seconds inside the
+interval given as argument.</dd>
 </dl>
 </div>
 <div class="section" id="helper-functions">

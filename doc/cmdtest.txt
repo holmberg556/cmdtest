@@ -248,7 +248,7 @@ Options
     Be more verbose.
 
 --fast
-    Run fast without ensuring that timestamps of newly created/modfied
+    Run fast without ensuring that timestamps of newly created/modified
     files are unique. This could make it impossible for Cmdtest to detect
     all side-effects of commands.
 
@@ -257,11 +257,11 @@ Options
 
 --xml=FILE
     Write summary on JUnit XML format.
-    Useful when running under a continuouos integration server that
+    Useful when running under a continuous integration server that
     understands JUnit reports.
 
 -i
-    Run in "incermental" mode. **experimental**
+    Run in "incremental" mode. **experimental**
     Cmdtest will try to run only those test methods that are failed or
     have changed since last time.
 
@@ -377,6 +377,9 @@ Assertions - misc
     Assert that ``flag`` is true. This assertion is a last resort, when no other
     assertion fits. Should normally not be used.
 
+``time(interval)``
+    Assert that executing the command took a number of seconds inside the
+    interval given as argument.
 
 Helper functions
 ++++++++++++++++

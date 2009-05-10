@@ -69,6 +69,7 @@ module Cmdtest
       @_in_cmd = false
       @_comment_str = nil
       @_prepend_path_dirs = []
+      @_t1 = @_t2 = 0
     end
 
     #------------------------------
@@ -178,6 +179,17 @@ module Cmdtest
       _process_after do
         _assert flag do
           msg ? "assertion: #{msg}" : "assertion failed"
+        end
+      end
+    end
+
+    #------------------------------
+
+    def time(time_interval)
+      _process_after do
+        diff = @_t2 - @_t1
+        _assert diff >= time_interval.begin && diff <= time_interval.end do
+          "expected time in interval #{time_interval}"
         end
       end
     end
@@ -490,7 +502,9 @@ module Cmdtest
       @_runner.notify("cmdline", @_cmdline, @_comment_str)
       @_comment_str = nil
       @_runner.prepend_path_dirs(@_prepend_path_dirs)
+      @_t1 = Time.now
       @_effects = @_work_dir.run_cmd(@_cmdline)
+      @_t2 = Time.now
 
       @_checked_status = false
 
