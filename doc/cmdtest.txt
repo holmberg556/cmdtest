@@ -235,6 +235,36 @@ them instead of searching by itself. Some examples::
   $ cmdtest . t                              # all CMDTEST_*.rb files in both dirs
 
 
+Options
++++++++
+
+--help
+    Show available options.
+
+--quiet
+    Be more quiet by skipping some non-essential output.
+
+--verbose
+    Be more verbose.
+
+--fast
+    Run fast without ensuring that timestamps of newly created/modfied
+    files are unique. This could make it impossible for Cmdtest to detect
+    all side-effects of commands.
+
+--test=NAME
+    Only run named test method.
+
+--xml=FILE
+    Write summary on JUnit XML format.
+    Useful when running under a continuouos integration server that
+    understands JUnit reports.
+
+-i
+    Run in "incermental" mode. **experimental**
+    Cmdtest will try to run only those test methods that are failed or
+    have changed since last time.
+
 Reference Part
 --------------
 
