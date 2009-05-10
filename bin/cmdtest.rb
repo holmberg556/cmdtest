@@ -317,6 +317,8 @@ module Cmdtest
           @ruby_s = true
         when opt =~ /^-r$/
           @incremental = true
+        when opt =~ /^-i$/
+          @incremental = true
         when opt =~ /^--help$/ || opt =~ /^-h$/
           puts
           _show_options
@@ -373,6 +375,7 @@ module Cmdtest
       puts "  --fast            run fast without waiting for unique mtime:s"
       puts "  --test=NAME       only run named test"
       puts "  --xml=FILE        write summary on JUnit format"
+      puts "  -i                incremental mode"
     end
 
   end
