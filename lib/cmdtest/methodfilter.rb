@@ -46,7 +46,7 @@ module Cmdtest
         for key in @new_filter.keys.sort
           f.puts "%s\t%s" % [
             key,
-            @new_filter[key],
+            @new_filter[key] || "unknown",
           ]
         end
       end
@@ -102,7 +102,7 @@ module Cmdtest
           method_i = i
           ## p [:method_begin, method]
 
-        when method && line =~ /^#{method_indent}end\b/ #...
+        when klass && method && line =~ /^#{method_indent}end\b/ #...
           ## p [:method_end, method]
           key = _method_key(file, klass, method)
           method_signatures[key] = _method_signature(lines[method_i..i])
