@@ -60,43 +60,43 @@ class CMDTEST_simple < Cmdtest::Testcase
     end
   end
 
-    #------------------------------
+  #------------------------------
 
-    def test_touch
-      # one file
-      cmd "touch aaa" do
-        created_files "aaa"
-      end
-
-      # two files
-      cmd "touch bbb ccc" do
-        created_files "bbb", "ccc"
-      end
-
-      # existing file
-      cmd "touch aaa" do
-        changed_files "aaa"
-      end
+  def test_touch
+    # one file
+    cmd "touch aaa" do
+      created_files "aaa"
     end
 
-    #------------------------------
-
-    def test_mkdir
-      # one directory
-      cmd "mkdir aaa" do
-        created_files "aaa/"
-      end
-
-      # two directories
-      cmd "mkdir bbb ccc" do
-        created_files "bbb/", "ccc/"
-      end
-
-      # existing directory
-      cmd "mkdir aaa" do
-        exit_nonzero
-        stderr_equal /File exists/
-      end
+    # two files
+    cmd "touch bbb ccc" do
+      created_files "bbb", "ccc"
     end
+
+    # existing file
+    cmd "touch aaa" do
+      changed_files "aaa"
+    end
+  end
+
+  #------------------------------
+
+  def test_mkdir
+    # one directory
+    cmd "mkdir aaa" do
+      created_files "aaa/"
+    end
+
+    # two directories
+    cmd "mkdir bbb ccc" do
+      created_files "bbb/", "ccc/"
+    end
+
+    # existing directory
+    cmd "mkdir aaa" do
+      exit_nonzero
+      stderr_equal /File exists/
+    end
+  end
 
 end
