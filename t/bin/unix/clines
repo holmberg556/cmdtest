@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+use strict;
+
+for my $arg (@ARGV) {
+    print "$arg\n";
+}

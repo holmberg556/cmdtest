@@ -250,6 +250,8 @@ end
 path_dirs = [ File.expand_path("t/bin") ]
 if RUBY_PLATFORM =~ /mswin/
     path_dirs.unshift File.expand_path("t/bin/windows")
+else
+    path_dirs.unshift File.expand_path("t/bin/unix")
 end
 
 ENV["PATH"] = [
