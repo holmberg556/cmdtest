@@ -244,6 +244,9 @@ module Cmdtest
       try = Dir.glob("t/CMDTEST_*.rb")
       return _test_files(try) if ! try.empty?
 
+      try = Dir.glob("test/CMDTEST_*.rb")
+      return _test_files(try) if ! try.empty?
+
       try = Dir.glob("CMDTEST_*.rb")
       return _test_files(try) if ! try.empty?
 
