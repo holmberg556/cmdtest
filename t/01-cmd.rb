@@ -52,23 +52,41 @@ end
 
 #-----------------------------------
 # array with " and \ in arguments
+#
 
-cmd ["lines.rb", "emb\"edded1", "emb\\edded2", "emb\\edd\"ed3"] do
+cmd ["clines", "emb\"edded 1", "emb\\edded 2", "emb\\edd\"ed 3"] do
     stdout_equal [
-        "emb\"edded1",
-        "emb\\edded2",
-        "emb\\edd\"ed3",
+        "emb\"edded 1",
+        "emb\\edded 2",
+        "emb\\edd\"ed 3",
     ]
 end
 
 # stdout begin
-# ### lines.rb "emb\"edded1" "emb\edded2" "emb\edd\"ed3"
+#/### .*clines.*
 # stdout end
 
 #-----------------------------------
 # array with $ arguments
+#
 
-cmd ["lines.rb", "emb$edded1", "emb$$edded2"] do
+cmd ["clines", "emb$edded 1", "emb$$edded 2"] do
+    stdout_equal [
+        "emb$edded 1",
+        "emb$$edded 2",
+    ]
+end
+
+# stdout begin
+#/### .*clines.*
+# stdout end
+
+#-----------------------------------
+# array with $ arguments
+#
+# REQUIRE: RUBY_PLATFORM =~ /mswin32/
+
+cmd ["clines", "emb$edded1", "emb$$edded2"] do
     stdout_equal [
         "emb$edded1",
         "emb$$edded2",
@@ -76,11 +94,13 @@ cmd ["lines.rb", "emb$edded1", "emb$$edded2"] do
 end
 
 # stdout begin
-# ### lines.rb "emb\$edded1" "emb\$\$edded2"
+# ### clines "emb$edded1" "emb$$edded2"
 # stdout end
 
 #-----------------------------------
 # "all" characters (but not ` for now)
+#
+# REQUIRE: RUBY_PLATFORM !~ /mswin32/
 
 all = " !\"\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_abcdefghijklmnopqrstuvwxyz{|}~"
 cmd ["lines.rb", all] do
@@ -95,6 +115,7 @@ end
 
 #-----------------------------------
 # "`" character
+#
 
 all = " ` "
 cmd ["lines.rb", all] do
@@ -104,6 +125,6 @@ cmd ["lines.rb", all] do
 end
 
 # stdout begin
-# ### lines.rb " \` "
+#/### .*lines.*
 # stdout end
 
