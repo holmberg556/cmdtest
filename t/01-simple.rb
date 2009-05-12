@@ -1,6 +1,8 @@
 
 #-----------------------------------
 # try to run non-existing command
+#
+# REQUIRE: RUBY_PLATFORM !~ /mswin32/
 
 cmd "non-existing" do
     exit_nonzero
@@ -12,7 +14,26 @@ end
 # stdout end
 
 #-----------------------------------
+# try to run non-existing command
+#
+# REQUIRE: RUBY_PLATFORM =~ /mswin32/
+
+cmd "non-existing" do
+    exit_nonzero
+    stderr_equal [
+        /non-existing.*not recognized/,
+        /program or batch file/,
+    ]
+end
+
+# stdout begin
+# ### non-existing
+# stdout end
+
+#-----------------------------------
 # FAILING try to run non-existing command
+#
+# REQUIRE: RUBY_PLATFORM !~ /mswin32/
 
 cmd "non-existing" do
 end
@@ -22,6 +43,23 @@ end
 # --- ERROR: expected zero exit status, got 127
 # --- ERROR: wrong stderr
 #/---        actual:.*non-existing: .*not found
+# ---        expect: [[empty]]
+# stdout end
+
+#-----------------------------------
+# FAILING try to run non-existing command
+#
+# REQUIRE: RUBY_PLATFORM =~ /mswin32/
+
+cmd "non-existing" do
+end
+
+# stdout begin
+# ### non-existing
+# --- ERROR: expected zero exit status, got 1
+# --- ERROR: wrong stderr
+#/---        actual:.*non-existing.*not recognized
+#/---               .*program or batch file
 # ---        expect: [[empty]]
 # stdout end
 
