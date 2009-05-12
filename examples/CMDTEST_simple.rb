@@ -60,6 +60,15 @@ class CMDTEST_simple < Cmdtest::Testcase
     end
   end
 
+  #----------------------------------------
+
+  def test_stdout_and_stderr
+    cmd "echo on-stdout && echo on-stderr >&2 " do
+      stdout_equal "on-stdout\n"
+      stderr_equal "on-stderr\n"
+    end
+  end
+
   #------------------------------
 
   def test_touch
