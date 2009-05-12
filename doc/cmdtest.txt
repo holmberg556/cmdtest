@@ -224,7 +224,9 @@ for ``CMDTEST_*.rb`` files in the following places:
 
 1) first ``t/CMDTEST_*.rb``
 
-2) otherwise ``CMDTEST_*.rb``
+2) second ``test/CMDTEST_*.rb``
+
+3) otherwise ``CMDTEST_*.rb``
 
 If some command line arguments have been given, ``cmdtest`` will use
 them instead of searching by itself. Some examples::
@@ -233,6 +235,27 @@ them instead of searching by itself. Some examples::
   $ cmdtest CMDTEST_foo.rb CMDTEST_bar.rb    # two files
   $ cmdtest t                                # all CMDTEST_*.rb files in "t" dir
   $ cmdtest . t                              # all CMDTEST_*.rb files in both dirs
+
+In addition to test files, the command line can also contain options
+and testcase selectors. The general format is::
+
+  $ cmdtest [options] [files] [selectors]
+
+The options are describe in a separate section below. The selectors are
+regular expressions that are used to match the names of the test
+methods. It is best illustrated by an example::
+
+  $ cmdtest examples "/stdin|stdout/"
+
+This command will find all files matching ``examples/CMDTEST_*.rb``,
+and run all test methods whose names either contain the string "stdin"
+or "stdout". As can be seen in the example, the regular expression may
+need protection from expansion by the shell (that is the reason for
+the quotes in the example). But the example can also be written::
+
+  $ cmdtest examples /stdin/ /stdout/
+
+For more examples of command line usage, see the section `Commandline Examples`_ below.
 
 
 Options
@@ -264,6 +287,38 @@ Options
     Run in "incremental" mode. **experimental**
     Cmdtest will try to run only those test methods that are failed or
     have changed since last time.
+
+
+Commandline Examples
+++++++++++++++++++++
+
+This section is a collection of examples of how Cmdtest can be used. ::
+
+  $ cmdtest
+
+This is the most basic usage. All testcase files found (by the
+algorithm described earlier) will be executed. ::
+
+  $ cmdtest -i
+
+Only run the test methods that have failed earlier, or have changed.
+This is not a full-blown "make system", but may still be useful when
+developing the tests. ::
+
+  $ cmdtest /stdout/
+
+Run all test methods matching the regular expression given. ::
+
+  $ cmdtest examples
+
+Run all tests found in test files in the "examples" directory
+(i.e. ``examples/CMDTEST_*.rb``). ::
+
+  $ cmdtest --xml=reports/test-foo.xml
+
+Write an XML-summary to the specified file. The file uses the same
+format as JUnit_, so it can be understood be continuous integration
+servers such as Hudson_.
 
 Reference Part
 --------------

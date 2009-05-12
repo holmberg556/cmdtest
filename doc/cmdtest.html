@@ -307,15 +307,16 @@ ul.auto-toc {
 <li><a class="reference internal" href="#matching-standard-output-content" id="id7">Matching standard output content</a></li>
 <li><a class="reference internal" href="#invoking-cmdtest" id="id8">Invoking <tt class="docutils literal"><span class="pre">cmdtest</span></tt></a><ul>
 <li><a class="reference internal" href="#options" id="id9">Options</a></li>
+<li><a class="reference internal" href="#commandline-examples" id="id10">Commandline Examples</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#reference-part" id="id10">Reference Part</a><ul>
-<li><a class="reference internal" href="#cmd" id="id11">cmd</a></li>
-<li><a class="reference internal" href="#assertions-exit-status" id="id12">Assertions - exit status</a></li>
-<li><a class="reference internal" href="#assertions-files" id="id13">Assertions - files</a></li>
-<li><a class="reference internal" href="#assertions-stdout-stderr-file-content" id="id14">Assertions - stdout/stderr/file content</a></li>
-<li><a class="reference internal" href="#assertions-misc" id="id15">Assertions - misc</a></li>
-<li><a class="reference internal" href="#helper-functions" id="id16">Helper functions</a></li>
+<li><a class="reference internal" href="#reference-part" id="id11">Reference Part</a><ul>
+<li><a class="reference internal" href="#cmd" id="id12">cmd</a></li>
+<li><a class="reference internal" href="#assertions-exit-status" id="id13">Assertions - exit status</a></li>
+<li><a class="reference internal" href="#assertions-files" id="id14">Assertions - files</a></li>
+<li><a class="reference internal" href="#assertions-stdout-stderr-file-content" id="id15">Assertions - stdout/stderr/file content</a></li>
+<li><a class="reference internal" href="#assertions-misc" id="id16">Assertions - misc</a></li>
+<li><a class="reference internal" href="#helper-functions" id="id17">Helper functions</a></li>
 </ul>
 </li>
 </ul>
@@ -520,6 +521,7 @@ for string equality</li>
 for <tt class="docutils literal"><span class="pre">CMDTEST_*.rb</span></tt> files in the following places:</p>
 <ol class="arabic simple">
 <li>first <tt class="docutils literal"><span class="pre">t/CMDTEST_*.rb</span></tt></li>
+<li>second <tt class="docutils literal"><span class="pre">test/CMDTEST_*.rb</span></tt></li>
 <li>otherwise <tt class="docutils literal"><span class="pre">CMDTEST_*.rb</span></tt></li>
 </ol>
 <p>If some command line arguments have been given, <tt class="docutils literal"><span class="pre">cmdtest</span></tt> will use
@@ -530,6 +532,26 @@ $ cmdtest CMDTEST_foo.rb CMDTEST_bar.rb    # two files
 $ cmdtest t                                # all CMDTEST_*.rb files in &quot;t&quot; dir
 $ cmdtest . t                              # all CMDTEST_*.rb files in both dirs
 </pre>
+<p>In addition to test files, the command line can also contain options
+and testcase selectors. The general format is:</p>
+<pre class="literal-block">
+$ cmdtest [options] [files] [selectors]
+</pre>
+<p>The options are describe in a separate section below. The selectors are
+regular expressions that are used to match the names of the test
+methods. It is best illustrated by an example:</p>
+<pre class="literal-block">
+$ cmdtest examples &quot;/stdin|stdout/&quot;
+</pre>
+<p>This command will find all files matching <tt class="docutils literal"><span class="pre">examples/CMDTEST_*.rb</span></tt>,
+and run all test methods whose names either contain the string &quot;stdin&quot;
+or &quot;stdout&quot;. As can be seen in the example, the regular expression may
+need protection from expansion by the shell (that is the reason for
+the quotes in the example). But the example can also be written:</p>
+<pre class="literal-block">
+$ cmdtest examples /stdin/ /stdout/
+</pre>
+<p>For more examples of command line usage, see the section <a class="reference internal" href="#commandline-examples">Commandline Examples</a> below.</p>
 <div class="section" id="options">
 <h2><a class="toc-backref" href="#id9">Options</a></h2>
 <table class="docutils option-list" frame="void" rules="none">
@@ -566,11 +588,41 @@ have changed since last time.</td></tr>
 </tbody>
 </table>
 </div>
+<div class="section" id="commandline-examples">
+<h2><a class="toc-backref" href="#id10">Commandline Examples</a></h2>
+<p>This section is a collection of examples of how Cmdtest can be used.</p>
+<pre class="literal-block">
+$ cmdtest
+</pre>
+<p>This is the most basic usage. All testcase files found (by the
+algorithm described earlier) will be executed.</p>
+<pre class="literal-block">
+$ cmdtest -i
+</pre>
+<p>Only run the test methods that have failed earlier, or have changed.
+This is not a full-blown &quot;make system&quot;, but may still be useful when
+developing the tests.</p>
+<pre class="literal-block">
+$ cmdtest /stdout/
+</pre>
+<p>Run all test methods matching the regular expression given.</p>
+<pre class="literal-block">
+$ cmdtest examples
+</pre>
+<p>Run all tests found in test files in the &quot;examples&quot; directory
+(i.e. <tt class="docutils literal"><span class="pre">examples/CMDTEST_*.rb</span></tt>).</p>
+<pre class="literal-block">
+$ cmdtest --xml=reports/test-foo.xml
+</pre>
+<p>Write an XML-summary to the specified file. The file uses the same
+format as <a class="reference external" href="http://en.wikipedia.org/wiki/JUnit">JUnit</a>, so it can be understood be continuous integration
+servers such as <a class="reference external" href="https://hudson.dev.java.net">Hudson</a>.</p>
+</div>
 </div>
 <div class="section" id="reference-part">
-<h1><a class="toc-backref" href="#id10">Reference Part</a></h1>
+<h1><a class="toc-backref" href="#id11">Reference Part</a></h1>
 <div class="section" id="cmd">
-<h2><a class="toc-backref" href="#id11">cmd</a></h2>
+<h2><a class="toc-backref" href="#id12">cmd</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">cmd</span></tt> method is the central method of the whole Cmdtest framework.
 It should always be called with a block like this:</p>
 <pre class="literal-block">
@@ -597,7 +649,7 @@ end
 <p>See also the example in the <a class="reference internal" href="#structure-of-a-test-method">Structure of a test-method</a> section above.</p>
 </div>
 <div class="section" id="assertions-exit-status">
-<h2><a class="toc-backref" href="#id12">Assertions - exit status</a></h2>
+<h2><a class="toc-backref" href="#id13">Assertions - exit status</a></h2>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">exit_nonzero</span></tt></dt>
 <dd>The command should have exited with a non-zero exit status (i.e. it
@@ -611,7 +663,7 @@ exit-related methods have been called.</dd>
 </dl>
 </div>
 <div class="section" id="assertions-files">
-<h2><a class="toc-backref" href="#id13">Assertions - files</a></h2>
+<h2><a class="toc-backref" href="#id14">Assertions - files</a></h2>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">affected_files(file1,...,fileN)</span></tt></dt>
 <dd>The specified files should have been created, removed or modified by the
@@ -637,7 +689,7 @@ case special (when the file is created).</dd>
 </dl>
 </div>
 <div class="section" id="assertions-stdout-stderr-file-content">
-<h2><a class="toc-backref" href="#id14">Assertions - stdout/stderr/file content</a></h2>
+<h2><a class="toc-backref" href="#id15">Assertions - stdout/stderr/file content</a></h2>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">file_equal(file,</span> <span class="pre">content)</span></tt></dt>
 <dd>Assert that the specified file matches the given content.
@@ -661,7 +713,7 @@ For more details and examples see the section &quot;Matching standard output con
 </dl>
 </div>
 <div class="section" id="assertions-misc">
-<h2><a class="toc-backref" href="#id15">Assertions - misc</a></h2>
+<h2><a class="toc-backref" href="#id16">Assertions - misc</a></h2>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">assert(flag,</span> <span class="pre">msg=nil)</span></tt></dt>
 <dd>Assert that <tt class="docutils literal"><span class="pre">flag</span></tt> is true. This assertion is a last resort, when no other
@@ -672,7 +724,7 @@ interval given as argument.</dd>
 </dl>
 </div>
 <div class="section" id="helper-functions">
-<h2><a class="toc-backref" href="#id16">Helper functions</a></h2>
+<h2><a class="toc-backref" href="#id17">Helper functions</a></h2>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">create_file(filename,</span> <span class="pre">content)</span></tt></dt>
 <dd>Create a file inside the &quot;work directory&quot;.
@@ -711,7 +763,7 @@ time of the call.</dd>
 <div class="footer">
 <hr class="footer" />
 <a class="reference external" href="cmdtest.txt">View document source</a>.
-Generated on: 2009-05-10.
+Generated on: 2009-05-12.
 Generated by <a class="reference external" href="http://docutils.sourceforge.net/">Docutils</a> from <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> source.
 
 </div>
