@@ -247,9 +247,15 @@ while /^-/ =~ ARGV[0]
     end
 end
 
-ENV["PATH"] = (File.expand_path("t/bin") +
-                   Config::CONFIG["PATH_SEPARATOR"] +
-                   ENV["PATH"])
+path_dirs = [ File.expand_path("t/bin") ]
+if RUBY_PLATFORM =~ /mswin/
+    path_dirs.unshift File.expand_path("t/bin/windows")
+end
+
+ENV["PATH"] = [
+    path_dirs,
+    ENV["PATH"]
+].join(Config::CONFIG["PATH_SEPARATOR"])
 
 files = ARGV.empty? ? Dir.glob("t/*.rb") : ARGV
 rd = RegressionData.new(files)
