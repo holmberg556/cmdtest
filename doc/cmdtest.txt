@@ -185,6 +185,43 @@ Several of the assertions and helper functions take filename arguments
 that are evaluated relative to the "work directory" (or sometimes the
 current directory if they differ).
 
+Specifying files / directories
+------------------------------
+
+Several methods take files or directories as argument (e.g.
+``created_files``, ``modified_files`` and ``ignore_file``). Instead of
+having two sets of methods, one for files and one for directories, an
+argument with a trailing "/" denotes a directory::
+
+    create_files "build/"       # the directory "build"
+    create_files "build"        # the file "build"
+
+    ignore_file "build/"        # the directory "build" (and everything below)
+    ignore_file "build"         # the file "build"
+
+As can be seen in the example above, the ``ignore_file`` method is
+special, because an ignored directory means that all files below the directory are
+ignored too. Another peculiarity with ``ignore_file`` is that the
+argument can be a Regexp::
+
+    ignore_file /\.o$/          # all files *.o
+
+This is quite natural, since the "job" of ``ignore_file`` is to single
+out a subset of all files.
+ 
+PATH handling
+-------------
+
+Cmdtest is used to test commands, so an important question is how the
+commands are found and executed. Normally commands are found via the
+``PATH`` environment variable, and Cmdtest is no exception. The commands
+executed in the ``cmd`` calls are evaluated in a shell script (on
+UN*X) or in a BAT file (on Windows). The ``PATH`` in effect when
+``cmdtest`` is invoked is kept intact, with one addition: the current
+directory at the time of invocation is prepended to the ``PATH``.  If
+further changes to the ``PATH`` are needed the methods ``prepend_path`` or
+``prepend_local_path`` can be used.
+
 Matching standard output content
 --------------------------------
 
@@ -448,6 +485,7 @@ Helper functions
 
 ``ignore_file(file)``
     Ignore the specified file when looking for differences in the filesystem.
+    A subdirectory can be ignored by giving a trailing "/" to the name.
 
 ``ignore_files(file1, ..., fileN)``
     Ignore the specified files when looking for differences in the filesystem.
