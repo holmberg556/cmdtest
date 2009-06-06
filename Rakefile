@@ -1,3 +1,4 @@
+# -*- ruby -*-
 
 desc "run regression tests"
 task "test" do
