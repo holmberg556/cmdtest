@@ -116,6 +116,20 @@ module Cmdtest
     end
 
     #------------------------------
+    # A "chdir" to be used in tests, to avoid the Ruby warning:
+    #
+    #    warning: conflicting chdir during another chdir block
+    #
+
+    def chdir(dir, &block)
+      if block_given?
+        Util.chdir(dir, &block)
+      else
+        Dir.chdir(dir)
+      end
+    end
+
+    #------------------------------
     # Don't count the specified file when calculating the "side effects"
     # of a command.
 
