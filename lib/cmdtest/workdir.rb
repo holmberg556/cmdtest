@@ -69,7 +69,7 @@ module Cmdtest
     end
 
     def _shell
-      _windows ? "cmd /Q /c" : "sh"
+      _windows ? "cmd /Q /c" : "/bin/sh"
     end
 
     def _tmp_command_sh

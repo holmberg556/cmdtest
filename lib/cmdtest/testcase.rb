@@ -68,7 +68,7 @@ module Cmdtest
       @_work_dir = Workdir.new(runner)
       @_in_cmd = false
       @_comment_str = nil
-      @_prepend_path_dirs = []
+      @_env_path = @_runner.orig_env_path
       @_t1 = @_t2 = 0
     end
 
@@ -153,7 +153,7 @@ module Cmdtest
     # was started.
 
     def prepend_path(dir)
-      @_prepend_path_dirs.unshift(File.expand_path(dir, @_runner.orig_cwd))
+      @_env_path.unshift(File.expand_path(dir, @_runner.orig_cwd))
     end
 
     #------------------------------
@@ -162,7 +162,13 @@ module Cmdtest
     # of the call was started.
 
     def prepend_local_path(dir)
-      @_prepend_path_dirs.unshift(File.expand_path(dir, Dir.pwd))
+      @_env_path.unshift(File.expand_path(dir, Dir.pwd))
+    end
+
+    #------------------------------
+
+    def set_path(*dirs)
+      @_env_path = dirs.flatten
     end
 
     #==============================
@@ -515,7 +521,7 @@ module Cmdtest
 
       @_runner.notify("cmdline", @_cmdline, @_comment_str)
       @_comment_str = nil
-      @_runner.prepend_path_dirs(@_prepend_path_dirs)
+      @_runner.set_env_path(@_env_path)
       @_t1 = Time.now
       @_effects = @_work_dir.run_cmd(@_cmdline)
       @_t2 = Time.now

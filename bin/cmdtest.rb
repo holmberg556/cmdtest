@@ -186,17 +186,21 @@ module Cmdtest
       Config::CONFIG["PATH_SEPARATOR"] || ":"
     end
 
-    def prepend_path_dirs(full_path_dirs)
-      new_env_path = (full_path_dirs + [@orig_envpath]).join(_path_separator)
-      if new_env_path != ENV["PATH"]
-        ENV["PATH"] = new_env_path
+    def orig_env_path
+      @orig_env_path
+    end
+
+    def set_env_path(path_arr)
+      path_str = path_arr.join(_path_separator)
+      if path_str != ENV["PATH"]
+        ENV["PATH"] = path_str
       end
     end
 
     def run
       @orig_cwd = Dir.pwd
       ENV["PATH"] = Dir.pwd + _path_separator + ENV["PATH"]
-      @orig_envpath = ENV["PATH"]
+      @orig_env_path = ENV["PATH"].split(_path_separator)
       @n_assert_failures  = 0
       @n_assert_errors    = 0
       @n_assert_successes = 0
