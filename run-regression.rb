@@ -331,7 +331,7 @@ for prefix, code, stdout in tests
         f.puts lines
     end
 
-    res = my_system "ruby -w bin/cmdtest.rb --quiet --ruby_s CMDTEST_tmp_regression.rb"
+    res = my_system "ruby -w bin/cmdtest.rb --no-exit-code --quiet --ruby_s CMDTEST_tmp_regression.rb"
     if res.status != 0
         puts "ERROR: non-zero exit from:"
         puts lines
