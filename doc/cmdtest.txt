@@ -478,6 +478,8 @@ Helper functions
 
 ``create_file(filename, content)``
     Create a file inside the "work directory".
+    If the filename contains a directory part, intermediate directories are
+    created if needed.
     The content can be specified either as an array of lines or as
     a string with the content of the whole file.
     The filename is evaluated relative to the current directory at the
