@@ -208,6 +208,10 @@ module Cmdtest
       @method_filter.write
     end
 
+    def everything_ok?
+      @n_assert_errors == 0 && @n_assert_failures == 0
+    end
+
     def assert_success
       @n_assert_successes += 1
     end
@@ -298,6 +302,7 @@ module Cmdtest
       @verbose = false
       @fast = false
       @xml = nil
+      @set_exit_code = true
       @ruby_s = false
       @incremental = false
       @patterns = []
@@ -320,6 +325,8 @@ module Cmdtest
           @fast = true
         when opt =~ /^--xml=(.+)$/
           @xml = $1
+        when opt =~ /^--no-exit-code$/
+          @set_exit_code = false
         when opt =~ /^--ruby_s$/
           @ruby_s = true
         when opt =~ /^-r$/
@@ -364,6 +371,8 @@ module Cmdtest
       end
 
       @runner.run
+      error_exit = @set_exit_code && ! @runner.everything_ok?
+      exit( error_exit ? 1 : 0 )
     end
 
     private
@@ -382,6 +391,7 @@ module Cmdtest
       puts "  --fast            run fast without waiting for unique mtime:s"
       puts "  --test=NAME       only run named test"
       puts "  --xml=FILE        write summary on JUnit format"
+      puts "  --no-exit-code    exit with 0 status even after errors"
       puts "  -i                incremental mode"
     end
 
