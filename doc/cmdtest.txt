@@ -102,6 +102,10 @@ Cmdtest can also be directed to write an XML file on the same format as
 that used by Ant/JUnit. This makes it possible to use Cmdtest together
 with `continuous integration`_ servers like Hudson_.
 
+The exit status of ``cmdtest`` will be non-zero if some errors occurred,
+otherwise zero.  If errors should not affect exit code, the
+command line option ``--no-exit-code`` can be used.
+
 Structure of a test-file
 ------------------------
 
@@ -219,8 +223,10 @@ executed in the ``cmd`` calls are evaluated in a shell script (on
 UN*X) or in a BAT file (on Windows). The ``PATH`` in effect when
 ``cmdtest`` is invoked is kept intact, with one addition: the current
 directory at the time of invocation is prepended to the ``PATH``.  If
-further changes to the ``PATH`` are needed the methods ``prepend_path`` or
-``prepend_local_path`` can be used.
+further changes to the ``PATH`` are needed the methods ``prepend_path``,
+``prepend_local_path`` or ``set_path`` can be used. Such path modifications
+does not survive between test methods. Each new test method starts with the
+original value of ``PATH``.
 
 Matching standard output content
 --------------------------------
@@ -319,6 +325,9 @@ Options
     Write summary on JUnit XML format.
     Useful when running under a continuous integration server that
     understands JUnit reports.
+
+--no-exit-code
+    Do not exit with a non-zero exit code if errors occurred.
 
 -i
     Run in "incremental" mode. **experimental**
@@ -511,6 +520,10 @@ Helper functions
     where the executable tested is located. The argument ``dir`` is evaluated
     relative to the current directory  in effect when ``cmdtest`` was invoked.
 
+``set_path(dir1, ..., dirN)``
+    Set ``PATH`` to the given directories, so commands executed via ``cmd``
+    are looked up using the modified ``PATH``. This method sets the whole ``PATH``
+    rather than modifying it (in contrast to ``prepend_path`` and ``prepend_local_path``).
 
 ``touch_file(filename)``
     "touch" a file inside the "work directory".

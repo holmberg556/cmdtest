@@ -412,6 +412,9 @@ skipped. But all errors occurring at the same command will be reported.</p>
 <p>Cmdtest can also be directed to write an XML file on the same format as
 that used by Ant/JUnit. This makes it possible to use Cmdtest together
 with <a class="reference external" href="http://en.wikipedia.org/wiki/Continuous_integration">continuous integration</a> servers like <a class="reference external" href="https://hudson.dev.java.net">Hudson</a>.</p>
+<p>The exit status of <tt class="docutils literal"><span class="pre">cmdtest</span></tt> will be non-zero if some errors occurred,
+otherwise zero.  If errors should not affect exit code, the
+command line option <tt class="docutils literal"><span class="pre">--no-exit-code</span></tt> can be used.</p>
 </div>
 <div class="section" id="structure-of-a-test-file">
 <h1><a class="toc-backref" href="#id4">Structure of a test-file</a></h1>
@@ -521,8 +524,10 @@ executed in the <tt class="docutils literal"><span class="pre">cmd</span></tt> c
 UN*X) or in a BAT file (on Windows). The <tt class="docutils literal"><span class="pre">PATH</span></tt> in effect when
 <tt class="docutils literal"><span class="pre">cmdtest</span></tt> is invoked is kept intact, with one addition: the current
 directory at the time of invocation is prepended to the <tt class="docutils literal"><span class="pre">PATH</span></tt>.  If
-further changes to the <tt class="docutils literal"><span class="pre">PATH</span></tt> are needed the methods <tt class="docutils literal"><span class="pre">prepend_path</span></tt> or
-<tt class="docutils literal"><span class="pre">prepend_local_path</span></tt> can be used.</p>
+further changes to the <tt class="docutils literal"><span class="pre">PATH</span></tt> are needed the methods <tt class="docutils literal"><span class="pre">prepend_path</span></tt>,
+<tt class="docutils literal"><span class="pre">prepend_local_path</span></tt> or <tt class="docutils literal"><span class="pre">set_path</span></tt> can be used. Such path modifications
+does not survive between test methods. Each new test method starts with the
+original value of <tt class="docutils literal"><span class="pre">PATH</span></tt>.</p>
 </div>
 <div class="section" id="matching-standard-output-content">
 <h1><a class="toc-backref" href="#id9">Matching standard output content</a></h1>
@@ -617,6 +622,9 @@ all side-effects of commands.</td></tr>
 <td>Write summary on JUnit XML format.
 Useful when running under a continuous integration server that
 understands JUnit reports.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--no-exit-code</span></kbd></td>
+<td>Do not exit with a non-zero exit code if errors occurred.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-i</span></kbd></td>
 <td>Run in &quot;incremental&quot; mode. <strong>experimental</strong>
@@ -765,6 +773,8 @@ interval given as argument.</dd>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">create_file(filename,</span> <span class="pre">content)</span></tt></dt>
 <dd>Create a file inside the &quot;work directory&quot;.
+If the filename contains a directory part, intermediate directories are
+created if needed.
 The content can be specified either as an array of lines or as
 a string with the content of the whole file.
 The filename is evaluated relative to the current directory at the
@@ -790,6 +800,10 @@ relative to the current directory in effect at the time of the call
 are looked up using the modified <tt class="docutils literal"><span class="pre">PATH</span></tt>. A typical use is to add the directory
 where the executable tested is located. The argument <tt class="docutils literal"><span class="pre">dir</span></tt> is evaluated
 relative to the current directory  in effect when <tt class="docutils literal"><span class="pre">cmdtest</span></tt> was invoked.</dd>
+<dt><tt class="docutils literal"><span class="pre">set_path(dir1,</span> <span class="pre">...,</span> <span class="pre">dirN)</span></tt></dt>
+<dd>Set <tt class="docutils literal"><span class="pre">PATH</span></tt> to the given directories, so commands executed via <tt class="docutils literal"><span class="pre">cmd</span></tt>
+are looked up using the modified <tt class="docutils literal"><span class="pre">PATH</span></tt>. This method sets the whole <tt class="docutils literal"><span class="pre">PATH</span></tt>
+rather than modifying it (in contrast to <tt class="docutils literal"><span class="pre">prepend_path</span></tt> and <tt class="docutils literal"><span class="pre">prepend_local_path</span></tt>).</dd>
 <dt><tt class="docutils literal"><span class="pre">touch_file(filename)</span></tt></dt>
 <dd>&quot;touch&quot; a file inside the &quot;work directory&quot;.
 The filename is evaluated relative to the current directory at the
@@ -801,7 +815,7 @@ time of the call.</dd>
 <div class="footer">
 <hr class="footer" />
 <a class="reference external" href="cmdtest.txt">View document source</a>.
-Generated on: 2009-05-27.
+Generated on: 2009-11-19.
 Generated by <a class="reference external" href="http://docutils.sourceforge.net/">Docutils</a> from <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> source.
 
 </div>
