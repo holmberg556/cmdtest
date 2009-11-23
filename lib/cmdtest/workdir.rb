@@ -69,7 +69,12 @@ module Cmdtest
     end
 
     def _shell
-      _windows ? "cmd /Q /c" : "/bin/sh"
+      if _windows
+        cmd_exe = ENV["COMSPEC"] || "cmd.exe"
+        "#{cmd_exe} /Q /c"
+      else
+        "/bin/sh"
+      end
     end
 
     def _tmp_command_sh
