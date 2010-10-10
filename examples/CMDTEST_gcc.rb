@@ -223,4 +223,85 @@ class CMDTEST_gcc < Cmdtest::Testcase
 
   #----------------------------------------
 
+  def test_defines
+
+    create_file "alpha.c", [
+      "#ifndef AAA",
+      "#define AAA aaa_in_file",
+      "#endif",
+      "#ifndef BBB",
+      "#define BBB bbb_in_file",
+      "#endif",
+      "AAA --- BBB",
+    ]
+
+    cmd "gcc -E alpha.c" do
+      stdout_equal /^aaa_in_file --- bbb_in_file/
+    end
+
+    cmd "gcc -DAAA=aaa_option -E alpha.c" do
+      stdout_equal /^aaa_option --- bbb_in_file/
+    end
+
+    cmd "gcc -DAAA=aaa_option -DBBB=bbb_option -E alpha.c" do
+      stdout_equal /^aaa_option --- bbb_option/
+    end
+
+  end
+
+  #----------------------------------------
+
+  def test_includes
+
+    create_file "alpha.c", [
+      "#include <alpha.h>",
+    ]
+
+    create_file "dir1/alpha.h", "this_is_dir1"
+    create_file "dir2/alpha.h", "this_is_dir2"
+
+    cmd "gcc -Idir1 -E alpha.c" do
+      stdout_equal /this_is_dir1/
+    end
+
+    cmd "gcc -Idir2 -E alpha.c" do
+      stdout_equal /this_is_dir2/
+    end
+
+    cmd "gcc -Idir1 -Idir2 -E alpha.c" do
+      stdout_equal /this_is_dir1/
+    end
+
+    cmd "gcc -Idir2 -Idir1 -E alpha.c" do
+      stdout_equal /this_is_dir2/
+    end
+
+    create_file "beta.c", [
+      "#include <beta1.h>",
+      "#include <beta2.h>",
+      "#include <beta12.h>",
+    ]
+
+    create_file "dir1/beta1.h", "dir1_beta1_h"
+    create_file "dir1/beta12.h", "dir1_beta12_h"
+
+    create_file "dir2/beta2.h", "dir2_beta2_h"
+    create_file "dir2/beta12.h", "dir2_beta12_h"
+
+    cmd "gcc -Idir1 -Idir2 -E beta.c" do
+      stdout_equal /dir1_beta1_h/
+      stdout_equal /dir1_beta12_h/
+      stdout_equal /dir2_beta2_h/
+    end
+
+    cmd "gcc -Idir2 -Idir1 -E beta.c" do
+      stdout_equal /dir1_beta1_h/
+      stdout_equal /dir2_beta12_h/
+      stdout_equal /dir2_beta2_h/
+    end
+
+  end
+
+  #----------------------------------------
+
 end
