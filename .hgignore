@@ -1,0 +1,12 @@
+# use glob syntax.
+syntax: glob
+*~
+.cmdtest-filter
+CMDTEST_tmp_regression.rb
+TC_actual-regression.rb
+actual-regression.rb
+already_ok.db
+build
+tmp-cmdtest-1
+tmp-stderr
+tmp-stdout
