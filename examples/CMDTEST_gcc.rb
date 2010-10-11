@@ -29,6 +29,10 @@ class CMDTEST_gcc < Cmdtest::Testcase
     ENV["CMDTEST_GCC_TO_TEST"] || "gcc"
   end
 
+  def gxx
+    ENV["CMDTEST_GXX_TO_TEST"] || "g++"
+  end
+
   #----------------------------------------
 
   def test_no_arguments
@@ -398,6 +402,61 @@ class CMDTEST_gcc < Cmdtest::Testcase
       stdout_equal /dir1_beta1_h/
       stdout_equal /dir2_beta12_h/
       stdout_equal /dir2_beta2_h/
+    end
+
+  end
+
+  #----------------------------------------
+
+  def test_gcc_vs_gxx
+
+    simple_cxx = [
+      "#include <iostream>",
+      "int main() { std::cout << \"hello\" << std::endl; return 0; }",
+    ]
+    create_file "alpha.c", simple_cxx
+    create_file "alpha.cpp", simple_cxx
+
+    cmd "#{gcc} -c alpha.c" do
+      stderr_equal /iostream/
+      exit_nonzero
+    end
+
+    cmd "#{gcc} -c alpha.cpp" do
+      created_files "alpha.o"
+    end
+
+    cmd "#{gxx} -c alpha.c" do
+      written_files "alpha.o"
+    end
+
+    cmd "#{gxx} -c alpha.cpp" do
+      written_files "alpha.o"
+    end
+
+  end
+
+  #----------------------------------------
+
+  def test_gcc_vs_gxx_linking
+
+    simple_cxx = [
+      "#include <iostream>",
+      "int main() { std::cout << \"hello\" << std::endl; return 0; }",
+    ]
+    create_file "alpha.cpp", simple_cxx
+
+    cmd "#{gxx} -c alpha.cpp" do
+      written_files "alpha.o"
+    end
+
+    cmd "#{gcc} alpha.o" do
+      stderr_equal /main/
+      exit_nonzero
+    end
+
+    cmd "#{gxx} alpha.o" do
+      written_files "a.out"
     end
 
   end
