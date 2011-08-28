@@ -187,7 +187,7 @@ module Cmdtest
     end
 
     def orig_env_path
-      @orig_env_path
+      @orig_env_path.dup
     end
 
     def set_env_path(path_arr)
