@@ -90,6 +90,14 @@ module Cmdtest
       File.join(Workdir.tmp_cmdtest_dir, "tmp-stderr.log")
     end
 
+    def _set_env_path_str(env_path)
+      if _windows
+        "set path=" + env_path.join(";")
+      else
+        "export PATH=" + env_path.join(":")
+      end
+    end
+
     def _ruby_S(cmdline)
       if @runner.opts.ruby_s
         if cmdline =~ /ruby/
@@ -102,8 +110,9 @@ module Cmdtest
       end
     end
 
-    def run_cmd(cmdline)
+    def run_cmd(cmdline, env_path)
       File.open(_tmp_command_sh, "w") do |f|
+        f.puts _set_env_path_str(env_path)
         f.puts _ruby_S(cmdline)
       end
       str = "%s %s  > %s  2> %s" % [

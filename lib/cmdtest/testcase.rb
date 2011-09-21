@@ -521,9 +521,8 @@ module Cmdtest
 
       @_runner.notify("cmdline", @_cmdline, @_comment_str)
       @_comment_str = nil
-      @_runner.set_env_path(@_env_path)
       @_t1 = Time.now
-      @_effects = @_work_dir.run_cmd(@_cmdline)
+      @_effects = @_work_dir.run_cmd(@_cmdline, @_env_path)
       @_t2 = Time.now
 
       @_checked_status = false
