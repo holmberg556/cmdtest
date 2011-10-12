@@ -194,6 +194,10 @@ module Cmdtest
       @orig_cwd = Dir.pwd
       ENV["PATH"] = Dir.pwd + _path_separator + ENV["PATH"]
       @orig_env_path = ENV["PATH"].split(_path_separator)
+
+      # find local files "required" by testcase files
+      $LOAD_PATH.unshift(@project_dir.test_files_dir)
+
       @n_assert_failures  = 0
       @n_assert_errors    = 0
       @n_assert_successes = 0
@@ -230,9 +234,20 @@ module Cmdtest
 
     def initialize(argv)
       @argv = argv
+      @test_files = nil
     end
 
     def test_files
+      @test_files ||= _fs_test_files
+    end
+
+    def test_files_dir
+      File.dirname(test_files[0].path)
+    end
+
+    private
+
+    def _fs_test_files
       if ! @argv.empty?
         files = _expand_files_or_dirs(@argv)
         if files.empty?
@@ -254,8 +269,6 @@ module Cmdtest
       puts "ERROR: no CMDTEST_*.rb files found"
       exit 1
     end
-
-    private
 
     def _test_files(files)
       files.map {|file| TestFile.new(file) }
