@@ -81,7 +81,7 @@ module Cmdtest
       method_signatures = {}
       lines = File.readlines(file)
       klass  = klass_indent  = klass_i  = nil
-      method = method_indent = method_i = nil
+      methods = method_indent = method_i = nil
 
       lines.each_with_index do |line, i|
         case
@@ -96,17 +96,25 @@ module Cmdtest
           klass = nil
           klass_indent = nil
 
-        when klass && line =~ /^(#{klass_indent}\s+)def\s+(test_\w+)\b/ #...
-          method = $2
+        when klass && line =~ /^(#{klass_indent}\s+)## methods: (.*)$/ #...
+          methods = $2.split
           method_indent = $1
           method_i = i
-          ## p [:method_begin, method]
+          ## p [:method_begin, methods]
 
-        when klass && method && line =~ /^#{method_indent}end\b/ #...
-          ## p [:method_end, method]
-          key = _method_key(file, klass, method)
-          method_signatures[key] = _method_signature(lines[method_i..i])
-          method = nil
+        when klass && line =~ /^(#{klass_indent}\s+)def\s+(test_\w+)\b/ #...
+          methods = [$2]
+          method_indent = $1
+          method_i = i
+          ## p [:method_begin, methods]
+
+        when klass && methods && line =~ /^#{method_indent}end\b/ #...
+          ## p [:method_end, methods]
+          for method in methods
+            key = _method_key(file, klass, method)
+            method_signatures[key] = _method_signature(lines[method_i..i])
+          end
+          methods = nil
           method_indent = nil
         end
       end
