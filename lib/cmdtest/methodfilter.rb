@@ -126,7 +126,7 @@ module Cmdtest
     end
 
     def _method_key(file, klass, method)
-      file + ":" + klass + "." + method
+      file + ":" + klass + "." + method.to_s
     end
 
   end
