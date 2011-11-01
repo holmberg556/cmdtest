@@ -30,22 +30,22 @@ module Cmdtest
       @@opts = opts
     end
 
-    def self._timestamp_file
-      File.join(Workdir.tmp_cmdtest_dir, "TIMESTAMP")
+    def self._timestamp_file(tmp_dir)
+      File.join(tmp_dir, "TIMESTAMP")
     end
 
-    def self.wait_for_new_second
+    def self.wait_for_new_second(tmp_dir, tmp_work_dir)
       return if ! TRUST_MTIME || @@opts.fast
       loop do
-        File.open(_timestamp_file, "w") {|f| f.puts Time.now }
-        break if File.mtime(_timestamp_file) != _newest_file_time
+        File.open(_timestamp_file(tmp_dir), "w") {|f| f.puts Time.now }
+        break if File.mtime(_timestamp_file(tmp_dir)) != _newest_file_time(tmp_work_dir)
         sleep 0.2
       end
     end
 
-    def self._newest_file_time
+    def self._newest_file_time(tmp_work_dir)
       tnew = Time.at(0)
-      Find.find(Workdir.tmp_work_dir) do |path|
+      Find.find(tmp_work_dir) do |path|
         next if ! File.file?(path)
         t = File.mtime(path)
         tnew = t > tnew ? t : tnew

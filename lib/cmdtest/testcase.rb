@@ -60,16 +60,32 @@ module Cmdtest
     
     #------------------------------
 
+    ORIG_CWD = Dir.pwd
+
     attr_reader :_work_dir
 
     def initialize(test_method, runner)
       @_test_method = test_method
       @_runner = runner
-      @_work_dir = Workdir.new(runner)
+      @_work_dir = Workdir.new(self, runner)
       @_in_cmd = false
       @_comment_str = nil
       @_env_path = @_runner.orig_env_path
       @_t1 = @_t2 = 0
+    end
+
+    #------------------------------
+
+    def tmp_cmdtest_dir
+      File.join(ORIG_CWD, "tmp-cmdtest-%d" % [$cmdtest_level])
+    end
+
+    def tmp_dir
+      File.join(tmp_cmdtest_dir, @_test_method.as_filename)
+    end
+
+    def tmp_work_dir
+      File.join(tmp_dir, "work")
     end
 
     #------------------------------
@@ -79,7 +95,7 @@ module Cmdtest
     # the current directory at the time of the call.
 
     def import_file(src, tgt)
-      src_path = File.expand_path(src, Workdir::ORIG_CWD)
+      src_path = File.expand_path(src, ORIG_CWD)
       tgt_path = tgt            # rely on CWD
       FileUtils.mkdir_p(File.dirname(tgt_path))
       FileUtils.cp(src_path, tgt_path)
@@ -93,7 +109,7 @@ module Cmdtest
     # time of the call.
 
     def create_file(filename, lines)
-      #Util.wait_for_new_second
+      #_wait_for_new_second
       FileUtils.mkdir_p( File.dirname(filename) )
       File.open(filename, "w") do |f|
         case lines
@@ -111,7 +127,7 @@ module Cmdtest
     # time of the call.
 
     def touch_file(filename)
-      #Util.wait_for_new_second
+      #_wait_for_new_second
       FileUtils.touch(filename)
     end
 
@@ -571,11 +587,17 @@ module Cmdtest
 
     #------------------------------
 
+    def _wait_for_new_second
+      Util.wait_for_new_second(tmp_dir, tmp_work_dir)
+    end
+
+    #------------------------------
+
     def cmd(cmdline)
       if Array === cmdline
         cmdline = _args_to_quoted_string(cmdline)
       end
-      Util.wait_for_new_second
+      _wait_for_new_second
       _update_hardlinks
       @_cmdline = cmdline
       @_cmd_done = false

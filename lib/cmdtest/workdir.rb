@@ -27,20 +27,11 @@ require "fileutils"
 module Cmdtest
   class Workdir
 
-    ORIG_CWD = Dir.pwd
-
-    def self.tmp_cmdtest_dir
-      File.join(ORIG_CWD, "tmp-cmdtest-%d" % [$cmdtest_level])
-    end
-
-    def self.tmp_work_dir
-      File.join(tmp_cmdtest_dir, "workdir")
-    end
-
-    def initialize(runner)
+    def initialize(testcase, runner)
+      @testcase = testcase
       @runner = runner
-      @dir = Workdir.tmp_work_dir
-      hardlinkdir = File.join(Workdir.tmp_cmdtest_dir, "hardlinks")
+      @dir = @testcase.tmp_work_dir
+      hardlinkdir = File.join(testcase.tmp_dir, "hardlinks")
       FileUtils.rm_rf(@dir)
       FileUtils.rm_rf(hardlinkdir)
       FileUtils.mkdir_p(@dir)
@@ -78,16 +69,16 @@ module Cmdtest
     end
 
     def _tmp_command_sh
-      File.join(Workdir.tmp_cmdtest_dir,
+      File.join(@testcase.tmp_dir,
                 _windows ? "tmp-command.bat" : "tmp-command.sh")
     end
 
     def _tmp_stdout_log
-      File.join(Workdir.tmp_cmdtest_dir, "tmp-stdout.log")
+      File.join(@testcase.tmp_dir, "tmp-stdout.log")
     end
 
     def _tmp_stderr_log
-      File.join(Workdir.tmp_cmdtest_dir, "tmp-stderr.log")
+      File.join(@testcase.tmp_dir, "tmp-stderr.log")
     end
 
     def _set_env_path_str(env_path)

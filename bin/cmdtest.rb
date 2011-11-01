@@ -49,41 +49,51 @@ module Cmdtest
 
   class TestMethod
 
-    def initialize(test_method, test_class, runner)
-      @test_method, @test_class, @runner = test_method, test_class, runner
+    def initialize(test_method, test_class)
+      @test_method, @test_class = test_method, test_class
+    end
+
+    def to_s
+      class_name = @test_class.testcase_class.name.sub(/^.*::/, "")
+      "<<TestMethod: #{class_name}.#{@test_method}>>"
+    end
+
+    def as_filename
+      klass_name = @test_class.as_filename
+      "#{klass_name}.#{@test_method}"
     end
 
     def method_id
       [@test_class.file, @test_class.testcase_class, @test_method]
     end
 
-    def skip?
-      patterns = @runner.opts.patterns
+    def skip?(runner)
+      patterns = runner.opts.patterns
       selected = (patterns.size == 0 ||
                     patterns.any? {|pattern| pattern =~ @test_method } )
 
-      !selected || @runner.method_filter.skip?(*method_id)
+      !selected || runner.method_filter.skip?(*method_id)
     end
 
-    def run
-      @runner.notify("testmethod", @test_method) do
-        obj = @test_class.testcase_class.new(self, @runner)
+    def run(runner)
+      runner.notify("testmethod", @test_method) do
+        obj = @test_class.testcase_class.new(self, runner)
         obj._work_dir.chdir do
           obj.setup
           begin
             obj.send(@test_method)
-            @runner.assert_success
+            runner.assert_success
           rescue Cmdtest::AssertFailed => e
-            @runner.assert_failure(e.message)
-            @runner.method_filter.error(*method_id)
+            runner.assert_failure(e.message)
+            runner.method_filter.error(*method_id)
           rescue => e
             io = StringIO.new
             io.puts "CAUGHT EXCEPTION:"
             io.puts "  " + e.message + " (#{e.class})"
             io.puts "BACKTRACE:"
             io.puts e.backtrace.map {|line| "  " + line }
-            @runner.assert_error(io.string)
-            @runner.method_filter.error(*method_id)
+            runner.assert_error(io.string)
+            runner.method_filter.error(*method_id)
           end
           obj.teardown
         end
@@ -98,22 +108,26 @@ module Cmdtest
 
     attr_reader :testcase_class, :file
 
-    def initialize(testcase_class, file, runner)
-      @testcase_class, @file, @runner = testcase_class, file, runner
+    def initialize(testcase_class, file)
+      @testcase_class, @file = testcase_class, file
     end
 
-    def run
-      @runner.notify("testclass", @testcase_class) do
-        get_test_methods.each do |method|
-          test_method = TestMethod.new(method, self, @runner)
-          test_method.run unless test_method.skip?
+    def as_filename
+      @testcase_class.name.sub(/^.*::/, "")
+    end
+
+    def run(runner)
+      runner.notify("testclass", @testcase_class) do
+        get_test_methods(runner).each do |method|
+          test_method = TestMethod.new(method, self)
+          test_method.run(runner) unless test_method.skip?(runner)
         end
       end
     end
 
-    def get_test_methods
+    def get_test_methods(runner)
       @testcase_class.public_instance_methods(false).sort.select do |method|
-        in_list = @runner.opts.tests.empty? || @runner.opts.tests.include?(method)
+        in_list = runner.opts.tests.empty? || runner.opts.tests.include?(method)
         method =~ /^test_/ && in_list
       end
     end
@@ -126,20 +140,22 @@ module Cmdtest
 
     attr_reader :path
 
+    attr_reader :test_classes
+
     def initialize(path)
       @path = path
+      @test_classes = Cmdtest::Testcase.new_subclasses do
+        Kernel.load(@path, true)
+      end.map do |testcase_class|
+        TestClass.new(testcase_class, self)
+      end
     end
 
     def run(runner)
-      @runner = runner
-      @runner.notify("testfile", @path) do
-        testcase_classes = Cmdtest::Testcase.new_subclasses do
-          Kernel.load(@path, true)
-        end
-        for testcase_class in testcase_classes
-          test_class = TestClass.new(testcase_class, self, @runner)
-          if ! test_class.get_test_methods.empty?
-            test_class.run
+      runner.notify("testfile", @path) do
+        for test_class in @test_classes
+          if ! test_class.get_test_methods(runner).empty?
+            test_class.run(runner)
           end
         end
       end
@@ -198,11 +214,30 @@ module Cmdtest
       # find local files "required" by testcase files
       $LOAD_PATH.unshift(@project_dir.test_files_dir)
 
+      # force loading of all test files
+      test_files = @project_dir.test_filenames.map {|x| TestFile.new(x) }
+
+      # make sure class names are unique
+      used_test_class_filenames = {}
+      for test_file in test_files
+        for test_class in test_file.test_classes
+          filename = test_class.as_filename
+          prev_test_file = used_test_class_filenames[filename]
+          if prev_test_file
+            puts "ERROR: same class name used twice: #{filename}"
+            puts "ERROR:     prev file: #{prev_test_file.path}"
+            puts "ERROR:     curr file: #{test_file.path}"
+            exit(1)
+          end
+          used_test_class_filenames[filename] = test_file
+        end
+      end
+
       @n_assert_failures  = 0
       @n_assert_errors    = 0
       @n_assert_successes = 0
       notify("testsuite") do
-        for test_file in @project_dir.test_files
+        for test_file in test_files
           test_file.run(self)
         end
       end
@@ -234,20 +269,20 @@ module Cmdtest
 
     def initialize(argv)
       @argv = argv
-      @test_files = nil
+      @test_filenames = nil
     end
 
-    def test_files
-      @test_files ||= _fs_test_files
+    def test_filenames
+      @test_filenames ||= _fs_test_filenames
     end
 
     def test_files_dir
-      File.dirname(test_files[0].path)
+      File.dirname(test_filenames[0])
     end
 
     private
 
-    def _fs_test_files
+    def _fs_test_filenames
       if ! @argv.empty?
         files = _expand_files_or_dirs(@argv)
         if files.empty?
@@ -258,20 +293,16 @@ module Cmdtest
       end
 
       try = Dir.glob("t/CMDTEST_*.rb")
-      return _test_files(try) if ! try.empty?
+      return try if ! try.empty?
 
       try = Dir.glob("test/CMDTEST_*.rb")
-      return _test_files(try) if ! try.empty?
+      return try if ! try.empty?
 
       try = Dir.glob("CMDTEST_*.rb")
-      return _test_files(try) if ! try.empty?
+      return try if ! try.empty?
 
       puts "ERROR: no CMDTEST_*.rb files found"
       exit 1
-    end
-
-    def _test_files(files)
-      files.map {|file| TestFile.new(file) }
     end
 
     def _expand_files_or_dirs(argv)
@@ -279,7 +310,7 @@ module Cmdtest
       for arg in @argv
         if File.file?(arg)
           if File.basename(arg) =~ /^.*\.rb$/
-            files << TestFile.new(arg)
+            files << arg
           else
             puts "ERROR: illegal file: #{arg}"
             exit(1)
@@ -289,7 +320,7 @@ module Cmdtest
             path = File.join(arg,entry)
             next unless File.file?(path)
             next unless entry =~ /^CMDTEST_.*\.rb$/
-            files << TestFile.new(path)
+            files << path
           end
         else
           puts "ERROR: unknown file: #{arg}"
