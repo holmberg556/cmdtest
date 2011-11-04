@@ -55,12 +55,8 @@ module Cmdtest
       FsSnapshot.new(@dir, @ignored_files)
     end
 
-    def _windows
-      RUBY_PLATFORM =~ /mswin32/
-    end
-
     def _shell
-      if _windows
+      if Util.windows?
         cmd_exe = ENV["COMSPEC"] || "cmd.exe"
         "#{cmd_exe} /Q /c"
       else
@@ -70,7 +66,7 @@ module Cmdtest
 
     def _tmp_command_sh
       File.join(@testcase.tmp_dir,
-                _windows ? "tmp-command.bat" : "tmp-command.sh")
+                Util.windows? ? "tmp-command.bat" : "tmp-command.sh")
     end
 
     def _tmp_stdout_log
@@ -82,7 +78,7 @@ module Cmdtest
     end
 
     def _set_env_path_str(env_path)
-      if _windows
+      if Util.windows?
         "set path=" + env_path.join(";")
       else
         "export PATH=" + env_path.join(":")

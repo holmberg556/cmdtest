@@ -232,7 +232,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
 
   def test_file_equal_OTHER_ERROR
     #
-    return unless RUBY_PLATFORM !~ /mswin32/
+    return unless ! windows?
 
     create_CMDTEST_foo [
       "File.symlink 'foo', 'foo'",

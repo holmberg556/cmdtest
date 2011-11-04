@@ -9,7 +9,7 @@ class CMDTEST_simple < Cmdtest::Testcase
 
   def test_try_to_run_non_existing_command_LINUX
     #
-    return unless RUBY_PLATFORM !~ /mswin32/
+    return unless ! windows?
         
     create_CMDTEST_foo [
       'cmd "non-existing" do',
@@ -29,7 +29,7 @@ class CMDTEST_simple < Cmdtest::Testcase
 
   def test_try_to_run_non_existing_command_WINDOWS
     #
-    return unless RUBY_PLATFORM =~ /mswin32/
+    return unless windows?
 
     create_CMDTEST_foo [
       'cmd "non-existing" do',
@@ -52,7 +52,7 @@ class CMDTEST_simple < Cmdtest::Testcase
 
   def test_FAILING_try_to_run_non_existing_command_LINUX
     #
-    return unless RUBY_PLATFORM !~ /mswin32/
+    return unless ! windows?
 
     create_CMDTEST_foo [
       'cmd "non-existing" do',
@@ -75,7 +75,7 @@ class CMDTEST_simple < Cmdtest::Testcase
 
   def test_FAILING_try_to_run_non_existing_command_WIN32
     #
-    return unless RUBY_PLATFORM =~ /mswin32/
+    return unless windows?
 
     create_CMDTEST_foo [
       'cmd "non-existing" do',

@@ -5,7 +5,7 @@ module SelftestUtils
   TOP = Dir.pwd
   BIN = File.join(TOP, "t/bin")
 
-  if RUBY_PLATFORM =~ /mswin/
+  if Cmdtest::Util.windows?
     PLATFORM_BIN = File.join(TOP, "t/bin/windows")
   else
     PLATFORM_BIN = File.join(TOP, "t/bin/unix")

@@ -344,7 +344,7 @@ module Cmdtest
       @fast = false
       @xml = nil
       @set_exit_code = true
-      @ruby_s = false
+      @ruby_s = Util.windows?
       @incremental = false
       @patterns = []
 
@@ -369,7 +369,7 @@ module Cmdtest
         when opt =~ /^--no-exit-code$/
           @set_exit_code = false
         when opt =~ /^--ruby_s$/
-          @ruby_s = true
+          @ruby_s = ! @ruby_s
         when opt =~ /^-r$/
           @incremental = true
         when opt =~ /^-i$/

@@ -63,5 +63,9 @@ module Cmdtest
       end
     end
 
+    def self.windows?
+      RUBY_PLATFORM =~ /mswin32|mingw32/
+    end
+
   end
 end

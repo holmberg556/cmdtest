@@ -121,7 +121,7 @@ _END_
 
   def test_array_with_DOLLAR_arguments_2
     #
-    return unless RUBY_PLATFORM =~ /mswin32/
+    return unless windows?
 
     create_CMDTEST_foo <<'_END_'
       cmd ["clines", "emb$edded1", "emb$$edded2"] do
@@ -144,7 +144,7 @@ _END_
   def test_cmd_all_characters
     # (but not backslash for now)
     #
-    return unless RUBY_PLATFORM !~ /mswin32/
+    return unless ! windows?
 
     create_CMDTEST_foo <<'_END_'
       all = " !\"\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_abcdefghijklmnopqrstuvwxyz{|}~"

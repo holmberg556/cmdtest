@@ -846,9 +846,10 @@ _END_
   # TODO: this test should be improved to actually trigger the difference
   # between lstat/stat in "_update_hardlinks".
   #
-  # REQUIRE: RUBY_PLATFORM !~ /mswin32/
 
   def test_symlinks_in_tree
+    return unless ! windows?
+
     create_CMDTEST_foo [
       "File.symlink 'non-existing', 'non-existing-link'",
       "",

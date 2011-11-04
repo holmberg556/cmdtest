@@ -187,6 +187,12 @@ module Cmdtest
       @_env_path = dirs.flatten
     end
 
+    #------------------------------
+
+    def windows?
+      Util.windows?
+    end
+
     #==============================
 
     # Used in methods invoked from the "cmd" do-block, in methods that
@@ -330,7 +336,7 @@ module Cmdtest
     #------------------------------
 
     def _read_file(file)
-      if File.directory?(file) && RUBY_PLATFORM =~ /mswin32/
+      if File.directory?(file) && Util.windows?
         :is_directory
       else
         File.read(file)
@@ -558,7 +564,7 @@ module Cmdtest
     def _args_to_quoted_string(args)
       quoted_args = []
       for arg in args
-        if RUBY_PLATFORM =~ /mswin32/
+        if Util.windows?
           if arg =~ /[;&()><\\| $%"]/
             quoted_arg = arg.dup
             # \  --- no change needed
