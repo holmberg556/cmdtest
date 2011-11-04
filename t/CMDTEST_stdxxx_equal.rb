@@ -42,14 +42,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_equal_INCORRECT_EMPTY") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello world' do",
+        "cmd 'echo_#{stdxxx}.rb hello world' do",
         "    #{stdxxx}_equal ''",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello world",
+          "### echo_#{stdxxx}.rb hello world",
           "--- ERROR: wrong #{stdxxx}",
           "---        actual: hello world",
           "---        expect: [[empty]]",
@@ -82,14 +82,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_equal_INCORRECT_NO_LINES") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello world' do",
+        "cmd 'echo_#{stdxxx}.rb hello world' do",
         "    #{stdxxx}_equal []",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello world",
+          "### echo_#{stdxxx}.rb hello world",
           "--- ERROR: wrong #{stdxxx}",
           "---        actual: hello world",
           "---        expect: [[empty]]",
@@ -104,14 +104,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_equal_CORRECT_1_LINE") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello world' do",
+        "cmd 'echo_#{stdxxx}.rb hello world' do",
         "    #{stdxxx}_equal [ 'hello world' ]",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello world",
+          "### echo_#{stdxxx}.rb hello world",
         ]
       end
     end
@@ -145,14 +145,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
     define_method("test_#{stdxxx}_equal_CORRECT_2_LINES") do
 
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello && echo-#{stdxxx}.rb world' do",
+        "cmd 'echo_#{stdxxx}.rb hello && echo_#{stdxxx}.rb world' do",
         "    #{stdxxx}_equal [ 'hello', 'world' ]",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello && echo-#{stdxxx}.rb world",
+          "### echo_#{stdxxx}.rb hello && echo_#{stdxxx}.rb world",
         ]
       end
     end
@@ -189,14 +189,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_not_equal_CORRECT_EMPTY") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello' do",
+        "cmd 'echo_#{stdxxx}.rb hello' do",
         "    #{stdxxx}_not_equal ''",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello",
+          "### echo_#{stdxxx}.rb hello",
         ]
       end
     end
@@ -229,14 +229,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_not_equal_CORRECT_NO_LINES") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello' do",
+        "cmd 'echo_#{stdxxx}.rb hello' do",
         "    #{stdxxx}_not_equal []",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello",
+          "### echo_#{stdxxx}.rb hello",
         ]
       end
     end
@@ -268,14 +268,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_not_equal_CORRECT_1_LINE") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb not hello world' do",
+        "cmd 'echo_#{stdxxx}.rb not hello world' do",
         "    #{stdxxx}_not_equal [ 'hello world' ]",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb not hello world",
+          "### echo_#{stdxxx}.rb not hello world",
         ]
       end
     end
@@ -286,14 +286,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_not_equal_INCORRECT_1_LINE") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello world' do",
+        "cmd 'echo_#{stdxxx}.rb hello world' do",
         "    #{stdxxx}_not_equal [ 'hello world' ]",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello world",
+          "### echo_#{stdxxx}.rb hello world",
           "--- ERROR: wrong #{stdxxx}",
           "---        actual: hello world",
           "---        expect: hello world",
@@ -308,14 +308,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_not_equal_CORRECT_2_LINES") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello world' do",
+        "cmd 'echo_#{stdxxx}.rb hello world' do",
         "    #{stdxxx}_not_equal [ 'hello', 'world' ]",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello world",
+          "### echo_#{stdxxx}.rb hello world",
         ]
       end
     end
@@ -326,14 +326,14 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
 
     define_method("test_#{stdxxx}_not_equal_INCORRECT_2_LINES") do
       create_CMDTEST_foo [
-        "cmd 'echo-#{stdxxx}.rb hello && echo-#{stdxxx}.rb world' do",
+        "cmd 'echo_#{stdxxx}.rb hello && echo_#{stdxxx}.rb world' do",
         "    #{stdxxx}_not_equal [ 'hello', 'world' ]",
         "end",
       ]
 
       cmd_cmdtest do
         stdout_equal [
-          "### echo-#{stdxxx}.rb hello && echo-#{stdxxx}.rb world",
+          "### echo_#{stdxxx}.rb hello && echo_#{stdxxx}.rb world",
           "--- ERROR: wrong #{stdxxx}",
           "---        actual: hello",
           "---                world",
