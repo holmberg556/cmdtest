@@ -47,6 +47,56 @@ module Cmdtest
 
   #----------------------------------------------------------------------
 
+  class LogClient
+    def initialize
+      @listeners = []
+
+      @n_assert_failures  = 0
+      @n_assert_errors    = 0
+      @n_assert_successes = 0
+    end
+
+    def add_listener(listener)
+      @listeners << listener
+    end
+
+    def _notify_once(method, *args)
+      for listener in @listeners
+        listener.send(method, *args)
+      end
+    end
+
+    def notify(method, *args)
+      if block_given?
+        _notify_once(method + "_begin", *args)
+        yield
+        _notify_once(method + "_end", *args)
+      else
+        _notify_once(method, *args)
+      end
+    end
+
+    def everything_ok?
+      @n_assert_errors == 0 && @n_assert_failures == 0
+    end
+
+    def assert_success
+      @n_assert_successes += 1
+    end
+
+    def assert_failure(str)
+      @n_assert_failures += 1
+      notify("assert_failure", str)
+    end
+
+    def assert_error(str)
+      @n_assert_errors += 1
+      notify("assert_error", str)
+    end
+  end
+
+  #----------------------------------------------------------------------
+
   class TestMethod
 
     def initialize(test_method, test_class)
@@ -75,16 +125,16 @@ module Cmdtest
       !selected || runner.method_filter.skip?(*method_id)
     end
 
-    def run(runner)
-      runner.notify("testmethod", @test_method) do
-        obj = @test_class.testcase_class.new(self, runner)
+    def run(clog, runner)
+      clog.notify("testmethod", @test_method) do
+        obj = @test_class.testcase_class.new(self, clog, runner)
         obj._work_dir.chdir do
           obj.setup
           begin
             obj.send(@test_method)
-            runner.assert_success
+            clog.assert_success
           rescue Cmdtest::AssertFailed => e
-            runner.assert_failure(e.message)
+            clog.assert_failure(e.message)
             runner.method_filter.error(*method_id)
           rescue => e
             io = StringIO.new
@@ -92,7 +142,7 @@ module Cmdtest
             io.puts "  " + e.message + " (#{e.class})"
             io.puts "BACKTRACE:"
             io.puts e.backtrace.map {|line| "  " + line }
-            runner.assert_error(io.string)
+            clog.assert_error(io.string)
             runner.method_filter.error(*method_id)
           end
           obj.teardown
@@ -116,11 +166,11 @@ module Cmdtest
       @testcase_class.name.sub(/^.*::/, "")
     end
 
-    def run(runner)
-      runner.notify("testclass", @testcase_class) do
+    def run(clog, runner)
+      clog.notify("testclass", @testcase_class) do
         get_test_methods(runner).each do |method|
           test_method = TestMethod.new(method, self)
-          test_method.run(runner) unless test_method.skip?(runner)
+          test_method.run(clog, runner) unless test_method.skip?(runner)
         end
       end
     end
@@ -151,11 +201,11 @@ module Cmdtest
       end
     end
 
-    def run(runner)
-      runner.notify("testfile", @path) do
+    def run(clog, runner)
+      clog.notify("testfile", @path) do
         for test_class in @test_classes
           if ! test_class.get_test_methods(runner).empty?
-            test_class.run(runner)
+            test_class.run(clog, runner)
           end
         end
       end
@@ -173,29 +223,8 @@ module Cmdtest
 
     def initialize(project_dir, opts)
       @project_dir = project_dir
-      @listeners = []
       @opts = opts
       @method_filter = MethodFilter.new(FILTER_FILENAME, self)
-    end
-
-    def add_listener(listener)
-      @listeners << listener
-    end
-
-    def notify_once(method, *args)
-      for listener in @listeners
-        listener.send(method, *args)
-      end
-    end
-
-    def notify(method, *args)
-      if block_given?
-        notify_once(method + "_begin", *args)
-        yield
-        notify_once(method + "_end", *args)
-      else
-        notify_once(method, *args)
-      end
     end
 
     def _path_separator
@@ -206,7 +235,7 @@ module Cmdtest
       @orig_env_path.dup
     end
 
-    def run
+    def run(clog)
       @orig_cwd = Dir.pwd
       ENV["PATH"] = Dir.pwd + _path_separator + ENV["PATH"]
       @orig_env_path = ENV["PATH"].split(_path_separator)
@@ -233,33 +262,12 @@ module Cmdtest
         end
       end
 
-      @n_assert_failures  = 0
-      @n_assert_errors    = 0
-      @n_assert_successes = 0
-      notify("testsuite") do
+      clog.notify("testsuite") do
         for test_file in test_files
-          test_file.run(self)
+          test_file.run(clog, self)
         end
       end
       @method_filter.write
-    end
-
-    def everything_ok?
-      @n_assert_errors == 0 && @n_assert_failures == 0
-    end
-
-    def assert_success
-      @n_assert_successes += 1
-    end
-
-    def assert_failure(str)
-      @n_assert_failures += 1
-      notify("assert_failure", str)
-    end
-
-    def assert_error(str)
-      @n_assert_errors += 1
-      notify("assert_error", str)
     end
   end
 
@@ -402,17 +410,19 @@ module Cmdtest
         exit(1)
       end
 
+      clog = LogClient.new
+
       Util.opts = self
       @project_dir = ProjectDir.new(files)
       @runner = Runner.new(@project_dir, self)
       logger = ConsoleLogger.new(self)
-      @runner.add_listener(logger)
+      clog.add_listener(logger)
       if @xml
-        @runner.add_listener(JunitLogger.new(self, @xml))
+        clog.add_listener(JunitLogger.new(self, @xml))
       end
 
-      @runner.run
-      error_exit = @set_exit_code && ! @runner.everything_ok?
+      @runner.run(clog)
+      error_exit = @set_exit_code && ! clog.everything_ok?
       exit( error_exit ? 1 : 0 )
     end
 

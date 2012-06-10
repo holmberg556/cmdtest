@@ -64,8 +64,9 @@ module Cmdtest
 
     attr_reader :_work_dir
 
-    def initialize(test_method, runner)
+    def initialize(test_method, clog, runner)
       @_test_method = test_method
+      @_clog = clog
       @_runner = runner
       @_work_dir = Workdir.new(self, runner)
       @_in_cmd = false
@@ -541,7 +542,7 @@ module Cmdtest
       return if @_cmd_done
       @_cmd_done = true
 
-      @_runner.notify("cmdline", @_cmdline, @_comment_str)
+      @_clog.notify("cmdline", @_cmdline, @_comment_str)
       @_comment_str = nil
       @_t1 = Time.now
       @_effects = @_work_dir.run_cmd(@_cmdline, @_env_path)
