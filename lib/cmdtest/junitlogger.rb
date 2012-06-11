@@ -38,13 +38,13 @@ module Cmdtest
       super
     end
 
-    def testclass_begin(testcase_class)
+    def testclass_begin(testcase_class_name)
       super
-      @testcase_class = testcase_class
-      @ts = @jf.new_testsuite("CMDTEST", testcase_class.display_name)
+      @testcase_class_name = testcase_class_name
+      @ts = @jf.new_testsuite("CMDTEST", testcase_class_name)
     end
 
-    def testclass_end(testcase_class)
+    def testclass_end(testcase_class_name)
       super
     end
 
@@ -66,7 +66,7 @@ module Cmdtest
     end
 
     def _xml_class
-      "CMDTEST." + @testcase_class.display_name
+      "CMDTEST." + @testcase_class_name
     end
 
     def cmdline(cmdline_arg, comment)

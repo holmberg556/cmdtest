@@ -33,9 +33,9 @@ module Cmdtest
       _banner "=", file  if ! opts.quiet
     end
 
-    def testclass_begin(testcase_class)
+    def testclass_begin(testcase_class_name)
       super
-      _banner "-", testcase_class.display_name if ! opts.quiet
+      _banner "-", testcase_class_name if ! opts.quiet
     end
 
     def testmethod_begin(method)

@@ -167,7 +167,7 @@ module Cmdtest
     end
 
     def run(clog, runner)
-      clog.notify("testclass", @testcase_class) do
+      clog.notify("testclass", @testcase_class.display_name) do
         get_test_methods(runner).each do |method|
           test_method = TestMethod.new(method, self)
           test_method.run(clog, runner) unless test_method.skip?(runner)
