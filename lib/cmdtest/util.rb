@@ -53,16 +53,6 @@ module Cmdtest
       return tnew
     end
 
-    def self.chdir(dir)
-      old_cwd = Dir.pwd
-      Dir.chdir(dir)
-      yield
-    ensure
-      if Dir.pwd != old_cwd
-        Dir.chdir(old_cwd)
-      end
-    end
-
     def self.windows?
       RUBY_PLATFORM =~ /mswin32|mingw32/
     end

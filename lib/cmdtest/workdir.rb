@@ -27,14 +27,16 @@ require "fileutils"
 module Cmdtest
   class Workdir
 
+    attr_reader :path, :hardlinkdir
+
     def initialize(testcase, runner)
       @testcase = testcase
       @runner = runner
-      @dir = @testcase.tmp_work_dir
-      hardlinkdir = File.join(testcase.tmp_dir, "hardlinks")
-      FileUtils.rm_rf(@dir)
-      FileUtils.rm_rf(hardlinkdir)
-      FileUtils.mkdir_p(@dir)
+      @path = @testcase.tmp_work_dir
+      @hardlinkdir = File.join(testcase.tmp_dir, "hardlinks")
+      FileUtils.rm_rf(@path)
+      FileUtils.rm_rf(@hardlinkdir)
+      FileUtils.mkdir_p(@path)
       @ignored_files = []
     end
 
@@ -47,12 +49,8 @@ module Cmdtest
 
     #--------------------
 
-    def chdir(&block)
-      Util.chdir(@dir, &block)
-    end
-
     def _take_snapshot
-      FsSnapshot.new(@dir, @ignored_files)
+      FsSnapshot.new(@path, @ignored_files)
     end
 
     def _shell
@@ -77,6 +75,10 @@ module Cmdtest
       File.join(@testcase.tmp_dir, "tmp-stderr.log")
     end
 
+    def _chdir_str(dir)
+      "cd #{dir}"
+    end
+
     def _set_env_path_str(env_path)
       if Util.windows?
         "set path=" + env_path.join(";")
@@ -99,6 +101,7 @@ module Cmdtest
 
     def run_cmd(cmdline, env_path)
       File.open(_tmp_command_sh, "w") do |f|
+        f.puts _chdir_str(@testcase._cwd)
         f.puts _set_env_path_str(env_path)
         f.puts _ruby_S(cmdline)
       end

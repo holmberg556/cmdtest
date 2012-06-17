@@ -27,19 +27,31 @@ require "find"
 module Cmdtest
   class FsSnapshot
 
+    def relative_find(dir)
+      dir_prefix = @dir + "/"
+      Find.find(dir) do |path|
+        if path == dir
+          yield "."
+        elsif path.index(dir_prefix) != 0
+          raise "not a prefix: #{dir_prefix}, #{dir}"
+        else
+          path[0, dir_prefix.length] = ""
+          yield path
+        end
+      end
+    end
+
     def initialize(dir, ignored_files)
       @dir = dir
       @ignored_files = ignored_files
       @fileinfo_by_path = {}
-      Util.chdir(@dir) do
-        Find.find(".") do |path|
-          next if path == "."
-          path.sub!(/^\.\//, "")
-          file_info = FileInfo.new(path)
-          display_path = file_info.display_path
-          Find.prune if _ignore_file?(display_path)
-          @fileinfo_by_path[display_path] = file_info
-        end
+      dir_prefix = @dir + "/"
+      relative_find(@dir) do |path|
+        next if path == "."
+        file_info = FileInfo.new(path, @dir)
+        display_path = file_info.display_path
+        Find.prune if _ignore_file?(display_path)
+        @fileinfo_by_path[display_path] = file_info
       end
     end
 

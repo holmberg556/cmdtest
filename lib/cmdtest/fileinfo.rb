@@ -26,13 +26,15 @@ module Cmdtest
 
     attr_reader :stat, :digest
 
-    def initialize(path)
-      @path = path
-      @stat = File.lstat(path)
+    def initialize(relpath, topdir)
+      @topdir = topdir
+      @relpath = relpath
+      @path = File.join(topdir, relpath)
+      @stat = File.lstat(@path)
 
       if @stat.file?
         md5 = Digest::MD5.new
-        File.open(path) {|f| f.binmode; md5.update(f.read) }
+        File.open(@path) {|f| f.binmode; md5.update(f.read) }
         @digest = md5.hexdigest
       else
         @digest = "a-directory"
@@ -46,7 +48,7 @@ module Cmdtest
     }
 
     def display_path
-      @path + (FILE_SUFFIXES[@stat.ftype] || "?")
+      @relpath + (FILE_SUFFIXES[@stat.ftype] || "?")
     end
 
     def ==(other)

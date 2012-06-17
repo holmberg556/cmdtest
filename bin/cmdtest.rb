@@ -128,25 +128,24 @@ module Cmdtest
     def run(clog, runner)
       clog.notify("testmethod", @test_method) do
         obj = @test_class.testcase_class.new(self, clog, runner)
-        obj._work_dir.chdir do
-          obj.setup
-          begin
-            obj.send(@test_method)
-            clog.assert_success
-          rescue Cmdtest::AssertFailed => e
-            clog.assert_failure(e.message)
-            runner.method_filter.error(*method_id)
-          rescue => e
-            io = StringIO.new
-            io.puts "CAUGHT EXCEPTION:"
-            io.puts "  " + e.message + " (#{e.class})"
-            io.puts "BACKTRACE:"
-            io.puts e.backtrace.map {|line| "  " + line }
-            clog.assert_error(io.string)
-            runner.method_filter.error(*method_id)
-          end
-          obj.teardown
+        Dir.chdir(obj._work_dir.path)
+        obj.setup
+        begin
+          obj.send(@test_method)
+          clog.assert_success
+        rescue Cmdtest::AssertFailed => e
+          clog.assert_failure(e.message)
+          runner.method_filter.error(*method_id)
+        rescue => e
+          io = StringIO.new
+          io.puts "CAUGHT EXCEPTION:"
+          io.puts "  " + e.message + " (#{e.class})"
+          io.puts "BACKTRACE:"
+          io.puts e.backtrace.map {|line| "  " + line }
+          clog.assert_error(io.string)
+          runner.method_filter.error(*method_id)
         end
+        obj.teardown
       end
     end
 

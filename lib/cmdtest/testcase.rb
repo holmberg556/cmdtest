@@ -19,6 +19,7 @@
 # along with "cmdtest".  If not, see <http://www.gnu.org/licenses/>.
 #----------------------------------------------------------------------
 
+require "fileutils"
 require "set"
 require "stringio"
 
@@ -62,13 +63,14 @@ module Cmdtest
 
     ORIG_CWD = Dir.pwd
 
-    attr_reader :_work_dir
+    attr_reader :_work_dir, :_cwd
 
     def initialize(test_method, clog, runner)
       @_test_method = test_method
       @_clog = clog
       @_runner = runner
       @_work_dir = Workdir.new(self, runner)
+      @_cwd = self.tmp_work_dir
       @_in_cmd = false
       @_comment_str = nil
       @_env_path = @_runner.orig_env_path
@@ -97,7 +99,7 @@ module Cmdtest
 
     def import_file(src, tgt)
       src_path = File.expand_path(src, ORIG_CWD)
-      tgt_path = tgt            # rely on CWD
+      tgt_path = _cwd_path(tgt)
       FileUtils.mkdir_p(File.dirname(tgt_path))
       FileUtils.cp(src_path, tgt_path)
     end
@@ -111,8 +113,8 @@ module Cmdtest
 
     def create_file(filename, lines)
       #_wait_for_new_second
-      FileUtils.mkdir_p( File.dirname(filename) )
-      File.open(filename, "w") do |f|
+      FileUtils.mkdir_p( File.dirname(_cwd_path(filename)) )
+      File.open(_cwd_path(filename), "w") do |f|
         case lines
         when Array
           f.puts lines
@@ -129,20 +131,77 @@ module Cmdtest
 
     def touch_file(filename)
       #_wait_for_new_second
-      FileUtils.touch(filename)
+      FileUtils.touch(_cwd_path(filename))
     end
 
     #------------------------------
-    # A "chdir" to be used in tests, to avoid the Ruby warning:
-    #
-    #    warning: conflicting chdir during another chdir block
-    #
+
+    def file_read(filename)
+      File.read(_cwd_path(filename))
+    end
+
+    #------------------------------
+
+    def file_open(filename, *args, &block)
+      File.open(_cwd_path(filename), *args, &block)
+    end
+
+    #------------------------------
+
+    def dir_mkdir(filename, *args)
+      Dir.mkdir(_cwd_path(filename), *args)
+    end
+
+    #------------------------------
+
+    def file_symlink(filename1, filename2)
+      File.symlink(filename1, _cwd_path(filename2))
+    end
+
+    #------------------------------
+
+    def remove_file(filename)
+      FileUtils.rm_f(_cwd_path(filename))
+    end
+
+    #------------------------------
+
+    def remove_file_tree(filename)
+      FileUtils.rm_rf(_cwd_path(filename))
+    end
+
+    #------------------------------
+
+    def file_utime(arg1, arg2, filename)
+      File.utime(arg1, arg2, _cwd_path(filename))
+    end
+
+    #------------------------------
+
+    def file_chmod(arg, filename)
+      File.chmod(arg, _cwd_path(filename))
+    end
+
+    #------------------------------
+
+    def current_directory
+      @_cwd
+    end
+
+    #------------------------------
 
     def chdir(dir, &block)
+      dir_path = File.expand_path(dir, @_cwd)
       if block_given?
-        Util.chdir(dir, &block)
+        saved_cwd = @_cwd
+        @_cwd = dir_path
+        begin
+          yield
+        ensure
+          @_cwd = saved_cwd
+        end
       else
-        Dir.chdir(dir)
+        @_cwd = dir_path
       end
     end
 
@@ -179,7 +238,7 @@ module Cmdtest
     # of the call was started.
 
     def prepend_local_path(dir)
-      @_env_path.unshift(File.expand_path(dir, Dir.pwd))
+      @_env_path.unshift(File.expand_path(dir, @_cwd))
     end
 
     #------------------------------
@@ -336,11 +395,17 @@ module Cmdtest
 
     #------------------------------
 
+    def _cwd_path(path)
+      File.expand_path(path, @_cwd)
+    end
+
+    #------------------------------
+
     def _read_file(file)
-      if File.directory?(file) && Util.windows?
+      if File.directory?(_cwd_path(file)) && Util.windows?
         :is_directory
       else
-        File.read(file)
+        File.read(_cwd_path(file))
       end
     rescue Errno::ENOENT
       :no_such_file
@@ -522,15 +587,14 @@ module Cmdtest
     def _update_hardlinks
       return if ! @_runner.opts.fast
 
-      @_work_dir.chdir do
-        FileUtils.mkdir_p("../hardlinks")
-        Find.find(".") do |path|
-          st = File.lstat(path)
-          if st.file?
-            inode_path = "../hardlinks/%d" % [st.ino]
-            if ! File.file?(inode_path)
-              FileUtils.ln(path,inode_path)
-            end
+      hardlinkdir = @_work_dir.hardlinkdir
+      FileUtils.mkdir_p(hardlinkdir)
+      Find.find(@_work_dir.path) do |path|
+        st = File.lstat(path)
+        if st.file?
+          inode_path = "%s/%d" % [hardlinkdir, st.ino]
+          if ! File.file?(inode_path)
+            FileUtils.ln(path,inode_path)
           end
         end
       end
