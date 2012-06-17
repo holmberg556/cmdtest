@@ -10,7 +10,7 @@ class CMDTEST_file_not_equal < Cmdtest::Testcase
 
   def test_file_not_equal_CORRECT
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {|f| f.puts 'hello' }",
+      "file_open('foo', 'w') {|f| f.puts 'hello' }",
       "",
       "cmd 'true.rb' do",
       "    file_not_equal 'foo', ['world']",
@@ -30,7 +30,7 @@ class CMDTEST_file_not_equal < Cmdtest::Testcase
 
   def test_file_not_equal_INCORRECT
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {|f| f.puts 'hello' }",
+      "file_open('foo', 'w') {|f| f.puts 'hello' }",
       "",
       "cmd 'true.rb' do",
       "    file_not_equal 'foo', ['hello']",

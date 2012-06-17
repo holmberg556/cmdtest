@@ -10,7 +10,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
 
   def test_file_equal_CORRECT_EMPTY
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {}",
+      "file_open('foo', 'w') {}",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', ''",
@@ -31,7 +31,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_INCORRECT_EMPTY
 
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {|f| f.puts 'hello world' }",
+      "file_open('foo', 'w') {|f| f.puts 'hello world' }",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', ''",
@@ -56,7 +56,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_CORRECT_NO_LINES
 
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {}",
+      "file_open('foo', 'w') {}",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', []",
@@ -78,7 +78,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_INCORRECT_NO_LINES
 
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {|f| f.puts 'hello world' }",
+      "file_open('foo', 'w') {|f| f.puts 'hello world' }",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', []",
@@ -102,7 +102,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_CORRECT_LINE
 
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {|f| f.puts 'hello world' }",
+      "file_open('foo', 'w') {|f| f.puts 'hello world' }",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', [ 'hello world' ]",
@@ -122,7 +122,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_INCORRECT_LINE
 
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {}",
+      "file_open('foo', 'w') {}",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', [ 'hello world' ]",
@@ -146,7 +146,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_CORRECT_2_LINES
 
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {|f| f.puts 'hello'; f.puts 'world' }",
+      "file_open('foo', 'w') {|f| f.puts 'hello'; f.puts 'world' }",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', [ 'hello', 'world' ]",
@@ -166,7 +166,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_INCORRECT_2_LINES
 
     create_CMDTEST_foo [
-      "File.open('foo', 'w') {}",
+      "file_open('foo', 'w') {}",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', [ 'hello', 'world' ]",
@@ -211,7 +211,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_FILE_IS_DIRECTORY
 
     create_CMDTEST_foo [
-      "Dir.mkdir 'foo'",
+      "dir_mkdir 'foo'",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', ''",
@@ -235,7 +235,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
     return unless ! windows?
 
     create_CMDTEST_foo [
-      "File.symlink 'foo', 'foo'",
+      "file_symlink 'foo', 'foo'",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', ''",

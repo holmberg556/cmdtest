@@ -120,8 +120,8 @@ class CMDTEST_misc < Cmdtest::Testcase
 
   def test_existing_files_is_OK
     create_CMDTEST_foo [
-      "File.open('before1', 'w') {}",
-      "File.open('before2', 'w') {}",
+      "file_open('before1', 'w') {}",
+      "file_open('before2', 'w') {}",
       "cmd 'true.rb' do",
       "end",
     ]
@@ -156,8 +156,8 @@ class CMDTEST_misc < Cmdtest::Testcase
 
   def test_several_actual_created_files_will_give_error
     create_CMDTEST_foo [
-      "File.open('before1', 'w') {}",
-      "File.open('before2', 'w') {}",
+      "file_open('before1', 'w') {}",
+      "file_open('before2', 'w') {}",
       "cmd 'echo.rb x > a && echo.rb x > b' do",
       "end",
     ]
@@ -177,7 +177,7 @@ class CMDTEST_misc < Cmdtest::Testcase
 
   def test_actual_removed_file_will_give_error
     create_CMDTEST_foo [
-      "File.open('before', 'w') {}",
+      "file_open('before', 'w') {}",
       "cmd 'rm.rb before' do",
       "end",
     ]
@@ -197,9 +197,9 @@ class CMDTEST_misc < Cmdtest::Testcase
 
   def test_several_actual_removed_files_will_give_error
     create_CMDTEST_foo [
-      "File.open('before1', 'w') {}",
-      "File.open('before2', 'w') {}",
-      "File.open('before3', 'w') {}",
+      "file_open('before1', 'w') {}",
+      "file_open('before2', 'w') {}",
+      "file_open('before3', 'w') {}",
       "cmd 'rm.rb before1 before2' do",
       "end",
     ]
@@ -220,10 +220,10 @@ class CMDTEST_misc < Cmdtest::Testcase
   def test_actual_changed_files_will_give_error
     # NOTE: order of writing/testing is important below
     create_CMDTEST_foo <<'_END_'
-      File.open('changed1', 'w') {}
-      File.open('changed2', 'w') {}
+      file_open('changed1', 'w') {}
+      file_open('changed2', 'w') {}
 
-      File.open('script.rb', 'w') do |f|
+      file_open('script.rb', 'w') do |f|
           f.puts 't1 = File.mtime("changed2")'
           f.puts 'while File.mtime("changed2") == t1'
           f.puts '    File.open("changed2", "w") {|f| f.puts 111 }'
@@ -250,9 +250,9 @@ _END_
 
   def test_mix_of_actual_created_removed_files_will_give_error
     create_CMDTEST_foo [
-      "File.open('before1', 'w') {}",
-      "File.open('before2', 'w') {}",
-      "File.open('before3', 'w') {}",
+      "file_open('before1', 'w') {}",
+      "file_open('before2', 'w') {}",
+      "file_open('before3', 'w') {}",
       "cmd 'rm.rb before1 before2 && echo.rb x > a && echo.rb x > b' do",
       "end",
     ]
@@ -275,10 +275,10 @@ _END_
 
   def test_mix_of_all_errros
     create_CMDTEST_foo <<'_END_'
-      File.open('before1', 'w') {}
-      File.open('before2', 'w') {}
-      File.open('before3', 'w') {}
-      File.open('script.rb', 'w') do |f|
+      file_open('before1', 'w') {}
+      file_open('before2', 'w') {}
+      file_open('before3', 'w') {}
+      file_open('script.rb', 'w') do |f|
           f.puts 'File.unlink "before1"'
           f.puts 'File.unlink "before2"'
           f.puts 'File.open("a", "w") {}'
@@ -320,8 +320,8 @@ _END_
 
   def test_removed_files
     create_CMDTEST_foo [
-      "File.open('file1', 'w') {}",
-      "File.open('file2', 'w') {}",
+      "file_open('file1', 'w') {}",
+      "file_open('file2', 'w') {}",
       "",
       "cmd 'rm.rb file1' do",
       "    comment 'removed_files'",
@@ -340,8 +340,8 @@ _END_
 
   def test_FAILED_removed_files
     create_CMDTEST_foo [
-      "File.open('file1', 'w') {}",
-      "File.open('file2', 'w') {}",
+      "file_open('file1', 'w') {}",
+      "file_open('file2', 'w') {}",
       "",
       "cmd 'true.rb' do",
       "    comment 'FAILED removed_files'",
@@ -364,8 +364,8 @@ _END_
 
   def test_changed_files
     create_CMDTEST_foo [
-      "File.open('file1', 'w') {}",
-      "File.open('file2', 'w') {}",
+      "file_open('file1', 'w') {}",
+      "file_open('file2', 'w') {}",
       "",
       "cmd 'sleep.rb 1 && touch.rb file1' do",
       "    comment 'changed_files'",
@@ -385,8 +385,8 @@ _END_
   def test_FAILED_changed_files
 
     create_CMDTEST_foo [
-      "File.open('file1', 'w') {}",
-      "File.open('file2', 'w') {}",
+      "file_open('file1', 'w') {}",
+      "file_open('file2', 'w') {}",
       "",
       "cmd 'true.rb' do",
       "    comment 'FAILED changed_files'",
@@ -409,8 +409,8 @@ _END_
 
   def test_created_files
     create_CMDTEST_foo [
-      "File.open('file1', 'w') {}",
-      "File.open('file2', 'w') {}",
+      "file_open('file1', 'w') {}",
+      "file_open('file2', 'w') {}",
       "",
       "cmd 'touch.rb file3' do",
       "    comment 'created_files'",
@@ -429,8 +429,8 @@ _END_
 
   def test_FAILED_created_files
     create_CMDTEST_foo [
-      "File.open('file1', 'w') {}",
-      "File.open('file2', 'w') {}",
+      "file_open('file1', 'w') {}",
+      "file_open('file2', 'w') {}",
       "",
       "cmd 'true.rb' do",
       "    comment 'FAILED created_files'",
@@ -853,8 +853,8 @@ _END_
     create_CMDTEST_foo [
       "File.symlink 'non-existing', 'non-existing-link'",
       "",
-      "File.open('existing', 'w') {}",
-      "File.symlink 'existing', 'existing-link'",
+      "file_open('existing', 'w') {}",
+      "file_symlink 'existing', 'existing-link'",
       "",
       "cmd 'true.rb' do",
       "end",
@@ -871,9 +871,9 @@ _END_
 
   def test_file_with_mtime_in_future
     create_CMDTEST_foo [
-      "File.open('future-file', 'w') {}",
+      "file_open('future-file', 'w') {}",
       "future = Time.now + 86400",
-      "File.utime future, future, 'future-file'",
+      "file_utime future, future, 'future-file'",
       "",
       "cmd 'true.rb' do",
       "end",
