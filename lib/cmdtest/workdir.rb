@@ -75,6 +75,10 @@ module Cmdtest
       File.join(@testcase.tmp_dir, "tmp-stderr.log")
     end
 
+    def _ENV_strs(env)
+      env.keys.sort.map {|k| "export %s='%s'" % [k, env[k]] }
+    end
+
     def _chdir_str(dir)
       "cd #{dir}"
     end
@@ -101,6 +105,7 @@ module Cmdtest
 
     def run_cmd(cmdline, env_path)
       File.open(_tmp_command_sh, "w") do |f|
+        f.puts _ENV_strs(@testcase._env)
         f.puts _chdir_str(@testcase._cwd)
         f.puts _set_env_path_str(env_path)
         f.puts _ruby_S(cmdline)

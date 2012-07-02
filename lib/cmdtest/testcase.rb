@@ -63,7 +63,7 @@ module Cmdtest
 
     ORIG_CWD = Dir.pwd
 
-    attr_reader :_work_dir, :_cwd
+    attr_reader :_work_dir, :_cwd, :_env
 
     def initialize(test_method, clog, runner)
       @_test_method = test_method
@@ -71,6 +71,7 @@ module Cmdtest
       @_runner = runner
       @_work_dir = Workdir.new(self, runner)
       @_cwd = self.tmp_work_dir
+      @_env = Hash.new
       @_in_cmd = false
       @_comment_str = nil
       @_env_path = @_runner.orig_env_path
@@ -180,6 +181,18 @@ module Cmdtest
 
     def file_chmod(arg, filename)
       File.chmod(arg, _cwd_path(filename))
+    end
+
+    #------------------------------
+
+    def setenv(name, value)
+      @_env[name] = value
+    end
+
+    #------------------------------
+
+    def unsetenv(name)
+      @_env.delete(name)
     end
 
     #------------------------------
