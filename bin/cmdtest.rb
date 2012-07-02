@@ -32,6 +32,7 @@ $:.unshift(lib_dir) if File.directory?(File.join(lib_dir, "cmdtest"))
 require "cmdtest/baselogger"
 require "cmdtest/consolelogger"
 require "cmdtest/junitlogger"
+require "cmdtest/notify"
 require "cmdtest/testcase"
 require "cmdtest/workdir"
 require "cmdtest/methodfilter"
@@ -42,28 +43,23 @@ require "fileutils"
 require "find"
 require "digest/md5"
 require "rbconfig"
+require "thread"
 
 module Cmdtest
 
   #----------------------------------------------------------------------
 
-  class LogClient
-    def initialize
-      @listeners = []
-
-      @n_assert_failures  = 0
-      @n_assert_errors    = 0
-      @n_assert_successes = 0
+  module LogBaseMixin
+    def assert_success
+      _queue_notify [:assert_success]
+    end
+    
+    def assert_failure(str)
+      _queue_notify [:assert_failure, str]
     end
 
-    def add_listener(listener)
-      @listeners << listener
-    end
-
-    def _notify_once(method, *args)
-      for listener in @listeners
-        listener.send(method, *args)
-      end
+    def assert_error(str)
+      _queue_notify [:assert_error, str]
     end
 
     def notify(method, *args)
@@ -76,23 +72,64 @@ module Cmdtest
       end
     end
 
+    def _notify_once(method, *args)
+      _queue_notify [:call, method, args]
+    end
+  end
+
+  class LogBackground < NotifyBackground
+    include LogBaseMixin
+  end
+
+  #----------------------------------------------------------------------
+
+  class LogClient < NotifyForeground
+    include LogBaseMixin
+
+    def background_class
+      LogBackground
+    end
+
+    def _init
+      @listeners = []
+      @n_assert_failures  = 0
+      @n_assert_errors    = 0
+      @n_assert_successes = 0
+    end
+
+    def add_listener(listener)
+      @listeners << listener
+    end
+
+    def process_queue_item(e)
+      cmd, *rest = e
+      case cmd
+      when :assert_success
+        @n_assert_successes += 1
+      when :assert_failure
+        @n_assert_failures += 1
+        _distribute("assert_failure", rest)
+      when :assert_error
+        @n_assert_errors += 1
+        _distribute("assert_error", rest)
+      when :call
+        method, args = rest
+        _distribute(method, args)
+      else
+        raise "unknown command"
+      end
+    end
+
+    def _distribute(method, args)
+      for listener in @listeners
+        listener.send(method, *args)
+      end
+    end
+
     def everything_ok?
       @n_assert_errors == 0 && @n_assert_failures == 0
     end
 
-    def assert_success
-      @n_assert_successes += 1
-    end
-
-    def assert_failure(str)
-      @n_assert_failures += 1
-      notify("assert_failure", str)
-    end
-
-    def assert_error(str)
-      @n_assert_errors += 1
-      notify("assert_error", str)
-    end
   end
 
   #----------------------------------------------------------------------
@@ -125,27 +162,36 @@ module Cmdtest
       !selected || runner.method_filter.skip?(*method_id)
     end
 
+    @@t1 = Time.now
+
     def run(clog, runner)
-      clog.notify("testmethod", @test_method) do
-        obj = @test_class.testcase_class.new(self, clog, runner)
-        Dir.chdir(obj._work_dir.path)
-        obj.setup
-        begin
-          obj.send(@test_method)
-          clog.assert_success
-        rescue Cmdtest::AssertFailed => e
-          clog.assert_failure(e.message)
-          runner.method_filter.error(*method_id)
-        rescue => e
-          io = StringIO.new
-          io.puts "CAUGHT EXCEPTION:"
-          io.puts "  " + e.message + " (#{e.class})"
-          io.puts "BACKTRACE:"
-          io.puts e.backtrace.map {|line| "  " + line }
-          clog.assert_error(io.string)
-          runner.method_filter.error(*method_id)
+      clog.background do |clog2|
+        clog2.notify("testmethod", @test_method) do
+          obj = @test_class.testcase_class.new(self, clog2, runner)
+          #Dir.chdir(obj._work_dir.path)
+          obj.setup
+          begin
+            obj.send(@test_method)
+            clog2.assert_success
+          rescue Cmdtest::AssertFailed => e
+            clog2.assert_failure(e.message)
+            runner.method_filter.error(*method_id)
+          rescue => e
+            io = StringIO.new
+            io.puts "CAUGHT EXCEPTION:"
+            io.puts "  " + e.message + " (#{e.class})"
+            io.puts "BACKTRACE:"
+            io.puts e.backtrace.map {|line| "  " + line }
+            clog2.assert_error(io.string)
+            runner.method_filter.error(*method_id)
+          end
+          obj.teardown
         end
-        obj.teardown
+        if false
+          t2 = Time.now
+          puts "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- %s : %d" % [@test_method, t2-@@t1]
+          @@t1 = t2
+        end
       end
     end
 
@@ -342,13 +388,15 @@ module Cmdtest
 
   class Main
 
-    attr_reader :tests, :quiet, :verbose, :fast, :ruby_s, :incremental, :patterns
+    attr_reader :tests, :quiet, :verbose, :fast, :ruby_s, :incremental
+    attr_reader :patterns, :parallel
 
     def initialize
       @tests = []
       @quiet = false
       @verbose = false
       @fast = false
+      @parallel = 1
       @xml = nil
       @set_exit_code = true
       @ruby_s = Util.windows?
@@ -381,6 +429,8 @@ module Cmdtest
           @incremental = true
         when opt =~ /^-i$/
           @incremental = true
+        when opt =~ /^-j(\d+)$/
+          @parallel = Integer($1)
         when opt =~ /^--help$/ || opt =~ /^-h$/
           puts
           _show_options
@@ -409,19 +459,20 @@ module Cmdtest
         exit(1)
       end
 
-      clog = LogClient.new
+      the_clog = LogClient.new(@parallel) do |clog|
+        Util.opts = self
+        @project_dir = ProjectDir.new(files)
+        @runner = Runner.new(@project_dir, self)
+        logger = ConsoleLogger.new(self)
+        clog.add_listener(logger)
+        if @xml
+          clog.add_listener(JunitLogger.new(self, @xml))
+        end
 
-      Util.opts = self
-      @project_dir = ProjectDir.new(files)
-      @runner = Runner.new(@project_dir, self)
-      logger = ConsoleLogger.new(self)
-      clog.add_listener(logger)
-      if @xml
-        clog.add_listener(JunitLogger.new(self, @xml))
+        @runner.run(clog)
       end
-
-      @runner.run(clog)
-      error_exit = @set_exit_code && ! clog.everything_ok?
+      ok = the_clog.everything_ok?
+      error_exit = @set_exit_code && ! ok
       exit( error_exit ? 1 : 0 )
     end
 
