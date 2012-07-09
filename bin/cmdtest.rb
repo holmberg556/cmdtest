@@ -168,7 +168,9 @@ module Cmdtest
       clog.background do |clog2|
         clog2.notify("testmethod", @test_method) do
           obj = @test_class.testcase_class.new(self, clog2, runner)
-          #Dir.chdir(obj._work_dir.path)
+          if runner.opts.parallel == 1
+            Dir.chdir(obj._work_dir.path)
+          end
           obj.setup
           begin
             obj.send(@test_method)
