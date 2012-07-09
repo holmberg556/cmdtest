@@ -85,7 +85,11 @@ module Cmdtest
     end
 
     def tmp_dir
-      File.join(tmp_cmdtest_dir, @_test_method.as_filename)
+      if @_runner.opts.parallel == 1
+        File.join(tmp_cmdtest_dir, "top")
+      else
+        File.join(tmp_cmdtest_dir, @_test_method.as_filename)
+      end
     end
 
     def tmp_work_dir
