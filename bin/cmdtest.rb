@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#! /usr/bin/ruby1.8
 #----------------------------------------------------------------------
 # cmdtest.rb
 #----------------------------------------------------------------------
@@ -282,6 +282,10 @@ module Cmdtest
       @orig_env_path.dup
     end
 
+    def test_files_dir
+      @project_dir.test_files_dir
+    end
+
     def run(clog)
       @orig_cwd = Dir.pwd
       ENV["PATH"] = Dir.pwd + _path_separator + ENV["PATH"]
@@ -322,6 +326,8 @@ module Cmdtest
 
   class ProjectDir
 
+    ORIG_CWD = Dir.pwd
+
     def initialize(argv)
       @argv = argv
       @test_filenames = nil
@@ -332,7 +338,7 @@ module Cmdtest
     end
 
     def test_files_dir
-      File.dirname(test_filenames[0])
+      File.expand_path(File.dirname(test_filenames[0]), ORIG_CWD)
     end
 
     private
