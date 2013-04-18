@@ -103,7 +103,7 @@ module Cmdtest
     # the current directory at the time of the call.
 
     def import_file(src, tgt)
-      src_path = File.expand_path(src, @_runner.test_files_dir)
+      src_path = File.expand_path(src, @_runner.test_files_top)
       tgt_path = _cwd_path(tgt)
       FileUtils.mkdir_p(File.dirname(tgt_path))
       FileUtils.cp(src_path, tgt_path)

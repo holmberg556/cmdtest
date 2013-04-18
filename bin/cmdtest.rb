@@ -282,8 +282,8 @@ module Cmdtest
       @orig_env_path.dup
     end
 
-    def test_files_dir
-      @project_dir.test_files_dir
+    def test_files_top
+      @project_dir.test_files_top
     end
 
     def run(clog)
@@ -339,6 +339,10 @@ module Cmdtest
 
     def test_files_dir
       File.expand_path(File.dirname(test_filenames[0]), ORIG_CWD)
+    end
+
+    def test_files_top
+      ORIG_CWD
     end
 
     private
