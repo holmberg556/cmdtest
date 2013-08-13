@@ -10,9 +10,9 @@ It consists of a main program and a number of library files.
 Documentation
 -------------
 
-A "Cmdtest User Guide" can be found in the file `<doc/cmdtest.html>`_.
+A `Cmdtest User Guide`_ is available.
 It is generated from the file ``cmdtest.txt`` which is written in
-reStructuredText_ format. There is also an `<examples>`_ directory with
+reStructuredText_ format. There is also an ``examples`` directory with
 some real-world examples of using Cmdtest_.
 
 Installation
@@ -22,7 +22,7 @@ No installation is needed to use Cmdtest_. The file ``cmdtest.rb`` can
 be executed directly from where it is checked out or unpacked. But the
 program can also be installed. Use the following command::
 
-  $ hg clone https://cmdtest.googlecode.com/hg/ cmdtest
+  $ hg clone https://bitbucket.org/holmberg556/cmdtest cmdtest
   $ cd cmdtest
   $ ruby setup.rb            # sudo may be needed
 
@@ -33,7 +33,7 @@ License
 -------
 
 Cmdtest_ is released under the GNU General Public License version 3.
-For details see the file `<COPYING.txt>`_ in the same directory as this file.
+For details see the file ``COPYING.txt`` in the same directory as this file.
 
 History
 -------
@@ -53,5 +53,7 @@ Cmdtest_ was created by Johan Holmberg <holmberg556 at gmail dot com>.
 
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
-.. _Cmdtest:          http://cmdtest.googlecode.com
+.. _Cmdtest:          https://bitbucket.org/holmberg556/cmdtest
 .. _Cons:             http://www.dsmit.com/cons/
+
+.. _`Cmdtest User Guide`:     http://holmberg556.bitbucket.org/cmdtest/doc/cmdtest.html

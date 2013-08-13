@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.9.1: http://docutils.sourceforge.net/" />
 <title>Cmdtest - a program for testing executable programs</title>
 <style type="text/css">
 
@@ -295,54 +295,54 @@ ul.auto-toc {
 <div class="document" id="cmdtest-a-program-for-testing-executable-programs">
 <h1 class="title">Cmdtest - a program for testing executable programs</h1>
 
-<p><a class="reference external" href="http://cmdtest.googlecode.com">Cmdtest</a> is a program to test executable programs. Tests are written in
+<p><a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a> is a program to test executable programs. Tests are written in
 an &quot;xunit style&quot;, using assertions about created files, content of
-standard output, exit code, etc. <a class="reference external" href="http://cmdtest.googlecode.com">Cmdtest</a> is written in Ruby.
+standard output, exit code, etc. <a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a> is written in Ruby.
 It consists of a main program and a number of library files.</p>
 <div class="section" id="documentation">
 <h1>Documentation</h1>
-<p>A &quot;Cmdtest User Guide&quot; can be found in the file <a class="reference external" href="doc/cmdtest.html">doc/cmdtest.html</a>.
-It is generated from the file <tt class="docutils literal"><span class="pre">cmdtest.txt</span></tt> which is written in
-<a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> format. There is also an <a class="reference external" href="examples">examples</a> directory with
-some real-world examples of using <a class="reference external" href="http://cmdtest.googlecode.com">Cmdtest</a>.</p>
+<p>A <a class="reference external" href="http://holmberg556.bitbucket.org/cmdtest/doc/cmdtest.html">Cmdtest User Guide</a> is available.
+It is generated from the file <tt class="docutils literal">cmdtest.txt</tt> which is written in
+<a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> format. There is also an <tt class="docutils literal">examples</tt> directory with
+some real-world examples of using <a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a>.</p>
 </div>
 <div class="section" id="installation">
 <h1>Installation</h1>
-<p>No installation is needed to use <a class="reference external" href="http://cmdtest.googlecode.com">Cmdtest</a>. The file <tt class="docutils literal"><span class="pre">cmdtest.rb</span></tt> can
+<p>No installation is needed to use <a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a>. The file <tt class="docutils literal">cmdtest.rb</tt> can
 be executed directly from where it is checked out or unpacked. But the
 program can also be installed. Use the following command:</p>
 <pre class="literal-block">
-$ hg clone https://cmdtest.googlecode.com/hg/ cmdtest
+$ hg clone https://bitbucket.org/holmberg556/cmdtest cmdtest
 $ cd cmdtest
 $ ruby setup.rb            # sudo may be needed
 </pre>
-<p>For details about options to <tt class="docutils literal"><span class="pre">setup.rb</span></tt> use <tt class="docutils literal"><span class="pre">ruby</span> <span class="pre">setup.rb</span> <span class="pre">--help</span></tt>
+<p>For details about options to <tt class="docutils literal">setup.rb</tt> use <tt class="docutils literal">ruby setup.rb <span class="pre">--help</span></tt>
 or see &lt;<a class="reference external" href="http://i.loveruby.net/en/projects/setup/doc/usage.html">http://i.loveruby.net/en/projects/setup/doc/usage.html</a>&gt;.</p>
 </div>
 <div class="section" id="license">
 <h1>License</h1>
-<p><a class="reference external" href="http://cmdtest.googlecode.com">Cmdtest</a> is released under the GNU General Public License version 3.
-For details see the file <a class="reference external" href="COPYING.txt">COPYING.txt</a> in the same directory as this file.</p>
+<p><a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a> is released under the GNU General Public License version 3.
+For details see the file <tt class="docutils literal">COPYING.txt</tt> in the same directory as this file.</p>
 </div>
 <div class="section" id="history">
 <h1>History</h1>
-<p>I got the idea to create <a class="reference external" href="http://cmdtest.googlecode.com">Cmdtest</a> when I was using and making changes to <a class="reference external" href="http://www.dsmit.com/cons/">Cons</a>,
+<p>I got the idea to create <a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a> when I was using and making changes to <a class="reference external" href="http://www.dsmit.com/cons/">Cons</a>,
 the make-replacement written in Perl. The program had tests written
 using the Perl module Test::Cmd. Later I developed other
 programs that also needed some kind of &quot;unit tests&quot; for the executables.
 I looked for existing tools but could not find anything that I was completely
 comfortable with. So I started to develop my own tool, and the result was
-<a class="reference external" href="http://cmdtest.googlecode.com">Cmdtest</a>.</p>
+<a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a>.</p>
 </div>
 <div class="section" id="author">
 <h1>Author</h1>
-<p><a class="reference external" href="http://cmdtest.googlecode.com">Cmdtest</a> was created by Johan Holmberg &lt;holmberg556 at gmail dot com&gt;.</p>
+<p><a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a> was created by Johan Holmberg &lt;holmberg556 at gmail dot com&gt;.</p>
 </div>
 </div>
 <div class="footer">
 <hr class="footer" />
-<a class="reference external" href="README.txt">View document source</a>.
-Generated on: 2009-06-16.
+<a class="reference external" href="README.rst">View document source</a>.
+Generated on: 2013-08-13.
 Generated by <a class="reference external" href="http://docutils.sourceforge.net/">Docutils</a> from <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> source.
 
 </div>
