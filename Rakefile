@@ -12,6 +12,6 @@ end
 
 desc "generate HTML README"
 task "readme-html" do
-  sh "rst2html.py -gds --stylesheet doc/rst.css README.txt README.html"
+  sh "rst2html.py -gds --stylesheet doc/rst.css README.rst README.html"
 end
 
