@@ -53,6 +53,11 @@ module Cmdtest
       return tnew
     end
 
+    def self.quote_path(str)
+      needed = (str =~ /[^a-zA-Z0-9_]/)
+      return needed ? '"' + str.gsub('"', '\"') + '"' : str
+    end
+
     def self.windows?
       RUBY_PLATFORM =~ /mswin32|mingw32/
     end

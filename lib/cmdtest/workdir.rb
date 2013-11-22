@@ -21,6 +21,7 @@
 
 require "cmdtest/fssnapshot"
 require "cmdtest/cmdeffects"
+require "cmdtest/util"
 
 require "fileutils"
 
@@ -80,14 +81,14 @@ module Cmdtest
     end
 
     def _chdir_str(dir)
-      "cd #{dir}"
+      "cd %s" % _quote(dir)
     end
 
     def _set_env_path_str(env_path)
       if Util.windows?
         "set path=" + env_path.join(";")
       else
-        "export PATH=" + env_path.join(":")
+        "export PATH=" + _quote(env_path.join(":"))
       end
     end
 
@@ -103,6 +104,10 @@ module Cmdtest
       end
     end
 
+    def _quote(str)
+      return Cmdtest::Util::quote_path(str)
+    end
+
     def run_cmd(cmdline, env_path)
       File.open(_tmp_command_sh, "w") do |f|
         f.puts _ENV_strs(@testcase._env)
@@ -111,10 +116,10 @@ module Cmdtest
         f.puts _ruby_S(cmdline)
       end
       str = "%s %s  > %s  2> %s" % [
-        _shell,
-        _tmp_command_sh,
-        _tmp_stdout_log,
-        _tmp_stderr_log,
+        _quote(_shell),
+        _quote(_tmp_command_sh),
+        _quote(_tmp_stdout_log),
+        _quote(_tmp_stderr_log),
       ]
       before = _take_snapshot
       ok = system(str)

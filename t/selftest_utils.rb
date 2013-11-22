@@ -36,8 +36,14 @@ module SelftestUtils
     ]
   end
 
+  def _quote(str)
+    return Cmdtest::Util::quote_path(str)
+  end
+
   def cmd_cmdtest(*args)
-    cmd("ruby #{TOP}/bin/cmdtest.rb --quiet", *args) do
+    cmdtest = "#{TOP}/bin/cmdtest.rb"
+    command = "ruby %s --quiet" % _quote(cmdtest)
+    cmd(command, *args) do
       comment "running local cmdtest"
       yield
     end
