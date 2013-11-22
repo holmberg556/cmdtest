@@ -5,6 +5,25 @@ class CMDTEST_misc < Cmdtest::Testcase
 
   include SelftestUtils
 
+  def test_path_with_spaces
+    ignore_file "with spaces/tmp-cmdtest-2/"
+
+    Dir.mkdir "with spaces"
+    chdir "with spaces" do
+      create_CMDTEST_foo [
+        "cmd 'echo.rb this  is  a  line' do",
+        "  stdout_equal ['this is a line']",
+        "end",
+      ]
+
+      cmd_cmdtest do
+        stdout_equal [
+          "### echo.rb this  is  a  line",
+        ]
+      end
+    end
+  end
+
   #----------------------------------------
   # Ruby script called with "ruby -S"
   #----------------------------------------
