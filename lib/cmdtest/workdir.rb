@@ -63,25 +63,42 @@ module Cmdtest
       end
     end
 
-    def _tmp_command_sh
+    def _tmp_redirect_sh
       File.join(@testcase.tmp_dir,
-                Util.windows? ? "tmp-command.bat" : "tmp-command.sh")
+                Util.windows? ? "tmp-redirect.bat" : "tmp-redirect.sh")
+    end
+
+    def _tmp_command_name
+      Util.windows? ? "tmp-command.bat" : "tmp-command.sh"
+    end
+
+    def _tmp_command_sh
+      File.join(@testcase.tmp_dir, _tmp_command_name)
+    end
+
+    def _tmp_stdout_name
+      "tmp-stdout.log"
+    end
+
+    def _tmp_stderr_name
+      "tmp-stderr.log"
     end
 
     def _tmp_stdout_log
-      File.join(@testcase.tmp_dir, "tmp-stdout.log")
+      File.join(@testcase.tmp_dir, _tmp_stdout_name)
     end
 
     def _tmp_stderr_log
-      File.join(@testcase.tmp_dir, "tmp-stderr.log")
+      File.join(@testcase.tmp_dir, _tmp_stderr_name)
     end
 
     def _ENV_strs(env)
+      # TODO: windows
       env.keys.sort.map {|k| "export %s='%s'" % [k, env[k]] }
     end
 
     def _chdir_str(dir)
-      "cd %s" % _quote(dir)
+      "cd %s" % _quote(_slashes(dir))
     end
 
     def _set_env_path_str(env_path)
@@ -104,22 +121,42 @@ module Cmdtest
       end
     end
 
+    def _slashes(str)
+      if Util.windows?
+        str.gsub("/", "\\")
+      else
+        str
+      end
+    end
+
     def _quote(str)
       return Cmdtest::Util::quote_path(str)
     end
 
     def run_cmd(cmdline, env_path)
       File.open(_tmp_command_sh, "w") do |f|
-        f.puts _ENV_strs(@testcase._env)
-        f.puts _chdir_str(@testcase._cwd)
-        f.puts _set_env_path_str(env_path)
         f.puts _ruby_S(cmdline)
       end
-      str = "%s %s  > %s  2> %s" % [
-        _quote(_shell),
-        _quote(_tmp_command_sh),
-        _quote(_tmp_stdout_log),
-        _quote(_tmp_stderr_log),
+
+      File.open(_tmp_redirect_sh, "w") do |f|
+        f.puts _ENV_strs(@testcase._env)
+        f.puts
+        f.puts _chdir_str(@testcase._cwd)
+        f.puts
+        f.puts _set_env_path_str(env_path)
+        f.puts
+        f.printf "%s %s > %s 2> %s\n" % [
+          _shell,
+          _quote(_tmp_command_sh),
+          _quote(_tmp_stdout_log),
+          _quote(_tmp_stderr_log),
+        ]
+        f.puts
+      end
+
+      str = "%s %s" % [
+        _shell,
+        _quote(_tmp_redirect_sh),
       ]
       before = _take_snapshot
       ok = system(str)
