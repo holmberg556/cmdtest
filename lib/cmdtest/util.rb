@@ -54,7 +54,7 @@ module Cmdtest
     end
 
     def self.quote_path(str)
-      needed = (str =~ /[^a-zA-Z0-9_]/)
+      needed = (str =~ /[^-\\a-zA-Z0-9_:]/)
       return needed ? '"' + str.gsub('"', '\"') + '"' : str
     end
 
