@@ -275,7 +275,7 @@ module Cmdtest
     end
 
     def _path_separator
-      RbConfig::CONFIG["PATH_SEPARATOR"] || ":"
+      File::PATH_SEPARATOR || ":"
     end
 
     def orig_env_path
