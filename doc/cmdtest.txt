@@ -100,7 +100,7 @@ skipped. But all errors occurring at the same command will be reported.
 
 Cmdtest can also be directed to write an XML file on the same format as
 that used by Ant/JUnit. This makes it possible to use Cmdtest together
-with `continuous integration`_ servers like Hudson_.
+with `continuous integration`_ servers like Jenkins_.
 
 The exit status of ``cmdtest`` will be non-zero if some errors occurred,
 otherwise zero.  If errors should not affect exit code, the
@@ -183,11 +183,18 @@ Work directory
 
 All tests are performed in a "clean" temporary directory, here called the "work directory".
 When the ``setup``, ``test_*`` and ``teardown`` methods are called the current directory
-will be the "work directory" (unless ``Dir.chdir`` is called by the methods themselves).
+will be the "work directory" (unless ``chdir`` is called by the methods themselves).
 
 Several of the assertions and helper functions take filename arguments
 that are evaluated relative to the "work directory" (or sometimes the
 current directory if they differ).
+
+To support running ``cmdtest`` in parallel, methods such as
+``File.open`` and ``Dir.chdir`` should not be used in the test
+methods. Instead methods supplied by Cmdtest, such as ``create_file``
+and ``chdir`` should be used. The reason for this is that the ``cmdtest`` process
+only has **one** current directory, so different threads can't set the
+current directory without interfering with each other.
 
 Specifying files / directories
 ------------------------------
@@ -364,7 +371,7 @@ Run all tests found in test files in the "examples" directory
 
 Write an XML-summary to the specified file. The file uses the same
 format as JUnit_, so it can be understood be continuous integration
-servers such as Hudson_.
+servers such as Jenkins_.
 
 Reference Part
 --------------
@@ -423,13 +430,16 @@ Assertions - files
     (cf. ``written_files``).
 
 ``changed_files(file1,...,fileN)``
+    Deprecated. Use ``modified_files`` instead.
+
+``created_files(file1,...,fileN)``
+    The specified files should have been created by the command.
+
+``modified_files(file1,...,fileN)``
     The specified files should have been modified by the command. A
     file is considered modified if it existed before the command, and
     something about the file has changed after the command (inode
     number, modification date or content).
-
-``created_files(file1,...,fileN)``
-    The specified files should have been created by the command.
 
 ``removed_files(file1,...,fileN)``
     The specified files should have been removed by the command.
@@ -485,6 +495,10 @@ Assertions - misc
 Helper functions
 ++++++++++++++++
 
+``chdir(dir, &block)``
+    Works like ``Dir.chdir``, but handles current directory correctly
+    under ``cmdtest``.
+
 ``create_file(filename, content)``
     Create a file inside the "work directory".
     If the filename contains a directory part, intermediate directories are
@@ -493,6 +507,30 @@ Helper functions
     a string with the content of the whole file.
     The filename is evaluated relative to the current directory at the
     time of the call.
+
+``dir_mkdir(file)``
+    Works like ``Dir.mkdir``, but handles current directory correctly
+    under ``cmdtest``.
+
+``file_chmod(arg, file)``
+    Works like ``File.chmod``, but handles current directory correctly
+    under ``cmdtest``.
+
+``file_open(file, *args, &block)``
+    Works like ``File.open``, but handles current directory correctly
+    under ``cmdtest``.
+
+``file_read(file)``
+    Works like ``File.read``, but handles current directory correctly
+    under ``cmdtest``.
+
+``file_symlink(file1, file2)``
+    Works like ``File.symlink``, but handles current directory correctly
+    under ``cmdtest``.
+
+``file_utime(arg1, arg2, file)``
+    Works like ``File.utime``, but handles current directory correctly
+    under ``cmdtest``.
 
 ``ignore_file(file)``
     Ignore the specified file when looking for differences in the filesystem.
@@ -520,6 +558,14 @@ Helper functions
     where the executable tested is located. The argument ``dir`` is evaluated
     relative to the current directory  in effect when ``cmdtest`` was invoked.
 
+``remove_file(file)``
+    Works like ``FileUtils.rm_f``, but handles current directory correctly
+    under ``cmdtest``.
+
+``remove_file_tree(file)``
+    Works like ``FileUtils.rm_rf``, but handles current directory correctly
+    under ``cmdtest``.
+
 ``set_path(dir1, ..., dirN)``
     Set ``PATH`` to the given directories, so commands executed via ``cmd``
     are looked up using the modified ``PATH``. This method sets the whole ``PATH``
@@ -535,4 +581,4 @@ Helper functions
 .. _`Test::Unit`:   http://www.ruby-doc.org/stdlib/libdoc/test/unit/rdoc/classes/Test/Unit.html
 
 .. _`continuous integration`: http://en.wikipedia.org/wiki/Continuous_integration
-.. _Hudson: https://hudson.dev.java.net
+.. _Jenkins: http://jenkins-ci.org
