@@ -218,6 +218,10 @@ module Cmdtest
         get_test_methods(runner).each do |method|
           test_method = TestMethod.new(method, self)
           test_method.run(clog, runner) unless test_method.skip?(runner)
+          if $cmdtest_got_ctrl_c > 0
+            puts "cmdtest: exiting after Ctrl-C ..."
+            exit(1)
+          end
         end
       end
     end
@@ -481,6 +485,15 @@ module Cmdtest
           clog.add_listener(JunitLogger.new(self, @xml))
         end
 
+        $cmdtest_got_ctrl_c = 0
+        trap("INT") do
+          puts "cmdtest: got ctrl-C ..."
+          $cmdtest_got_ctrl_c += 1
+          if $cmdtest_got_ctrl_c > 3
+            puts "cmdtest: several Ctrl-C, exiting ..." 
+            exit(1)
+          end
+        end
         @runner.run(clog)
       end
       ok = the_clog.everything_ok?
