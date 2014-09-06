@@ -529,7 +529,7 @@ module Cmdtest
       if lines[-1] == ""
         lines.pop
       elsif ! lines.empty?
-        lines[-1] << "<<missing newline>>"
+        lines[-1] << "[[missing newline]]"
       end
       return lines
     end
@@ -554,7 +554,7 @@ module Cmdtest
         if lines[-1] == ""
           lines.pop
         elsif ! lines.empty?
-          lines[-1] << "<<missing newline>>"
+          lines[-1] << "[[missing newline]]"
         end
       when Regexp
         lines = [output]
