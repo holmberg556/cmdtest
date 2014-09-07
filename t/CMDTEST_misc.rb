@@ -750,7 +750,7 @@ _END_
         "--- ERROR: wrong stdout",
         "---        actual: 99",
         "---                22",
-        "---        expect: (?-mix:^11$)",
+        "---        expect: /^11$/",
       ]
       exit_nonzero
     end
@@ -773,7 +773,7 @@ _END_
         "--- ERROR: wrong stdout",
         "---        actual: 11",
         "---                99",
-        "---        expect: (?-mix:^22$)",
+        "---        expect: /^22$/",
       ]
       exit_nonzero
     end
@@ -795,7 +795,7 @@ _END_
         "--- ERROR: wrong stdout",
         "---        actual: 11",
         "---                22",
-        "---        expect: (?-mix:^\d+ \d+$)",
+        "---        expect: /^\d+ \d+$/",
       ]
       exit_nonzero
     end
@@ -852,7 +852,7 @@ _END_
         "---        actual: 11",
         "---                22",
         "---        expect: 11",
-        "---                (?-mix:^\d+ \d+$)",
+        "---                /^\d+ \d+$/",
       ]
       exit_nonzero
     end
