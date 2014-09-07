@@ -545,6 +545,17 @@ module Cmdtest
       end
     end
 
+    def _show_line(arg)
+      case arg
+      when String
+        arg
+      when Regexp
+        arg.inspect
+      else
+        arg.to_s # or error ???
+      end
+    end
+
     def _indented_lines(prefix, output)
       case output
       when Array
@@ -568,9 +579,9 @@ module Cmdtest
       lines.map do |line|
         if first
           first = false
-          prefix + line.to_s + "\n"
+          prefix + _show_line(line) + "\n"
         else
-          " " * prefix.size + line.to_s + "\n"
+          " " * prefix.size + _show_line(line) + "\n"
         end
       end.join("")
     end
