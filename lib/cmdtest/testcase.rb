@@ -463,6 +463,16 @@ module Cmdtest
       end
     end
 
+    # Assert stdout contains the specific value.
+    def stdout_contain(expected)
+      _stdxxx_contain_aux("stdout", true, expected)
+    end
+
+    # Assert stderr contains the specific value.
+    def stderr_contain(expected)
+      _stdxxx_contain_aux("stderr", true, expected)
+    end
+
     # Assert stdout equal to specific value.
     def stdout_equal(expected)
       _stdxxx_equal_aux("stdout", true, expected)
@@ -484,6 +494,75 @@ module Cmdtest
     end
 
     # helper methods
+
+    def _stdxxx_contain_aux(stdxxx, positive, expected)
+      _process_after do
+        @_checked[stdxxx] = true
+        actual = @_effects.send(stdxxx)
+        _xxx_contain(stdxxx, positive, actual, expected)
+      end
+    end
+
+    def _n_matches_here(actual_lines, i, expected_lines)
+      n = 0
+      expected_lines.each_index do |j|
+        break if i+j >= actual_lines.size
+        break if ! (expected_lines[j] === actual_lines[i+j])
+        n += 1
+      end
+      return [n, i]
+    end
+
+    def _xxx_contain(xxx, positive, actual, expected)
+      actual_lines = _str_as_lines(actual)
+      expected_lines = _str_or_arr_as_lines(expected)
+      n_matches = actual_lines.each_index.map do |i|
+        _n_matches_here(actual_lines, i, expected_lines)
+      end
+      n_matches.sort!
+      n_matches.reverse!
+      msg = []
+      if n_matches.size == 0
+        msg << "ERROR: empty #{xxx}, should contain:"
+        for line in expected_lines
+          msg << "    " + _show_line(line)
+        end
+      else
+        match_size, offset = n_matches[0]
+        if match_size == expected_lines.size
+          # ok
+        elsif match_size > 0
+          msg << "ERROR: found only part in #{xxx}:"
+          for line in expected_lines[0...match_size]
+            msg << "    " + _show_line(line)
+          end
+
+          msg << "ERROR: should have been followed by:"
+          for line in expected_lines[match_size..-1]
+            msg << "    " + _show_line(line)
+          end
+
+          if offset+match_size == actual_lines.size
+            msg << "ERROR: instead at EOF"
+          else
+            msg << "ERROR: instead followed by:"
+            for line in actual_lines[(offset+match_size)..-1]
+              msg << "    " + _show_line(line)
+            end
+          end
+        else
+          msg << "ERROR: not found in #{xxx}:"
+          for line in expected_lines
+            msg << "    " + _show_line(line)
+          end
+        end
+      end
+      _assert0 msg.size == 0 do
+        msg.join("\n")
+      end
+    end
+
+    #---
 
     def _stdxxx_equal_aux(stdxxx, positive, expected)
       _process_after do
