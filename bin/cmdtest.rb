@@ -436,7 +436,7 @@ module Cmdtest
         when opt =~ /^--fast$/
           @fast = true
         when opt =~ /^--xml=(.+)$/
-          @xml = $1
+          @xml = File.expand_path($1)
         when opt =~ /^--no-exit-code$/
           @set_exit_code = false
         when opt =~ /^--ruby_s$/
