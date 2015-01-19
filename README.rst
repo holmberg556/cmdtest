@@ -22,7 +22,7 @@ No installation is needed to use Cmdtest_. The file ``cmdtest.rb`` can
 be executed directly from where it is checked out or unpacked. But the
 program can also be installed. Use the following command::
 
-  $ hg clone https://bitbucket.org/holmberg556/cmdtest cmdtest
+  $ git clone https://bitbucket.org/holmberg556/cmdtest.git
   $ cd cmdtest
   $ ruby setup.rb            # sudo may be needed
 
