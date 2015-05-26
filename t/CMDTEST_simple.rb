@@ -7,6 +7,42 @@ class CMDTEST_simple < Cmdtest::Testcase
     
   #-----------------------------------
 
+  def test_get_path
+    create_CMDTEST_foo [
+      'old = get_path()',
+      'cmd "echo $PATH > old.path" do',
+      '    created_files "old.path"',
+      'end',
+      'set_path("extra/dir", *old)',
+      'cmd "echo $PATH > new.path" do',
+      '    created_files "new.path"',
+      'end',
+      'cmd "diff -q old.path new.path" do',
+      '    exit_nonzero',
+      '    stdout_equal /differ/',
+      'end',
+
+      'set_path(*old)',
+      'cmd "echo $PATH > restored.path" do',
+      '    created_files "restored.path"',
+      'end',
+      'cmd "diff -q old.path restored.path" do',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### echo $PATH > old.path",
+        "### echo $PATH > new.path",
+        "### diff -q old.path new.path",
+        "### echo $PATH > restored.path",
+        "### diff -q old.path restored.path",
+      ]
+    end
+  end
+
+  #-----------------------------------
+
   def test_use_chdir
     create_CMDTEST_foo [
       'create_file "dir/file1", ["this is dir/file1"]',
