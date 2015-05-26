@@ -7,6 +7,30 @@ class CMDTEST_simple < Cmdtest::Testcase
     
   #-----------------------------------
 
+  def test_use_chdir
+    create_CMDTEST_foo [
+      'create_file "dir/file1", ["this is dir/file1"]',
+      'chdir("dir")',
+      'File.mtime("file1")',    # exception if failing
+      'create_file "file2", ["this is dir/file2"]',
+      'cmd "cat file1" do',
+      '    stdout_equal ["this is dir/file1"]',
+      'end',
+      'cmd "cat file2" do',
+      '    stdout_equal ["this is dir/file2"]',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        '### cat file1',
+        '### cat file2',
+      ]
+    end
+  end
+
+  #-----------------------------------
+
   def test_try_to_run_non_existing_command_LINUX
     #
     return unless ! windows?
