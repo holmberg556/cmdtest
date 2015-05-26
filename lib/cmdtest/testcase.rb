@@ -269,6 +269,12 @@ module Cmdtest
 
     #------------------------------
 
+    def get_path
+      @_env_path
+    end
+
+    #------------------------------
+
     def windows?
       Util.windows?
     end
@@ -549,7 +555,7 @@ module Cmdtest
             msg << "ERROR: instead at EOF"
           else
             msg << "ERROR: instead followed by:"
-            for line in actual_lines[(offset+match_size)..-1]
+            for line in actual_lines[(offset+match_size)...(offset+expected_lines.size)]
               msg << "    " + _show_line(line)
             end
           end
