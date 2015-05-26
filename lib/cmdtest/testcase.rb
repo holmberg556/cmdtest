@@ -212,13 +212,16 @@ module Cmdtest
       if block_given?
         saved_cwd = @_cwd
         @_cwd = dir_path
+        Dir.chdir(@_cwd) if @_runner.opts.parallel == 1
         begin
           yield
         ensure
           @_cwd = saved_cwd
+          Dir.chdir(@_cwd) if @_runner.opts.parallel == 1
         end
       else
         @_cwd = dir_path
+        Dir.chdir(@_cwd) if @_runner.opts.parallel == 1
       end
     end
 
