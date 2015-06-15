@@ -216,13 +216,10 @@ class Result:
         expect = ExpectPattern(self, pattern, encoding)
         expect.check("stdout_match", self._stdout)
 
-    def stderr_match(self, pattern):
+    def stderr_match(self, pattern, encoding='utf-8'):
         self._checked_stderr = True
-        lines = self._stderr.lines()
-        for line in lines:
-            if re.search(pattern, line):
-                return
-        self._error("stderr_match", actual=Lines(lines), expect=Regexp(pattern))
+        expect = ExpectPattern(self, pattern, encoding)
+        expect.check("stderr_match", self._stderr)
 
     def stdout_equal(self, content, encoding='utf-8'):
         self._checked_stdout = True
