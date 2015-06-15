@@ -102,4 +102,27 @@ class CMDTEST_chdir < Cmdtest::Testcase
     end
   end
 
+  # "create_file" after "Dir.chdir"
+  def test_dir_chdir_SUBDIR_create_file
+    create_CMDTEST_foo [
+      "create_file 'SUBDIR/f0.txt', ''",
+      "create_file 'f1.txt', ''",
+      "Dir.chdir 'SUBDIR'",
+      "create_file 'f2.txt', ''",
+      "Dir.chdir '..'",
+      "cmd 'find . -type f | sort' do",
+      "    stdout_equal [",
+      "        './SUBDIR/f0.txt',",
+      "        './SUBDIR/f2.txt',",
+      "        './f1.txt',",
+      "    ]",
+      "end",
+    ]
+    cmd_cmdtest do
+      stdout_equal [
+        "### find . -type f | sort",
+      ]
+    end
+  end
+
 end
