@@ -32,6 +32,14 @@ import sys
 import types
 import hashlib
 
+if sys.platform == 'win32':
+    try:
+        import win_unicode_console
+    except ImportError:
+        pass
+    else:
+        win_unicode_console.enable()
+
 class AssertFailed(Exception):
     pass
 
