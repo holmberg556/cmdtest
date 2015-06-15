@@ -39,6 +39,14 @@ ORIG_CWD = os.getcwd()
 
 #----------------------------------------------------------------------
 
+def subranges(n, arr):
+    arr = list(arr)
+    for i in range(0,len(arr)-n+1):
+        yield arr[i:i+n]
+
+def to_list(arg):
+    return arg if isinstance(arg, list) else [arg]
+
 def to_content(lines):
     return ''.join(line + "\n" for line in lines)
 
@@ -137,6 +145,15 @@ class ExpectPattern:
         self.encoding = encoding
         self.pattern = pattern
 
+    def _match(self, lines):
+        patterns = to_list(self.pattern)
+        for some_lines in subranges(len(patterns), lines):
+            for pattern, line in zip(patterns, some_lines):
+                if not re.search(pattern, line):
+                    break
+            else:
+                return True
+
     def check(self, name, actual_bytes):
         try:
             actual_lines = actual_bytes.lines(self.encoding)
@@ -144,15 +161,12 @@ class ExpectPattern:
             actual_lines = ["<CAN'T DECODE AS " + self.encoding + ">"]
             ok = False
         else:
-            ok = False
-            for line in actual_lines:
-                if re.search(self.pattern, line):
-                    ok = True
+            ok = self._match(actual_lines)
 
         if not ok:
             print("--- ERROR:", name)
             error_show(name, "actual:", actual_lines)
-            error_show(name, "expect:", ['PATTERN: ' + self.pattern])
+            error_show(name, "expect:", ['PATTERN:'] + to_list(self.pattern))
             self.result._nerrors += 1
 
 #----------------------------------------------------------------------

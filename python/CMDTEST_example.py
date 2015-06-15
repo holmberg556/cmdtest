@@ -90,6 +90,10 @@ class TC_example(TestCase):
         self.create_file("abc.txt", [
             'detta är abc.txt',
             'räksmörgås',
+            ' aaa',
+            ' bbb',
+            ' ccc',
+            ' ddd',
         ], encoding='utf-16')
         with self.cmd("cat abc.txt") as c:
             c.stdout_equal([
@@ -102,7 +106,10 @@ class TC_example(TestCase):
                 'detta är abc.txtx',
                 'räksmörgås',
             ], 'utf-16')
-            c.file_match("abc.txt", "tt", 'utf-16')
+            c.file_match("abc.txt", [
+                "xbb",
+                "ccc",
+            ], 'utf-16')
 
         with self.cmd("true") as c:
             pass
