@@ -55,7 +55,7 @@ class TC_example(TestCase):
 
     def test_06_ls(self):
         self.create_file("aaa.txt", "aaa\n")
-        self.import_file("file1.txt", "subdir/bbb.txt")
+        self.import_file("../file1.txt", "subdir/bbb.txt")
 
         with self.cmd("ls") as c:
             c.stdout_equal([
@@ -68,13 +68,13 @@ class TC_example(TestCase):
             c.exit_nonzero()
             c.stderr_match('command not found')
 
-        self.prepend_path("files/bin")
+        self.prepend_path("../files/bin")
 
         with self.cmd("hello1") as c:
             c.stdout_equal("hello\n")
 
     def test_07_path_ii(self):
-        self.import_file("files/bin/hello1", "blaha/hello2")
+        self.import_file("../files/bin/hello1", "blaha/hello2")
 
         with self.cmd("hello2") as c:
             c.exit_nonzero()
