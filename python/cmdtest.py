@@ -473,7 +473,7 @@ class Tclass:
 class Tfile:
     def __init__(self, filename):
         try:
-            with open(filename) as f:
+            with open(filename, encoding='utf-8') as f:
                 co = compile(f.read(), filename, "exec")
         except IOError as e:
             print("cmdtest: error: failed to read %s" % filename,
