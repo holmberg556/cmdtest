@@ -63,7 +63,7 @@ def error_show(name, what, arg):
     try:
         msg = arg.error_msg(what)
     except:
-        if name.startswith('stdout_') or name.startswith('stderr_'):
+        if re.match(r'(stdout|stderr|file)_', name):
             print(what)
             if len(arg) == 0:
                 print("     <<empty>>")
@@ -230,6 +230,14 @@ class Result:
         self._checked_stderr = True
         expect = ExpectFile(self, content, encoding)
         expect.check("stderr_equal", self._stderr)
+
+    def file_match(self, fname, pattern, encoding='utf-8'):
+        expect = ExpectPattern(self, pattern, encoding)
+        expect.check("file_match %s" % fname, File(fname))
+
+    def file_equal(self, fname, content, encoding='utf-8'):
+        expect = ExpectFile(self, content, encoding)
+        expect.check("file_equal %s" % fname, File(fname))
 
     TESTS = {
         "created_files"  : (lambda before,after: not before and after,

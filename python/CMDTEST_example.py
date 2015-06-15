@@ -98,6 +98,12 @@ class TC_example(TestCase):
             ], 'utf-16')
             c.stdout_match("tt", 'utf-16')
 
+            c.file_equal("abc.txt", [
+                'detta är abc.txtx',
+                'räksmörgås',
+            ], 'utf-16')
+            c.file_match("abc.txt", "tt", 'utf-16')
+
         with self.cmd("true") as c:
             pass
 
