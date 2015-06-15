@@ -42,7 +42,7 @@ ORIG_CWD = os.getcwd()
 def to_content(lines):
     return ''.join(line + "\n" for line in lines)
 
-def to_lines(content):
+def to_lines(content, newline="\n"):
     lines = content.split("\n")
     if lines[-1] == '':
         lines.pop()
@@ -104,7 +104,7 @@ class File:
             self.content = f.read()
 
     def lines(self, encoding):
-        return to_lines(self.content.decode(encoding=encoding))
+        return to_lines(self.content.decode(encoding=encoding), os.linesep)
 
 #----------------------------------------------------------------------
 
