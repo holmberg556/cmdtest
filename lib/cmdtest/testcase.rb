@@ -55,10 +55,10 @@ module Cmdtest
 
     def setup
     end
-    
+
     def teardown
     end
-    
+
     #------------------------------
 
     ORIG_CWD = Dir.pwd
@@ -202,26 +202,39 @@ module Cmdtest
     #------------------------------
 
     def current_directory
-      @_cwd
+      self._cwd
+    end
+
+    def _cwd
+      if @_runner.opts.parallel == 1
+        Dir.pwd
+      else
+        @_cwd
+      end
+    end
+
+    def _cwd=(dir)
+      if @_runner.opts.parallel == 1
+        Dir.chdir(dir)
+      else
+        @_cwd = dir
+      end
     end
 
     #------------------------------
 
     def chdir(dir, &block)
-      dir_path = File.expand_path(dir, @_cwd)
+      dir_path = File.expand_path(dir, self._cwd)
       if block_given?
-        saved_cwd = @_cwd
-        @_cwd = dir_path
-        Dir.chdir(@_cwd) if @_runner.opts.parallel == 1
+        saved_cwd = self._cwd
+        self._cwd = dir_path
         begin
           yield
         ensure
-          @_cwd = saved_cwd
-          Dir.chdir(@_cwd) if @_runner.opts.parallel == 1
+          self._cwd = saved_cwd
         end
       else
-        @_cwd = dir_path
-        Dir.chdir(@_cwd) if @_runner.opts.parallel == 1
+        self._cwd = dir_path
       end
     end
 
@@ -258,7 +271,7 @@ module Cmdtest
     # of the call was started.
 
     def prepend_local_path(dir)
-      @_env_path.unshift(File.expand_path(dir, @_cwd))
+      @_env_path.unshift(File.expand_path(dir, self._cwd))
     end
 
     #------------------------------
@@ -422,7 +435,7 @@ module Cmdtest
     #------------------------------
 
     def _cwd_path(path)
-      File.expand_path(path, @_cwd)
+      File.expand_path(path, self._cwd)
     end
 
     #------------------------------
