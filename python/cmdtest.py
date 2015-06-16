@@ -48,6 +48,23 @@ class AssertFailed(Exception):
 
 ORIG_CWD = os.getcwd()
 
+class Statistics:
+    def __init__(self):
+        self.classes = 0
+        self.methods = 0
+        self.commands = 0
+        self.errors = 0
+        self.fatals = 0
+
+    def __repr__(self):
+        return "Statistics(classes=%s, methods=%s, command=%s, errors=%s, fatals=%s)" % (
+            self.classes,
+            self.methods,
+            self.commands,
+            self.errors,
+            self.fatals,
+        )
+
 #----------------------------------------------------------------------
 
 def subranges(n, arr):
@@ -309,8 +326,9 @@ class Result:
 #----------------------------------------------------------------------
 
 class TestCase:
-    def __init__(self, tmpdir):
+    def __init__(self, tmpdir, statistics):
         self.__tmpdir = tmpdir
+        self.__statistics = statistics
 
     def setup(self):
         pass
@@ -345,6 +363,7 @@ class TestCase:
         stdout_log = tmpdir.stdout_log()
         stderr_log = tmpdir.stderr_log()
         self._wait_for_new_second()
+        self.__statistics.commands += 1
         print("### cmdline:", cmdline)
         with open(stdout_log, "w") as stdout, open(stderr_log, "w") as stderr:
             err = subprocess.call(cmdline, stdout=stdout, stderr=stderr, shell=True)
@@ -492,19 +511,20 @@ class Tmethod:
     def name(self):
         return self.method.__name__
 
-    def run(self, tmpdir):
-        obj = self.tclass.klass(tmpdir)
+    def run(self, tmpdir, statistics):
+        obj = self.tclass.klass(tmpdir, statistics)
         tmpdir.clear()
         with tmpdir:
             try:
                 obj.setup()
                 self.method(obj)
             except AssertFailed as e:
-                pass
+                statistics.errors += 1
             except Exception as e:
                 print("--- exception in test: %s: %s" % (sys.exc_info()[0].__name__, e))
                 import traceback
                 traceback.print_tb(sys.exc_info()[2])
+                statistics.fatals += 1
             obj.teardown()
 
 
@@ -574,15 +594,22 @@ def parse_otions():
 
 def main():
     options, py_files, selected_methods = parse_otions()
+    statistics = Statistics()
     for py_file in py_files:
         tfile = Tfile(py_file)
         tmpdir = Tmpdir()
         for tclass in tfile.tclasses():
+            statistics.classes += 1
             progress(tclass.name())
             for tmethod in tclass.tmethods():
                 if not selected_methods or tmethod.name() in selected_methods:
+                    statistics.methods += 1
                     progress(tmethod.name())
-                    tmethod.run(tmpdir)
+                    tmethod.run(tmpdir, statistics)
+    print()
+    print(statistics)
+    print()
+    exit(0 if statistics.errors == 0 and statistics.fatals == 0 else 1)
 
 if __name__ == '__main__':
     main()
