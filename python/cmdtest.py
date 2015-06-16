@@ -316,12 +316,12 @@ class TestCase:
         pass
 
     def prepend_path(self, dirpath):
-        os.environ['PATH'] = ':'.join((os.path.join(ORIG_CWD, dirpath),
-                                       os.environ['PATH']))
+        os.environ['PATH'] = os.pathsep.join((os.path.join(ORIG_CWD, dirpath),
+                                              os.environ['PATH']))
 
     def prepend_local_path(self, dirpath):
-        os.environ['PATH'] = ':'.join((os.path.join(self.__tmpdir.top, dirpath),
-                                       os.environ['PATH']))
+        os.environ['PATH'] = os.pathsep.join((os.path.join(self.__tmpdir.top, dirpath),
+                                              os.environ['PATH']))
 
     def import_file(self, src, tgt):
         mkdir_for(tgt)
