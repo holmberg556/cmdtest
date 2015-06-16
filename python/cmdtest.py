@@ -22,7 +22,9 @@
 
 # This is a minimal Python version of "cmdtest".
 
+import argparse
 import copy
+import glob
 import io
 import os
 import re
@@ -522,16 +524,39 @@ class Tfile:
 
 #----------------------------------------------------------------------
 
+def parse_otions():
+    parser = argparse.ArgumentParser('jcons')
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="be more verbose")
+    parser.add_argument("arg", nargs="*",
+                        help="CMDTEST_*.py files / test methods")
+    options = parser.parse_args()
+    py_files = []
+    selected_methods = set()
+    for arg in options.arg:
+        if re.match(r'CMDTEST_.*\.py$', arg):
+            py_files.append(arg)
+        else:
+            selected_methods.add(arg)
+    if not py_files:
+        py_files = glob.glob("CMDTEST_*.py")
+        if not py_files:
+            print("ERROR: no CMDTEST_*.py files found")
+            exit(1)
+
+    return options, py_files, selected_methods
+
 def main():
-    selected = set(sys.argv[1:])
-    tfile = Tfile("CMDTEST_example.py")
-    tmpdir = Tmpdir()
-    for tclass in tfile.tclasses():
-        progress(tclass.name())
-        for tmethod in tclass.tmethods():
-            if not selected or tmethod.name() in selected:
-                progress(tmethod.name())
-                tmethod.run(tmpdir)
+    options, py_files, selected_methods = parse_otions()
+    for py_file in py_files:
+        tfile = Tfile(py_file)
+        tmpdir = Tmpdir()
+        for tclass in tfile.tclasses():
+            progress(tclass.name())
+            for tmethod in tclass.tmethods():
+                if not selected_methods or tmethod.name() in selected_methods:
+                    progress(tmethod.name())
+                    tmethod.run(tmpdir)
 
 if __name__ == '__main__':
     main()
