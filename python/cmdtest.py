@@ -25,14 +25,15 @@
 import argparse
 import copy
 import glob
+import hashlib
 import io
 import os
 import re
 import shutil
 import subprocess
 import sys
+import time
 import types
-import hashlib
 
 if sys.platform == 'win32':
     try:
@@ -343,6 +344,7 @@ class TestCase:
         before = tmpdir.snapshot()
         stdout_log = tmpdir.stdout_log()
         stderr_log = tmpdir.stderr_log()
+        self._wait_for_new_second()
         print("### cmdline:", cmdline)
         with open(stdout_log, "w") as stdout, open(stderr_log, "w") as stderr:
             err = subprocess.call(cmdline, stdout=stdout, stderr=stderr, shell=True)
@@ -351,6 +353,27 @@ class TestCase:
         return Result(err, before, after,
                       File(stdout_log), File(stderr_log),
                       tmpdir)
+
+    def _wait_for_new_second(self):
+        newest = self._newest_file_time()
+        while self._current_file_time() == newest:
+            time.sleep(0.1)
+
+    def _newest_file_time(self):
+        newest = None
+        for dirpath, dirnames, filenames in os.walk(self.__tmpdir.top):
+            for filename in filenames:
+                path = os.path.join(dirpath, filename)
+                mtime = os.path.getmtime(path)
+                if not newest or mtime > newest:
+                    newest = mtime
+        return newest
+
+    def _current_file_time(self):
+        with open(self.__tmpdir.timestamp_file(), "w") as f:
+            print("file written to detect 'mtime'", file=f)
+        return os.path.getmtime(self.__tmpdir.timestamp_file())
+
 
 #----------------------------------------------------------------------
 
@@ -436,6 +459,9 @@ class Tmpdir:
 
     def stderr_log(self):
         return os.path.join(self.logdir, "tmp.stderr")
+
+    def timestamp_file(self):
+        return os.path.join(self.logdir, "tmp.timestamp")
 
     def snapshot(self):
         return FsSnapshot(self.top)
