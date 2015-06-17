@@ -114,6 +114,17 @@ class TC_example(TestCase):
         with self.cmd("true") as c:
             pass
 
+    def test_09_encoding(self):
+        self.create_file("abc.txt", [
+            'detta är abc.txt',
+            'räksmörgås',
+            ' aaa',
+            ' bbb',
+            ' ccc',
+            ' ddd',
+        ], encoding='utf-16')
+        self.transcode_file('abc.txt', 'xxx.txt', src_encoding='utf-16', tgt_encoding='utf-32')
+
     def xxx_test_bool(self):
         with self.cmd("true") as c:
             c.exit_status(0)

@@ -357,6 +357,17 @@ class TestCase:
             else:
                 f.write(content)
 
+    def transcode_file(self, src_file, tgt_file=None, src_encoding='utf-8', tgt_encoding='utf-8'):
+        if tgt_file:
+            mkdir_for(tgt_file)
+        else:
+            tgt_file = src_file
+
+        with open(src_file, "r", encoding=src_encoding) as f:
+            data = f.read()
+        with open(tgt_file, "w", encoding=tgt_encoding) as f:
+            f.write(data)
+
     def cmd(self, cmdline):
         tmpdir = self.__tmpdir
         before = tmpdir.snapshot()
