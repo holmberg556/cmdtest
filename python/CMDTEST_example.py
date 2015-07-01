@@ -125,6 +125,15 @@ class TC_example(TestCase):
         ], encoding='utf-16')
         self.transcode_file('abc.txt', 'xxx.txt', src_encoding='utf-16', tgt_encoding='utf-32')
 
+    def test_10_compare_files(self):
+        lines = ["line %d" % i for i in range(100)]
+        self.create_file("aaa.txt", lines)
+        lines[20:25] = ['aaa', 'bbb']
+        self.create_file("bbb.txt", lines)
+
+        with self.cmd(None) as c:
+            c.files_equal('aaa.txt', 'bbb.txt')
+
     def xxx_test_bool(self):
         with self.cmd("true") as c:
             c.exit_status(0)

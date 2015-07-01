@@ -27,6 +27,7 @@ import copy
 import glob
 import hashlib
 import io
+from itertools import zip_longest, dropwhile
 import os
 import re
 import shutil
@@ -99,7 +100,7 @@ def error_show(name, what, arg):
     try:
         msg = arg.error_msg(what)
     except:
-        if re.match(r'(stdout|stderr|file)_', name):
+        if re.match(r'(stdout|stderr|file|files)_', name):
             print(what)
             if len(arg) == 0:
                 print("     <<empty>>")
@@ -281,6 +282,29 @@ class Result:
         expect = ExpectFile(self, content, encoding)
         expect.check("file_equal %s" % fname, File(fname))
 
+    def files_equal(self, fname1, fname2, encoding='utf-8'):
+        with open(fname1, "r", encoding=encoding) as f: lines1 = list(f)
+        with open(fname2, "r", encoding=encoding) as f: lines2 = list(f)
+        if lines1 != lines2:
+            both = list(zip_longest(lines1, lines2))
+            n1 = len(both)
+            rest = list(dropwhile(lambda x: x[0] == x[1], both))
+            n2 = len(rest)
+            nequal = n1 - n2
+            self._error("files_equal",
+                        actual=[
+                            "<%d equal lines>" % nequal,
+                            both[nequal][0].rstrip("\n"),
+                            "<...>",
+                        ],
+                        expect=[
+                            "<%d equal lines>" % nequal,
+                            both[nequal][1].rstrip("\n"),
+                            "<...>",
+                        ])
+
+
+
     TESTS = {
         "created_files"  : (lambda before,after: not before and after,
                             {"created"}),
@@ -377,7 +401,10 @@ class TestCase:
         self.__statistics.commands += 1
         print("### cmdline:", cmdline)
         with open(stdout_log, "w") as stdout, open(stderr_log, "w") as stderr:
-            err = subprocess.call(cmdline, stdout=stdout, stderr=stderr, shell=True)
+            if cmdline:
+                err = subprocess.call(cmdline, stdout=stdout, stderr=stderr, shell=True)
+            else:
+                err = 0
         after = tmpdir.snapshot()
 
         return Result(err, before, after,
