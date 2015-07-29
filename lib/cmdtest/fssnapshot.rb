@@ -56,7 +56,13 @@ module Cmdtest
     end
 
     def _ignore_file?(path)
-      @ignored_files.any? {|ignored| ignored === path }
+      @ignored_files.any? do |ignored|
+        if ignored.index("*")
+          File.fnmatch(ignored, path, File::FNM_PATHNAME)
+        else
+          ignored === path
+        end
+      end
     end
 
     def files

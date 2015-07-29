@@ -109,4 +109,26 @@ class CMDTEST_ignore_file < Cmdtest::Testcase
     end
   end
 
+  #----------------------------------------
+  # the argument to 'ignore_file' can contain shell wildcards,
+  # both * and **
+
+  def test_ignore_file_SHELL_GLOB
+    create_CMDTEST_foo [
+      "ignore_file 'bbb*'",
+      "ignore_file '**/ccc'",
+      "dir_mkdir 'dir'",
+      "",
+      "cmd 'touch.rb aaa bbb1 bbb2 ccc dir/aaa dir/bbb1 dir/bbb2 dir/ccc' do",
+      "  created_files 'aaa', 'dir/aaa', 'dir/bbb1', 'dir/bbb2'",
+      "end",
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### touch.rb aaa bbb1 bbb2 ccc dir/aaa dir/bbb1 dir/bbb2 dir/ccc",
+      ]
+    end
+  end
+
 end
