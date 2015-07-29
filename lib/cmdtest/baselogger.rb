@@ -20,17 +20,58 @@
 #----------------------------------------------------------------------
 
 module Cmdtest
+
   class BaseLogger
 
-    @@debug = false
-
     attr_reader :opts
+
+    def initialize(opts)
+      @opts = opts
+    end
+
+    def testsuite_begin
+    end
+
+    def testsuite_end
+    end
+
+    def testfile_begin(file)
+    end
+
+    def testfile_end(file)
+    end
+
+    def testclass_begin(testcase_class)
+    end
+
+    def testclass_end(testcase_class)
+    end
+
+    def testmethod_begin(method)
+    end
+
+    def testmethod_end(method)
+    end
+
+    def cmdline(method, comment)
+    end
+
+    def assert_failure(str)
+    end
+
+    def assert_error(str)
+    end
+  end
+
+  class ErrorLogger < BaseLogger
+
+    @@debug = false
 
     attr_reader :n_suites, :n_files, :n_classes
     attr_reader :n_methods, :n_commands, :n_failures, :n_errors
 
     def initialize(opts)
-      @opts = opts
+      super
 
       @n_suites   = 0
       @n_files    = 0
@@ -42,52 +83,35 @@ module Cmdtest
     end
 
     def testsuite_begin
-      p :testsuite_begin if @@debug
       @n_suites += 1
     end
-    
-    def testsuite_end
-      p :testsuite_end if @@debug
-    end
-    
+
     def testfile_begin(file)
-      p [:testfile_begin, file] if @@debug
       @n_files += 1
     end
-    
-    def testfile_end(file)
-      p :testfile_end if @@debug
-    end
-    
+
     def testclass_begin(testcase_class)
-      p [:testclass_begin, testcase_class] if @@debug
       @n_classes += 1
     end
-    
-    def testclass_end(testcase_class)
-      p :testclass_end if @@debug
-    end
-    
+
     def testmethod_begin(method)
-      p [:testmethod_begin, method] if @@debug
       @n_methods += 1
-    end
-    
-    def testmethod_end(method)
-      p :testmethod_end if @@debug
     end
 
     def cmdline(method, comment)
-      p :testmethod_end if @@debug
       @n_commands += 1
     end
-    
-    def assert_failure
+
+    def assert_failure(msg)
       @n_failures += 1
     end
 
-    def assert_error
+    def assert_error(str)
       @n_errors += 1
+    end
+
+    def everything_ok?
+      @n_errors == 0 && @n_failures == 0
     end
 
   end

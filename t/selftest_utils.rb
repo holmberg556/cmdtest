@@ -12,7 +12,7 @@ module SelftestUtils
   end
 
   def setup
-    ignore_file ".cmdtest-filter"
+    ignore_file "**/.cmdtest-filter"
     ignore_file "tmp-cmdtest-2/"
     ignore_file "tmp-cmdtest-2/TIMESTAMP"
     ignore_file "tmp-cmdtest-2/tmp-command.sh"

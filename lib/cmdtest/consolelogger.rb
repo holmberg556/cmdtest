@@ -25,27 +25,22 @@ module Cmdtest
   class ConsoleLogger < BaseLogger
 
     def _banner(ch, str)
-      puts "### " + ch * 40 + " " + str      
+      puts "### " + ch * 40 + " " + str
     end
 
     def testfile_begin(file)
-      super
       _banner "=", file  if ! opts.quiet
     end
 
     def testclass_begin(testcase_class_name)
-      super
       _banner "-", testcase_class_name if ! opts.quiet
     end
 
     def testmethod_begin(method)
-      super
       _banner ".", method.to_s  if ! opts.quiet
     end
 
     def cmdline(cmdline_arg, comment)
-      super
-
       if opts.verbose
         first = comment || "..."
         puts "### %s" % [first]
@@ -57,26 +52,12 @@ module Cmdtest
     end
 
     def assert_failure(str)
-      super()
       puts str.gsub(/^/, "--- ")
     end
 
     def assert_error(str)
-      super()
       puts str.gsub(/^/, "--- ")
     end
 
-    def testsuite_end
-      super
-      if ! opts.quiet
-        puts
-        puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
-          n_failures == 0 && n_errors == 0 ? "###" : "---",
-          n_classes, n_methods, n_commands, n_failures, n_errors
-        ]
-        puts
-      end
-    end
-    
   end
 end

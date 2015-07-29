@@ -34,27 +34,16 @@ module Cmdtest
       @jf = JunitFile.new(@file)
     end
 
-    def testfile_begin(file)
-      super
-    end
-
     def testclass_begin(testcase_class_name)
-      super
       @testcase_class_name = testcase_class_name
       @ts = @jf.new_testsuite("CMDTEST", testcase_class_name)
     end
 
-    def testclass_end(testcase_class_name)
-      super
-    end
-
     def testmethod_begin(method)
-      super
       @err_assertions = []
     end
 
     def testmethod_end(method)
-      super
       if @err_assertions.size > 0
         message = @err_assertions[0].split(/\n/)[0]
         type = "assert"
@@ -69,25 +58,17 @@ module Cmdtest
       "CMDTEST." + @testcase_class_name
     end
 
-    def cmdline(cmdline_arg, comment)
-      super
-    end
-
     def assert_failure(str)
-      super()
       @err_assertions << str
     end
 
     def assert_error(str)
-      super()
       @err_assertions << str
     end
 
     def testsuite_end
-      super
       @jf.write
     end
-    
+
   end
 end
-

@@ -19,67 +19,66 @@
 # along with "cmdtest".  If not, see <http://www.gnu.org/licenses/>.
 #----------------------------------------------------------------------
 
+require "json"
+
 module Cmdtest
   class MethodFilter
 
-    def initialize(filter_filename, runner)
-      @filter_filename = filter_filename
+    def initialize(cwd, incremental, runner)
+      @incremental = incremental
+      @cwd = cwd
+      @filter_filename = File.expand_path(".cmdtest-filter", @cwd)
+
       @runner = runner
-      @filter = {}
+
       if @runner.opts.incremental && File.file?(@filter_filename)
-        File.open(filter_filename, "r") do |f|
-          while line = f.gets
-            line.chomp!
-            key, signature = line.split(/\t/, 2)
-            @filter[key] = signature
-          end
+        File.open(@filter_filename, "r") do |f|
+          @filter = JSON.load(f)
         end
+      else
+        @filter = {}
       end
 
       @files_read = {}
       @signatures = {}
-      @new_filter = {}
+      @new_filter = @filter.dup
     end
 
     def write
       File.open(@filter_filename, "w") do |f|
-        for key in @new_filter.keys.sort
-          f.puts "%s\t%s" % [
-            key,
-            @new_filter[key] || "unknown",
-          ]
-        end
+        f.puts JSON.pretty_generate(@new_filter)
       end
     end
 
-    def skip?(file, klass, method)
-      _maybe_read_ruby_file(file.path)
-      key = _method_key(file.path, klass.display_name, method)
-      #p [:skip, key, @signatures[key], @filter[key]]
-      @new_filter[key] = @signatures[key]
-      return @new_filter[key] && @new_filter[key] ==  @filter[key]
+    def _get_method_signature(method_id)
+      _maybe_read_ruby_file(method_id.file)
+      return @signatures[method_id.key] || "NO-SIGNATURE-FOUND"
     end
 
-    def error(file, klass, method)
-      key = _method_key(file.path, klass.display_name, method)
-      @new_filter.delete(key)
+    def skip?(method_id)
+      return @incremental && @new_filter[method_id.key] == _get_method_signature(method_id)
+    end
+
+    def success(method_id)
+      @new_filter[method_id.key] = _get_method_signature(method_id)
     end
 
     def _maybe_read_ruby_file(file)
       return if @files_read[file]
       @files_read[file] = true
 
-      if File.file?(file)
-        method_signatures = _collect_method_signatures(file)
+      path = File.expand_path(file, @cwd)
+      if File.file?(path)
+        method_signatures = _collect_method_signatures(file, path)
         @signatures.merge!(method_signatures)
       end
     end
 
     # Collect signatures of all methods, as found in the CMDTEST_*.rb file.
 
-    def _collect_method_signatures(file)
+    def _collect_method_signatures(file, path)
       method_signatures = {}
-      lines = File.readlines(file)
+      lines = File.readlines(path)
       klass  = klass_indent  = klass_i  = nil
       methods = method_indent = method_i = nil
 
@@ -111,7 +110,7 @@ module Cmdtest
         when klass && methods && line =~ /^#{method_indent}end\b/ #...
           ## p [:method_end, methods]
           for method in methods
-            key = _method_key(file, klass, method)
+            key = MethodId.new(file, klass, method).key
             method_signatures[key] = _method_signature(lines[method_i..i])
           end
           methods = nil
@@ -120,13 +119,9 @@ module Cmdtest
       end
       return method_signatures
     end
-    
+
     def _method_signature(content)
       Digest::MD5.hexdigest(content.join)
-    end
-
-    def _method_key(file, klass, method)
-      file + ":" + klass + "." + method.to_s
     end
 
   end
