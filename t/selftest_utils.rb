@@ -51,9 +51,12 @@ module SelftestUtils
 
   def cmd_cmdtest_verbose(*args)
     cmdtest = "#{TOP}/bin/cmdtest.rb"
-    command = "ruby %s" % _quote(cmdtest)
-    cmd(command, *args) do
-      comment "running local cmdtest --verbose"
+    command = "ruby %s %s" % [
+      _quote(cmdtest),
+      args.join(" "),
+    ]
+    cmd(command) do
+      comment "running local cmdtest non-quietly"
       yield
     end
   end
