@@ -29,6 +29,7 @@ top_dir = File.dirname(File.dirname(__FILE__))
 lib_dir = File.join(File.expand_path(top_dir), "lib")
 $:.unshift(lib_dir) if File.directory?(File.join(lib_dir, "cmdtest"))
 
+require "cmdtest/argumentparser"
 require "cmdtest/baselogger"
 require "cmdtest/consolelogger"
 require "cmdtest/junitlogger"
@@ -220,7 +221,7 @@ module Cmdtest
 
     def get_test_methods(runner)
       @testcase_class.public_instance_methods(false).sort.select do |method|
-        in_list = runner.opts.tests.empty? || runner.opts.tests.include?(method)
+        in_list = runner.opts.test.empty? || runner.opts.test.include?(method)
         method =~ /^test_/ && in_list
       end
     end
@@ -394,71 +395,48 @@ module Cmdtest
 
   class Main
 
-    attr_reader :tests, :quiet, :verbose, :fast, :ruby_s, :incremental
-    attr_reader :patterns, :parallel
-
     def initialize
-      @tests = []
-      @quiet = false
-      @verbose = false
-      @fast = false
-      @parallel = 1
-      @xml = nil
-      @set_exit_code = true
-      @ruby_s = Util.windows?
-      @incremental = false
-      @patterns = []
-
       _update_cmdtest_level
     end
 
+    def _parse_options
+      pr = @argument_parser = ArgumentParser.new("cmdtest")
+      pr.add("",   "--version",      "show version")
+      pr.add("-q", "--quiet",        "be more quiet")
+      pr.add("-v", "--verbose",      "be more verbose")
+      pr.add("",   "--fast",         "run fast without waiting for unique mtime:s")
+      pr.add("-j", "--parallel",     "build in parallel",  type: Integer, default: 1, metavar: "N")
+      pr.add("",   "--test",         "only run named test", type: [String])
+      pr.add("",   "--xml",          "write summary on JUnit format", type: String, metavar: "FILE")
+      pr.add("",   "--no-exit-code", "exit with 0 status even after errors")
+      pr.add("-i", "--incremental",  "incremental mode")
+      pr.addpos("arg", "testfile or pattern", nargs: 0..999)
+      return pr.parse_args(ARGV, patterns: [], ruby_s: Util.windows?)
+    end
+
     def run
+      opts = _parse_options
+
       files = []
-      while ! ARGV.empty?
-        opt = ARGV.shift
+      for arg in opts.args
         case
-        when opt =~ /^--test=(.*)/
-          @tests << $1
-        when opt =~ /^--quiet$/
-          @quiet = true
-        when opt =~ /^--verbose$/
-          @verbose = true
-        when opt =~ /^--fast$/
-          @fast = true
-        when opt =~ /^--xml=(.+)$/
-          @xml = File.expand_path($1)
-        when opt =~ /^--no-exit-code$/
-          @set_exit_code = false
-        when opt =~ /^--ruby_s$/
-          @ruby_s = ! @ruby_s
-        when opt =~ /^-r$/
-          @incremental = true
-        when opt =~ /^-i$/
-          @incremental = true
-        when opt =~ /^-j(\d+)$/
-          @parallel = Integer($1)
-        when opt =~ /^--help$/ || opt =~ /^-h$/
-          puts
-          _show_options
-          puts
-          exit 0
-        when File.file?(opt)
-          files << opt
-        when File.directory?(opt)
-          files << opt
-        when opt =~ /^\/(.+)\/$/
-          @patterns  << $1
+        when File.file?(arg)
+          files << arg
+        when File.directory?(arg)
+          files << arg
+        when arg =~ /^\/(.+)\/$/
+          opts.patterns  << $1
         else
-          puts "ERROR: unknown argument: #{opt}"
+          puts "ERROR: unknown argument: #{arg}"
           puts
-          _show_options
+          @argument_parser.print_usage()
           puts
           exit 1
         end
       end
 
       begin
-        @patterns.map! {|pattern| Regexp.new(pattern) }
+        opts.patterns.map! {|pattern| Regexp.new(pattern) }
       rescue RegexpError => e
         puts "ERROR: syntax error in regexp?"
         puts "DETAILS: " + e.message
@@ -466,20 +444,20 @@ module Cmdtest
       end
 
       clog = LogClient.new
-      Util.opts = self
+      Util.opts = opts
 
-      error_logger = ErrorLogger.new(self)
+      error_logger = ErrorLogger.new(opts)
       clog.add_listener(error_logger)
 
-      logger = ConsoleLogger.new(self)
+      logger = ConsoleLogger.new(opts)
       clog.add_listener(logger)
 
-      if @xml
-        clog.add_listener(JunitLogger.new(self, @xml))
+      if opts.xml
+        clog.add_listener(JunitLogger.new(opts, File.expand_path(opts.xml)))
       end
 
       @project_dir = ProjectDir.new(files)
-      @runner = Runner.new(@project_dir, @incremental, self)
+      @runner = Runner.new(@project_dir, opts.incremental, opts)
 
       $cmdtest_got_ctrl_c = 0
       trap("INT") do
@@ -492,7 +470,7 @@ module Cmdtest
       end
       @runner.run(clog)
 
-      if ! @quiet
+      if ! opts.quiet
         puts
         puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
           error_logger.n_failures == 0 && error_logger.n_errors == 0 ? "###" : "---",
@@ -506,7 +484,7 @@ module Cmdtest
       end
 
       ok = error_logger.everything_ok?
-      error_exit = @set_exit_code && ! ok
+      error_exit = ! opts.no_exit_code && ! ok
       exit( error_exit ? 1 : 0 )
     end
 
@@ -515,19 +493,6 @@ module Cmdtest
     def _update_cmdtest_level
       $cmdtest_level = (ENV["CMDTEST_LEVEL"] || "0").to_i + 1
       ENV["CMDTEST_LEVEL"] = $cmdtest_level.to_s
-    end
-
-    def _show_options
-      puts "Usage: cmdtest [options] [files/directories]"
-      puts
-      puts "  --help            show this help"
-      puts "  --quiet           be more quiet"
-      puts "  --verbose         be more verbose"
-      puts "  --fast            run fast without waiting for unique mtime:s"
-      puts "  --test=NAME       only run named test"
-      puts "  --xml=FILE        write summary on JUnit format"
-      puts "  --no-exit-code    exit with 0 status even after errors"
-      puts "  -i                incremental mode"
     end
 
   end
