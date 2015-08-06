@@ -221,7 +221,7 @@ module Cmdtest
 
     def get_test_methods(runner)
       @testcase_class.public_instance_methods(false).sort.select do |method|
-        in_list = runner.opts.test.empty? || runner.opts.test.include?(method)
+        in_list = runner.opts.test.empty? || runner.opts.test.include?(method.to_s)
         method =~ /^test_/ && in_list
       end
     end
