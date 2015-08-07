@@ -33,8 +33,8 @@ module Cmdtest
     def initialize(testcase, runner)
       @testcase = testcase
       @runner = runner
-      @path = @testcase.tmp_work_dir
-      @hardlinkdir = File.join(testcase.tmp_dir, "hardlinks")
+      @path = @runner.tmp_work_dir
+      @hardlinkdir = File.join(@runner.tmp_dir, "hardlinks")
       FileUtils.rm_rf(@path)
       FileUtils.rm_rf(@hardlinkdir)
       FileUtils.mkdir_p(@path)
@@ -64,7 +64,7 @@ module Cmdtest
     end
 
     def _tmp_redirect_sh
-      File.join(@testcase.tmp_dir,
+      File.join(@runner.tmp_dir,
                 Util.windows? ? "tmp-redirect.bat" : "tmp-redirect.sh")
     end
 
@@ -73,7 +73,7 @@ module Cmdtest
     end
 
     def _tmp_command_sh
-      File.join(@testcase.tmp_dir, _tmp_command_name)
+      File.join(@runner.tmp_dir, _tmp_command_name)
     end
 
     def _tmp_stdout_name
@@ -85,11 +85,11 @@ module Cmdtest
     end
 
     def _tmp_stdout_log
-      File.join(@testcase.tmp_dir, _tmp_stdout_name)
+      File.join(@runner.tmp_dir, _tmp_stdout_name)
     end
 
     def _tmp_stderr_log
-      File.join(@testcase.tmp_dir, _tmp_stderr_name)
+      File.join(@runner.tmp_dir, _tmp_stderr_name)
     end
 
     def _ENV_strs(env)

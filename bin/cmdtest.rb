@@ -263,6 +263,8 @@ module Cmdtest
 
     attr_reader :opts, :orig_cwd, :method_filter
 
+    ORIG_CWD = Dir.pwd
+
     def initialize(project_dir, incremental, opts)
       @project_dir = project_dir
       @opts = opts
@@ -280,6 +282,26 @@ module Cmdtest
     def test_files_top
       @project_dir.test_files_top
     end
+
+    #----------
+
+    def tmp_cmdtest_dir
+      File.join(ORIG_CWD, "tmp-cmdtest-%d" % [$cmdtest_level])
+    end
+
+    def tmp_dir
+      if ! @opts.slave
+        File.join(tmp_cmdtest_dir, "top")
+      else
+        File.join(tmp_cmdtest_dir, @opts.slave)
+      end
+    end
+
+    def tmp_work_dir
+      File.join(tmp_dir, "work")
+    end
+
+    #----------
 
     def run(clog)
       @orig_cwd = Dir.pwd
@@ -410,6 +432,7 @@ module Cmdtest
       pr.add("",   "--xml",          "write summary on JUnit format", type: String, metavar: "FILE")
       pr.add("",   "--no-exit-code", "exit with 0 status even after errors")
       pr.add("-i", "--incremental",  "incremental mode")
+      pr.add("",   "--slave",        "run in slave mode", type: String)
       pr.addpos("arg", "testfile or pattern", nargs: 0..999)
       return pr.parse_args(ARGV, patterns: [], ruby_s: Util.windows?)
     end

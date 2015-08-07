@@ -70,30 +70,12 @@ module Cmdtest
       @_clog = clog
       @_runner = runner
       @_work_dir = Workdir.new(self, runner)
-      @_cwd = self.tmp_work_dir
+      @_cwd = @_runner.tmp_work_dir
       @_env = Hash.new
       @_in_cmd = false
       @_comment_str = nil
       @_env_path = @_runner.orig_env_path
       @_t1 = @_t2 = 0
-    end
-
-    #------------------------------
-
-    def tmp_cmdtest_dir
-      File.join(ORIG_CWD, "tmp-cmdtest-%d" % [$cmdtest_level])
-    end
-
-    def tmp_dir
-      if @_runner.opts.parallel == 1
-        File.join(tmp_cmdtest_dir, "top")
-      else
-        File.join(tmp_cmdtest_dir, @_test_method.as_filename)
-      end
-    end
-
-    def tmp_work_dir
-      File.join(tmp_dir, "work")
     end
 
     #------------------------------
@@ -788,7 +770,7 @@ module Cmdtest
     #------------------------------
 
     def _wait_for_new_second
-      Util.wait_for_new_second(tmp_dir, tmp_work_dir)
+      Util.wait_for_new_second(@_runner.tmp_dir, @_runner.tmp_work_dir)
     end
 
     #------------------------------
