@@ -33,17 +33,17 @@ require "cmdtest/argumentparser"
 require "cmdtest/baselogger"
 require "cmdtest/consolelogger"
 require "cmdtest/junitlogger"
-require "cmdtest/testcase"
-require "cmdtest/workdir"
 require "cmdtest/methodfilter"
+require "cmdtest/testcase"
 require "cmdtest/util"
-require "set"
-require "stringio"
+require "cmdtest/workdir"
+
+require "digest/md5"
 require "fileutils"
 require "find"
-require "digest/md5"
 require "rbconfig"
-require "thread"
+require "set"
+require "stringio"
 
 module Cmdtest
 
@@ -137,43 +137,41 @@ module Cmdtest
 
   class TestMethod
 
-    def initialize(test_method, test_class)
-      @test_method, @test_class = test_method, test_class
+    def initialize(method, adm_class, runner)
+      @method, @adm_class, @runner = method, adm_class, runner
     end
 
     def to_s
-      class_name = @test_class.testcase_class.name.sub(/^.*::/, "")
-      "<<TestMethod: #{class_name}.#{@test_method}>>"
+      class_name = @adm_class.runtime_class.name.sub(/^.*::/, "")
+      "<<TestMethod: #{class_name}.#{@method}>>"
     end
 
     def as_filename
-      klass_name = @test_class.as_filename
-      "#{klass_name}.#{@test_method}"
+      klass_name = @adm_class.as_filename
+      "#{klass_name}.#{@method}"
     end
 
     def method_id
-      MethodId.new(@test_class.file.path, @test_class.testcase_class.display_name, @test_method)
+      MethodId.new(@adm_class.adm_file.path, @adm_class.runtime_class.display_name, @method)
     end
 
-    def skip?(runner)
-      patterns = runner.opts.patterns
+    def skip?
+      patterns = @runner.opts.patterns
       selected = (patterns.size == 0 ||
-                    patterns.any? {|pattern| pattern =~ @test_method } )
+                    patterns.any? {|pattern| pattern =~ @method } )
 
-      return !selected || runner.method_filter.skip?(method_id)
+      return !selected || @runner.method_filter.skip?(method_id)
     end
-
-    @@t1 = Time.now
 
     def run(clog, runner)
-      clog.notify("testmethod", @test_method) do
-        obj = @test_class.testcase_class.new(self, clog, runner)
+      clog.notify("testmethod", @method) do
+        obj = @adm_class.runtime_class.new(self, clog, runner)
         if runner.opts.parallel == 1
           Dir.chdir(obj._work_dir.path)
         end
         obj.setup
         begin
-          obj.send(@test_method)
+          obj.send(@method)
           clog.assert_success
           runner.method_filter.success(method_id)
         rescue Cmdtest::AssertFailed => e
@@ -196,34 +194,27 @@ module Cmdtest
 
   class TestClass
 
-    attr_reader :testcase_class, :file
+    attr_reader :runtime_class, :adm_file, :adm_methods
 
-    def initialize(testcase_class, file)
-      @testcase_class, @file = testcase_class, file
+    def initialize(runtime_class, adm_file, runner)
+      @runtime_class, @adm_file, @runner = runtime_class, adm_file, runner
+
+      tested = runner.opts.test
+      @adm_methods = @runtime_class.public_instance_methods(false).select do |name|
+        name =~ /^test_/
+      end.map do |name|
+        TestMethod.new(name, self, runner)
+      end.select do |adm_method|
+        (tested.empty? || tested.include?(adm_method.name)) && ! adm_method.skip?
+      end
+    end
+
+    def nitems
+      return @adm_methods.size
     end
 
     def as_filename
-      @testcase_class.name.sub(/^.*::/, "")
-    end
-
-    def run(clog, runner)
-      clog.notify("testclass", @testcase_class.display_name) do
-        get_test_methods(runner).each do |method|
-          test_method = TestMethod.new(method, self)
-          test_method.run(clog, runner) unless test_method.skip?(runner)
-          if $cmdtest_got_ctrl_c > 0
-            puts "cmdtest: exiting after Ctrl-C ..."
-            exit(1)
-          end
-        end
-      end
-    end
-
-    def get_test_methods(runner)
-      @testcase_class.public_instance_methods(false).sort.select do |method|
-        in_list = runner.opts.test.empty? || runner.opts.test.include?(method.to_s)
-        method =~ /^test_/ && in_list
-      end
+      @runtime_class.name.sub(/^.*::/, "")
     end
 
   end
@@ -232,27 +223,21 @@ module Cmdtest
 
   class TestFile
 
-    attr_reader :path
+    attr_reader :path, :adm_classes
 
-    attr_reader :test_classes
-
-    def initialize(path)
-      @path = path
-      @test_classes = Cmdtest::Testcase.new_subclasses do
+    def initialize(path, runner)
+      @path, @runner = path, runner
+      @adm_classes = Cmdtest::Testcase.new_subclasses do
         Kernel.load(@path, true)
-      end.map do |testcase_class|
-        TestClass.new(testcase_class, self)
+      end.map do |runtime_class|
+        TestClass.new(runtime_class, self, runner)
+      end.reject do |adm_class|
+        adm_class.nitems == 0
       end
     end
 
-    def run(clog, runner)
-      clog.notify("testfile", @path) do
-        for test_class in @test_classes
-          if ! test_class.get_test_methods(runner).empty?
-            test_class.run(clog, runner)
-          end
-        end
-      end
+    def nitems
+      return @adm_classes.size
     end
 
   end
@@ -269,6 +254,16 @@ module Cmdtest
       @project_dir = project_dir
       @opts = opts
       @method_filter = MethodFilter.new(Dir.pwd, incremental, self)
+
+      # find local files "required" by testcase files
+      $LOAD_PATH.unshift(@project_dir.test_files_dir)
+
+      # force loading of all test files
+      @adm_files = @project_dir.test_filenames.map do
+        |x| TestFile.new(x, self)
+      end.reject do |adm_file|
+        adm_file.nitems == 0
+      end
     end
 
     def _path_separator
@@ -308,34 +303,41 @@ module Cmdtest
       ENV["PATH"] = Dir.pwd + _path_separator + ENV["PATH"]
       @orig_env_path = ENV["PATH"].split(_path_separator)
 
-      # find local files "required" by testcase files
-      $LOAD_PATH.unshift(@project_dir.test_files_dir)
-
-      # force loading of all test files
-      test_files = @project_dir.test_filenames.map {|x| TestFile.new(x) }
-
       # make sure class names are unique
-      used_test_class_filenames = {}
-      for test_file in test_files
-        for test_class in test_file.test_classes
-          filename = test_class.as_filename
-          prev_test_file = used_test_class_filenames[filename]
-          if prev_test_file
+      used_adm_class_filenames = {}
+      for adm_file in @adm_files
+        for adm_class in adm_file.adm_classes
+          filename = adm_class.as_filename
+          prev_adm_file = used_adm_class_filenames[filename]
+          if prev_adm_file
             puts "ERROR: same class name used twice: #{filename}"
-            puts "ERROR:     prev file: #{prev_test_file.path}"
-            puts "ERROR:     curr file: #{test_file.path}"
+            puts "ERROR:     prev file: #{prev_adm_file.path}"
+            puts "ERROR:     curr file: #{adm_file.path}"
             exit(1)
           end
-          used_test_class_filenames[filename] = test_file
+          used_adm_class_filenames[filename] = adm_file
         end
       end
 
       clog.notify("testsuite") do
-        for test_file in test_files
-          test_file.run(clog, self)
+        for adm_file in @adm_files
+          clog.notify("testfile", adm_file.path) do
+            for adm_class in adm_file.adm_classes
+              clog.notify("testclass", adm_class.runtime_class.display_name) do
+                for adm_method in adm_class.adm_methods
+                  adm_method.run(clog, self)
+                  if $cmdtest_got_ctrl_c > 0
+                    puts "cmdtest: exiting after Ctrl-C ..."
+                    exit(1)
+                  end
+                end
+              end
+            end
+          end
         end
       end
-      @method_filter.write
+
+      return @method_filter.write
     end
   end
 
