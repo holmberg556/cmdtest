@@ -45,7 +45,6 @@ module Cmdtest
       @dir = dir
       @ignored_files = ignored_files
       @fileinfo_by_path = {}
-      dir_prefix = @dir + "/"
       relative_find(@dir) do |path|
         next if path == "."
         file_info = FileInfo.new(path, @dir)

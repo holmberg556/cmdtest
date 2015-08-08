@@ -63,7 +63,7 @@ module Cmdtest
 
     ORIG_CWD = Dir.pwd
 
-    attr_reader :_work_dir, :_cwd, :_env
+    attr_reader :_work_dir, :_env
 
     def initialize(test_method, clog, runner)
       @_test_method = test_method

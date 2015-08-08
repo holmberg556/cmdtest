@@ -159,7 +159,7 @@ module Cmdtest
         _quote(_tmp_redirect_sh),
       ]
       before = _take_snapshot
-      ok = system(str)
+      system(str) # TODO: really ignore exit status !?
       after = _take_snapshot
       CmdEffects.new($?,
                      File.read(_tmp_stdout_log),

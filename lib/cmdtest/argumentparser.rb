@@ -246,7 +246,7 @@ module Cmdtest
                     end
 
                     # --foo
-                elsif _arg() =~ /^(--\w[-_\w_]*)$/
+                elsif _arg() =~ /^(--\w[-\w]*)$/
                     option = _find_option($1)
                     if option._with_arg()
                         option._set(_arg(1), @opts)
@@ -257,7 +257,7 @@ module Cmdtest
                     end
 
                     # --foo=...
-                elsif _arg() =~ /^(--\w[-_\w]*)=(.*)$/
+                elsif _arg() =~ /^(--\w[-\w]*)=(.*)$/
                     option = _find_option($1)
                     if option._with_arg()
                         option._set($2, @opts)
