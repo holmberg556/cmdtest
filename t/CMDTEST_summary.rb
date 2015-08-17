@@ -28,7 +28,7 @@ class CMDTEST_summery < Cmdtest::Testcase
       '      exit_zero',
       '    end',
       '    cmd "true" do',
-      '      exit_nonzero',
+      '      exit_nonzero',     # +1 errors
       '    end',
       '  end',
       '',
@@ -36,25 +36,25 @@ class CMDTEST_summery < Cmdtest::Testcase
       '    cmd "true" do',
       '      exit_zero',
       '    end',
-      '    non_existing_method',
+      '    non_existing_method', # +1 fatals
       '  end',
       '',
       '  def test_foo3',
       '    cmd "true" do',
       '      exit_zero',
       '    end',
-      '    non_existing_method',
+      '    non_existing_method', # +1 fatals
       '  end',
       '',
       '  def test_foo4',
       '    cmd "true" do',
-      '      exit_nonzero',
+      '      exit_nonzero',     # +1 errors
       '    end',
       '  end',
       '',
       '  def test_foo5',
       '    cmd "true" do',
-      '      exit_nonzero',
+      '      exit_nonzero',     # +1 errors
       '    end',
       '  end',
       '',
