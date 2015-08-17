@@ -322,76 +322,112 @@ module Cmdtest
           used_adm_class_filenames[filename] = adm_file
         end
       end
+      _loop(clog)
+    end
 
-      if @opts.parallel > 1
-        json_files = []
-        nclasses = 0
-        File.open("tmp.sh", "w") do |f|
-          for adm_file in @adm_files
-            if ! @opts.quiet
-              f.puts "echo '### " + "=" * 40 + " " + adm_file.path + "'"
-            end
-            for adm_class in adm_file.adm_classes
-              nclasses += 1
-              if ! @opts.quiet
-                f.puts "echo '### " + "-" * 40 + " " + adm_class.as_filename + "'"
-              end
-              for adm_method in adm_class.adm_methods
-                slave_name = adm_method.as_filename
-                f.puts "#{$0} %s --slave %s %s" % [
-                  (@opts.quiet ? "-q" : ""),
-                  slave_name,
-                  adm_file.path,
-                ]
-                json_files << File.join(tmp_dir_slave(slave_name), "result.json")
-              end
-            end
-          end
-        end
-        cmd = "parallel -k -j%d < tmp.sh" % [@opts.parallel]
-        ok = system(cmd)
-        summary = Hash.new(0)
-        for file in json_files
-          File.open(file) do |f|
-            data = JSON.load(f)
-            for k,v in data
-              summary[k] += v
-            end
-          end
-        end
-        summary["classes"] = nclasses
-        if ! @opts.quiet
-          Cmdtest.print_summary(summary)
-        end
-
-        ok = summary["errors"] == 0 && summary["failures"] == 0
-        error_exit = ! @opts.no_exit_code && ! ok
-        exit( error_exit ? 1 : 0 )
-
-
-      elsif @opts.slave
-        for adm_file in @adm_files
-          for adm_class in adm_file.adm_classes
-            for adm_method in adm_class.adm_methods
-              if adm_method.as_filename == @opts.slave
-                adm_method.run(clog, self)
-              end
-            end
-          end
-        end
-
+    def self.create(project_dir, incremental, opts)
+      if opts.parallel > 1
+        klass = RunnerParallel
+      elsif opts.slave
+        klass = RunnerSlave
       else
-        clog.notify("testsuite") do
-          for adm_file in @adm_files
-            clog.notify("testfile", adm_file.path) do
-              for adm_class in adm_file.adm_classes
-                clog.notify("testclass", adm_class.runtime_class.display_name) do
-                  for adm_method in adm_class.adm_methods
-                    adm_method.run(clog, self)
-                    if $cmdtest_got_ctrl_c > 0
-                      puts "cmdtest: exiting after Ctrl-C ..."
-                      exit(1)
-                    end
+        klass = RunnerSerial
+      end
+      return klass.new(project_dir, incremental, opts)
+    end
+  end
+
+  class RunnerParallel < Runner
+    def _loop(clog)
+      json_files = []
+      nclasses = 0
+      File.open("tmp.sh", "w") do |f|
+        for adm_file in @adm_files
+          if ! @opts.quiet
+            f.puts "echo '### " + "=" * 40 + " " + adm_file.path + "'"
+          end
+          for adm_class in adm_file.adm_classes
+            nclasses += 1
+            if ! @opts.quiet
+              f.puts "echo '### " + "-" * 40 + " " + adm_class.as_filename + "'"
+            end
+            for adm_method in adm_class.adm_methods
+              slave_name = adm_method.as_filename
+              f.puts "#{$0} %s --slave %s %s" % [
+                (@opts.quiet ? "-q" : ""),
+                slave_name,
+                adm_file.path,
+              ]
+              json_files << File.join(tmp_dir_slave(slave_name), "result.json")
+            end
+          end
+        end
+      end
+      cmd = "parallel -k -j%d < tmp.sh" % [@opts.parallel]
+      ok = system(cmd)
+      summary = Hash.new(0)
+      for file in json_files
+        File.open(file) do |f|
+          data = JSON.load(f)
+          for k,v in data
+            summary[k] += v
+          end
+        end
+      end
+      summary["classes"] = nclasses
+      if ! @opts.quiet
+        Cmdtest.print_summary(summary)
+      end
+
+      ok = summary["errors"] == 0 && summary["failures"] == 0
+      error_exit = ! @opts.no_exit_code && ! ok
+      exit( error_exit ? 1 : 0 )
+    end
+  end
+
+  class RunnerSlave < Runner
+
+    def _loop(clog)
+      for adm_file in @adm_files
+        for adm_class in adm_file.adm_classes
+          for adm_method in adm_class.adm_methods
+            if adm_method.as_filename == @opts.slave
+              adm_method.run(clog, self)
+            end
+          end
+        end
+      end
+    end
+
+    def report_result(error_logger)
+      result = {
+        "classes" => error_logger.n_classes,
+        "methods" => error_logger.n_methods,
+        "commands" => error_logger.n_commands,
+        "failures" => error_logger.n_failures,
+        "errors" => error_logger.n_errors,
+      }
+      result_file = File.join(self.tmp_dir, "result.json")
+      File.open(result_file, "w") do |f|
+        f.puts JSON.pretty_generate(result)
+      end
+      exit(0)
+    end
+
+  end
+
+  class RunnerSerial < Runner
+    def _loop(clog)
+      clog.notify("testsuite") do
+        for adm_file in @adm_files
+          clog.notify("testfile", adm_file.path) do
+            for adm_class in adm_file.adm_classes
+              clog.notify("testclass", adm_class.runtime_class.display_name) do
+                for adm_method in adm_class.adm_methods
+                  adm_method.run(clog, self)
+                  if $cmdtest_got_ctrl_c > 0
+                    puts "cmdtest: exiting after Ctrl-C ..."
+                    exit(1)
                   end
                 end
               end
@@ -399,9 +435,28 @@ module Cmdtest
           end
         end
       end
-
-      return @method_filter.write
+      @method_filter.write
     end
+
+    def report_result(error_logger)
+      if ! opts.quiet
+        puts
+        puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
+          error_logger.n_failures == 0 && error_logger.n_errors == 0 ? "###" : "---",
+          error_logger.n_classes,
+          error_logger.n_methods,
+          error_logger.n_commands,
+          error_logger.n_failures,
+          error_logger.n_errors,
+        ]
+        puts
+      end
+
+      ok = error_logger.everything_ok?
+      error_exit = ! opts.no_exit_code && ! ok
+      exit( error_exit ? 1 : 0 )
+    end
+
   end
 
   #----------------------------------------------------------------------
@@ -561,7 +616,7 @@ module Cmdtest
       end
 
       @project_dir = ProjectDir.new(files)
-      @runner = Runner.new(@project_dir, opts.incremental, opts)
+      @runner = Runner.create(@project_dir, opts.incremental, opts)
 
       $cmdtest_got_ctrl_c = 0
       trap("INT") do
@@ -573,38 +628,7 @@ module Cmdtest
         end
       end
       @runner.run(clog)
-
-      if opts.slave
-        result = {
-          "classes" => error_logger.n_classes,
-          "methods" => error_logger.n_methods,
-          "commands" => error_logger.n_commands,
-          "failures" => error_logger.n_failures,
-          "errors" => error_logger.n_errors,
-        }
-        result_file = File.join(@runner.tmp_dir, "result.json")
-        File.open(result_file, "w") do |f|
-          f.puts JSON.pretty_generate(result)
-        end
-        exit(0)
-      else
-        if ! opts.quiet
-          puts
-          puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
-            error_logger.n_failures == 0 && error_logger.n_errors == 0 ? "###" : "---",
-            error_logger.n_classes,
-            error_logger.n_methods,
-            error_logger.n_commands,
-            error_logger.n_failures,
-            error_logger.n_errors,
-          ]
-          puts
-        end
-
-        ok = error_logger.everything_ok?
-        error_exit = ! opts.no_exit_code && ! ok
-        exit( error_exit ? 1 : 0 )
-      end
+      @runner.report_result(error_logger)
     end
 
     private
