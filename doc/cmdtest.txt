@@ -33,11 +33,17 @@ A simple example
   $ cat CMDTEST_example.rb
   class CMDTEST_example < Cmdtest::Testcase
 
-    def test_misc
-      cmd "echo hello world" do
-        stdout_equal "hello world\n"
+    def test_hello_world
+      cmd "echo hello" do
+        stdout_equal "hello\n"
       end
 
+      cmd "echo world" do
+        stdout_equal "world\n"
+      end
+    end
+
+    def test_touch_and_exit
       cmd "touch foo.txt ; exit 7" do
         created_files "foo.txt"
         exit_status 7
@@ -53,31 +59,41 @@ Inside a method we can call the ``cmd`` method. It will
 execute the command given as argument and then check the assertions
 given in the do-block. When ``cmdtest`` is run, it will find all
 ``CMDTEST_*.rb`` files in the current directory and run the tests in
-the files. The output looks like::
+the files (see the `Invoking cmdtest`_ section for more details
+on ``CMDTEST_*.rb`` file selection).
+The output looks like::
 
   $ cmdtest
   ### ======================================== CMDTEST_example.rb
-  ### echo hello world
+  ### ---------------------------------------- CMDTEST_example
+  ### ........................................ test_hello_world
+  ### echo hello
+  ### echo world
+  ### ........................................ test_touch_and_exit
   ### touch foo.txt ; exit 7
 
-  ### 1 test classes, 1 test methods, 2 commands, 0 errors.
+  ### 1 test classes, 2 test methods, 3 commands, 0 errors, 0 fatals.
 
 If we change "7" to "8", "foo" to "bar" and "world" to "WORLD" in
 the example, we get the following errors::
 
   $ cmdtest
   ### ======================================== CMDTEST_example.rb
-  ### echo hello WORLD
+  ### ---------------------------------------- CMDTEST_example
+  ### ........................................ test_hello_world
+  ### echo hello
+  ### echo WORLD
   --- ERROR: wrong stdout
-  ---        actual: hello WORLD
-  ---        expect: hello world
+  ---        actual: WORLD
+  ---        expect: world
+  ### ........................................ test_touch_and_exit
   ### touch bar.txt ; exit 8
   --- ERROR: created files
   ---        actual: ["bar.txt"]
   ---        expect: ["foo.txt"]
   --- ERROR: expected 7 exit status, got 8
 
-  --- 1 test classes, 1 test methods, 2 commands, 2 errors.
+  --- 1 test classes, 2 test methods, 3 commands, 2 errors, 0 fatals.
 
 The following sections will describe in more detail what can be done
 with Cmdtest. See also the `examples directory <../examples>`_ of the Cmdtest project,
@@ -189,12 +205,13 @@ Several of the assertions and helper functions take filename arguments
 that are evaluated relative to the "work directory" (or sometimes the
 current directory if they differ).
 
-To support running ``cmdtest`` in parallel, methods such as
-``File.open`` and ``Dir.chdir`` should not be used in the test
-methods. Instead methods supplied by Cmdtest, such as ``create_file``
-and ``chdir`` should be used. The reason for this is that the ``cmdtest`` process
-only has **one** current directory, so different threads can't set the
-current directory without interfering with each other.
+Cmdtest implements parallel execution of test methods by running several
+"slave processes", started by a tool like `GNU Parallel`_.
+
+Methods such as ``File.open`` and ``Dir.chdir`` that depend on the
+"current directory" can be used in the test methods, since each slave
+is a process of its own (an earlier version of Cmdtest used Ruby threads
+and adviced against using such methods).
 
 Specifying files / directories
 ------------------------------
@@ -204,8 +221,8 @@ Several methods take files or directories as argument (e.g.
 having two sets of methods, one for files and one for directories, an
 argument with a trailing "/" denotes a directory::
 
-    create_files "build/"       # the directory "build"
-    create_files "build"        # the file "build"
+    created_files "build/"       # the directory "build"
+    created_files "build"        # the file "build"
 
     ignore_file "build/"        # the directory "build" (and everything below)
     ignore_file "build"         # the file "build"
@@ -219,7 +236,7 @@ argument can be a Regexp::
 
 This is quite natural, since the "job" of ``ignore_file`` is to single
 out a subset of all files.
- 
+
 PATH handling
 -------------
 
@@ -311,36 +328,29 @@ For more examples of command line usage, see the section `Commandline Examples`_
 Options
 +++++++
 
---help
-    Show available options.
+The available options can be seen by using the ``-h`` option::
 
---quiet
-    Be more quiet by skipping some non-essential output.
+  $ cmdtest -h
+  usage: cmdtest [-h] [--version] [-q] [-v] [--fast] [-j N] [--test TEST]
+                 [--xml FILE] [--no-exit-code] [-i] [--slave SLAVE]
+                 [arg [arg ...]]
 
---verbose
-    Be more verbose.
+  positional arguments:
+    arg           testfile or pattern
 
---fast
-    Run fast without ensuring that timestamps of newly created/modified
-    files are unique. This could make it impossible for Cmdtest to detect
-    all side-effects of commands.
-
---test=NAME
-    Only run named test method.
-
---xml=FILE
-    Write summary on JUnit XML format.
-    Useful when running under a continuous integration server that
-    understands JUnit reports.
-
---no-exit-code
-    Do not exit with a non-zero exit code if errors occurred.
-
--i
-    Run in "incremental" mode. **experimental**
-    Cmdtest will try to run only those test methods that are failed or
-    have changed since last time.
-
+  optional arguments:
+    -h, --help            show this help message and exit
+    -h, --help            show this help message and exit
+    --version             show version
+    -q, --quiet           be more quiet by skipping some non-essential output
+    -v, --verbose         be more verbose
+    --fast                run fast without waiting for unique mtime:s
+    -j N, --parallel N    build in parallel
+    --test TEST           only run named test
+    --xml FILE            write summary on JUnit format
+    --no-exit-code        exit with 0 status even after errors
+    -i, --incremental     incremental mode
+    --slave SLAVE         run in slave mode
 
 Commandline Examples
 ++++++++++++++++++++
@@ -408,6 +418,9 @@ See also the example in the `Structure of a test-method`_ section above.
 Assertions - exit status
 ++++++++++++++++++++++++
 
+These methods should only be used inside a ``cmd`` block.
+
+
 ``exit_nonzero``
     The command should have exited with a non-zero exit status (i.e. it
     should have failed).
@@ -423,14 +436,13 @@ Assertions - exit status
 Assertions - files
 ++++++++++++++++++
 
+These methods should only be used inside a ``cmd`` block.
+
 ``affected_files(file1,...,fileN)``
     The specified files should have been created, removed or modified by the
     command. This assertion can be used when it doesn't matter which
     of ``created_files``, ``removed_files`` or ``changed_files`` that apply
     (cf. ``written_files``).
-
-``changed_files(file1,...,fileN)``
-    Deprecated. Use ``modified_files`` instead.
 
 ``created_files(file1,...,fileN)``
     The specified files should have been created by the command.
@@ -455,6 +467,8 @@ Assertions - files
 Assertions - stdout/stderr/file content
 +++++++++++++++++++++++++++++++++++++++
 
+These methods should only be used inside a ``cmd`` block.
+
 ``file_equal(file, content)``
     Assert that the specified file matches the given content.
     See "stdout_equal" for how "content" can be specified.
@@ -475,7 +489,7 @@ Assertions - stdout/stderr/file content
     string that should be equal to the entire file, 2) as an array of
     lines that should be equal to the entire file, 3) as a regexp that
     should match the entire file (given as one string).
-    For more details and examples see the section "Matching standard output content".
+    For more details and examples see the section `Matching standard output content`_.
 
 ``stdout_not_equal(content)``
     Like ``stdout_equal`` but with inverted test.
@@ -483,6 +497,8 @@ Assertions - stdout/stderr/file content
 
 Assertions - misc
 +++++++++++++++++
+
+These methods should only be used inside a ``cmd`` block.
 
 ``assert(flag, msg=nil)``
     Assert that ``flag`` is true. This assertion is a last resort, when no other
@@ -495,9 +511,8 @@ Assertions - misc
 Helper functions
 ++++++++++++++++
 
-``chdir(dir, &block)``
-    Works like ``Dir.chdir``, but handles current directory correctly
-    under ``cmdtest``.
+These methods should only be used outside a ``cmd`` block in a test method,
+or in the ``setup`` method.
 
 ``create_file(filename, content)``
     Create a file inside the "work directory".
@@ -507,30 +522,6 @@ Helper functions
     a string with the content of the whole file.
     The filename is evaluated relative to the current directory at the
     time of the call.
-
-``dir_mkdir(file)``
-    Works like ``Dir.mkdir``, but handles current directory correctly
-    under ``cmdtest``.
-
-``file_chmod(arg, file)``
-    Works like ``File.chmod``, but handles current directory correctly
-    under ``cmdtest``.
-
-``file_open(file, *args, &block)``
-    Works like ``File.open``, but handles current directory correctly
-    under ``cmdtest``.
-
-``file_read(file)``
-    Works like ``File.read``, but handles current directory correctly
-    under ``cmdtest``.
-
-``file_symlink(file1, file2)``
-    Works like ``File.symlink``, but handles current directory correctly
-    under ``cmdtest``.
-
-``file_utime(arg1, arg2, file)``
-    Works like ``File.utime``, but handles current directory correctly
-    under ``cmdtest``.
 
 ``ignore_file(file)``
     Ignore the specified file when looking for differences in the filesystem.
@@ -558,13 +549,13 @@ Helper functions
     where the executable tested is located. The argument ``dir`` is evaluated
     relative to the current directory  in effect when ``cmdtest`` was invoked.
 
-``remove_file(file)``
-    Works like ``FileUtils.rm_f``, but handles current directory correctly
-    under ``cmdtest``.
+``setenv(name, value)``
+    Set an environment variable that should be in effect when commands are executed
+    by later calls to ``cmd``.
 
-``remove_file_tree(file)``
-    Works like ``FileUtils.rm_rf``, but handles current directory correctly
-    under ``cmdtest``.
+``unsetenv(name)``
+    Unset an environment variable that should not be in effect when commands are executed
+    by later calls to ``cmd``.
 
 ``set_path(dir1, ..., dirN)``
     Set ``PATH`` to the given directories, so commands executed via ``cmd``
@@ -576,9 +567,38 @@ Helper functions
     The filename is evaluated relative to the current directory at the
     time of the call.
 
+Deprecated helper functions
++++++++++++++++++++++++++++
+
+``dir_mkdir(file)``
+    Deprecated, use ``Dir.mkdir`` instead.
+
+``file_chmod(arg, file)``
+    Deprecated, use ``File.chmod`` instead.
+
+``file_open(file, *args, &block)``
+    Deprecated, use ``File.open`` instead.
+
+``file_read(file)``
+    Deprecated, use ``File.read`` instead.
+
+``file_symlink(file1, file2)``
+    Deprecated, use ``File.symlink`` instead.
+
+``file_utime(arg1, arg2, file)``
+    Deprecated, use ``File.utime`` instead.
+
+``remove_file(file)``
+    Deprecated, use ``FileUtils.rm_f`` instead.
+
+``remove_file_tree(file)``
+    Deprecated, use ``FileUtils.rm_rf`` instead.
+
+
 .. _`unit testing`: http://en.wikipedia.org/wiki/Unit_testing
 .. _`junit`:        http://en.wikipedia.org/wiki/JUnit
-.. _`Test::Unit`:   http://www.ruby-doc.org/stdlib/libdoc/test/unit/rdoc/classes/Test/Unit.html
+.. _`Test::Unit`:   https://github.com/test-unit/test-unit
 
 .. _`continuous integration`: http://en.wikipedia.org/wiki/Continuous_integration
 .. _Jenkins: http://jenkins-ci.org
+.. _`GNU Parallel`: http://www.gnu.org/software/parallel/
