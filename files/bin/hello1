@@ -1,0 +1,3 @@
+#!/usr/bin/perl
+use File::Basename;
+print basename($0),"\n";
