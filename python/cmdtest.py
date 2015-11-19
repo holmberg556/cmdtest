@@ -608,8 +608,8 @@ class Tfile:
 
 #----------------------------------------------------------------------
 
-def parse_otions():
-    parser = argparse.ArgumentParser('jcons')
+def parse_options():
+    parser = argparse.ArgumentParser('cmdtest')
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="be more verbose")
     parser.add_argument("arg", nargs="*",
@@ -631,7 +631,7 @@ def parse_otions():
     return options, py_files, selected_methods
 
 def main():
-    options, py_files, selected_methods = parse_otions()
+    options, py_files, selected_methods = parse_options()
     statistics = Statistics()
     for py_file in py_files:
         tfile = Tfile(py_file)
