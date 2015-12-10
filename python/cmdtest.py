@@ -23,6 +23,7 @@
 # This is a minimal Python version of "cmdtest".
 
 import argparse
+import contextlib
 import copy
 import glob
 import hashlib
@@ -47,7 +48,7 @@ if sys.platform == 'win32':
 class AssertFailed(Exception):
     pass
 
-ORIG_CWD = os.getcwd()
+ROOT_WD = os.getcwd()
 
 class Statistics:
     def __init__(self):
@@ -92,6 +93,16 @@ def mkdir_for(filepath):
     if dirpath:
         os.makedirs(dirpath, exist_ok=True)
 
+@contextlib.contextmanager
+def temp_chdir(path):
+    global ROOT_WD
+    starting_directory = os.getcwd()
+    try:
+        os.chdir(path)
+        ROOT_WD = os.getcwd()
+        yield
+    finally:
+        os.chdir(starting_directory)
 
 def progress(*args):
     print("###", "-" * 50, *args)
@@ -361,7 +372,7 @@ class TestCase:
         pass
 
     def prepend_path(self, dirpath):
-        os.environ['PATH'] = os.pathsep.join((os.path.join(ORIG_CWD, dirpath),
+        os.environ['PATH'] = os.pathsep.join((os.path.join(ROOT_WD, dirpath),
                                               os.environ['PATH']))
 
     def prepend_local_path(self, dirpath):
@@ -370,7 +381,7 @@ class TestCase:
 
     def import_file(self, src, tgt):
         mkdir_for(tgt)
-        shutil.copy(os.path.join(ORIG_CWD, src), tgt)
+        shutil.copy(os.path.join(ROOT_WD, src), tgt)
 
     def create_file(self, fname, content, encoding='utf-8'):
         mkdir_for(fname)
@@ -608,6 +619,27 @@ class Tfile:
 
 #----------------------------------------------------------------------
 
+# Run cmdtest in given directory
+def cmdtest_in_dir(path):
+    with temp_chdir(path):
+        py_files = glob.glob("CMDTEST_*.py")
+        return test_files(py_files)
+
+def test_files(py_files, selected_methods = set()):
+    statistics = Statistics()
+    for py_file in py_files:
+        tfile = Tfile(py_file)
+        tmpdir = Tmpdir()
+        for tclass in tfile.tclasses():
+            statistics.classes += 1
+            progress(tclass.name())
+            for tmethod in tclass.tmethods():
+                if not selected_methods or tmethod.name() in selected_methods:
+                    statistics.methods += 1
+                    progress(tmethod.name())
+                    tmethod.run(tmpdir, statistics)
+    return statistics
+
 def parse_options():
     parser = argparse.ArgumentParser('cmdtest')
     parser.add_argument("-v", "--verbose", action="store_true",
@@ -632,18 +664,7 @@ def parse_options():
 
 def main():
     options, py_files, selected_methods = parse_options()
-    statistics = Statistics()
-    for py_file in py_files:
-        tfile = Tfile(py_file)
-        tmpdir = Tmpdir()
-        for tclass in tfile.tclasses():
-            statistics.classes += 1
-            progress(tclass.name())
-            for tmethod in tclass.tmethods():
-                if not selected_methods or tmethod.name() in selected_methods:
-                    statistics.methods += 1
-                    progress(tmethod.name())
-                    tmethod.run(tmpdir, statistics)
+    statistics = test_files(py_files, selected_methods)
     print()
     print(statistics)
     print()
