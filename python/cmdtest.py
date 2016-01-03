@@ -212,7 +212,7 @@ class ExpectPattern:
 #----------------------------------------------------------------------
 
 class Result:
-    def __init__(self, err, before, after, stdout, stderr, tmpdir):
+    def __init__(self, err, before, after, stdout, stderr, tmpdir, test_class_name):
         self._err = err
         self._before = before
         self._after = after
@@ -224,6 +224,9 @@ class Result:
         self._checked_status = False
         self._checked_files = set()
         self._nerrors = 0
+
+        self.tmpdir = tmpdir
+        self.test_class_name = test_class_name
 
     def __enter__(self, *args):
         return self
@@ -241,6 +244,7 @@ class Result:
         if not self._checked_stderr: self.stderr_equal([])
 
         if self._nerrors > 0:
+            self.tmpdir.preserve(self.test_class_name)
             raise AssertFailed("...")
 
     def _error(self, name, actual, expect):
@@ -420,7 +424,7 @@ class TestCase:
 
         return Result(err, before, after,
                       File(stdout_log), File(stderr_log),
-                      tmpdir)
+                      tmpdir, type(self).__name__)
 
     def _wait_for_new_second(self):
         newest = self._newest_file_time()
@@ -518,9 +522,11 @@ class FsSnapshot:
 class Tmpdir:
     def __init__(self):
         self.top = os.path.abspath("tmp-cmdtest-python/work")
+        self.top_save = self.top + "-save"
         self.logdir = os.path.dirname(self.top)
         self.environ_path = os.environ['PATH']
         self.old_cwds = []
+        self.remove_all_preserve()
 
     def stdout_log(self):
         return os.path.join(self.logdir, "tmp.stdout")
@@ -538,6 +544,13 @@ class Tmpdir:
         if os.path.exists(self.top):
             shutil.rmtree(self.top)
         os.makedirs(self.top)
+
+    def remove_all_preserve(self):
+        if os.path.exists(self.top_save):
+            shutil.rmtree(self.top_save)
+
+    def preserve(self, name):
+        shutil.move(self.top, os.path.join(self.top_save, name))
 
     def __enter__(self):
         self.old_cwds.append(os.getcwd())
@@ -627,9 +640,9 @@ def cmdtest_in_dir(path):
 
 def test_files(py_files, selected_methods = set()):
     statistics = Statistics()
+    tmpdir = Tmpdir()
     for py_file in py_files:
         tfile = Tfile(py_file)
-        tmpdir = Tmpdir()
         for tclass in tfile.tclasses():
             statistics.classes += 1
             progress(tclass.name())
