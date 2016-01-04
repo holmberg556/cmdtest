@@ -527,6 +527,7 @@ class Tmpdir:
         self.environ_path = os.environ['PATH']
         self.old_cwds = []
         self.remove_all_preserve()
+        self.test_method_name = None
 
     def stdout_log(self):
         return os.path.join(self.logdir, "tmp.stdout")
@@ -540,6 +541,10 @@ class Tmpdir:
     def snapshot(self):
         return FsSnapshot(self.top)
 
+    def prepare_for_test(self, test_method_name):
+        self.clear()
+        self.test_method_name = test_method_name
+
     def clear(self):
         if os.path.exists(self.top):
             shutil.rmtree(self.top)
@@ -549,8 +554,10 @@ class Tmpdir:
         if os.path.exists(self.top_save):
             shutil.rmtree(self.top_save)
 
-    def preserve(self, name):
-        shutil.move(self.top, os.path.join(self.top_save, name))
+    def preserve(self, test_class_name):
+        shutil.move(self.top, os.path.join(self.top_save,
+                                           test_class_name,
+                                           self.test_method_name))
 
     def __enter__(self):
         self.old_cwds.append(os.getcwd())
@@ -575,7 +582,7 @@ class Tmethod:
 
     def run(self, tmpdir, statistics):
         obj = self.tclass.klass(tmpdir, statistics)
-        tmpdir.clear()
+        tmpdir.prepare_for_test(self.name())
         with tmpdir:
             try:
                 obj.setup()
