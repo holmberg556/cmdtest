@@ -23,6 +23,7 @@
 # This is a minimal Python version of "cmdtest".
 
 import argparse
+import contextlib
 import copy
 import glob
 import hashlib
@@ -47,7 +48,7 @@ if sys.platform == 'win32':
 class AssertFailed(Exception):
     pass
 
-ORIG_CWD = os.getcwd()
+ROOT_WD = os.getcwd()
 
 class Statistics:
     def __init__(self):
@@ -92,6 +93,16 @@ def mkdir_for(filepath):
     if dirpath:
         os.makedirs(dirpath, exist_ok=True)
 
+@contextlib.contextmanager
+def temp_chdir(path):
+    global ROOT_WD
+    starting_directory = os.getcwd()
+    try:
+        os.chdir(path)
+        ROOT_WD = os.getcwd()
+        yield
+    finally:
+        os.chdir(starting_directory)
 
 def progress(*args):
     print("###", "-" * 50, *args)
@@ -201,7 +212,7 @@ class ExpectPattern:
 #----------------------------------------------------------------------
 
 class Result:
-    def __init__(self, err, before, after, stdout, stderr, tmpdir):
+    def __init__(self, err, before, after, stdout, stderr, tmpdir, test_class_name):
         self._err = err
         self._before = before
         self._after = after
@@ -213,6 +224,9 @@ class Result:
         self._checked_status = False
         self._checked_files = set()
         self._nerrors = 0
+
+        self.tmpdir = tmpdir
+        self.test_class_name = test_class_name
 
     def __enter__(self, *args):
         return self
@@ -230,6 +244,7 @@ class Result:
         if not self._checked_stderr: self.stderr_equal([])
 
         if self._nerrors > 0:
+            self.tmpdir.preserve(self.test_class_name)
             raise AssertFailed("...")
 
     def _error(self, name, actual, expect):
@@ -361,7 +376,7 @@ class TestCase:
         pass
 
     def prepend_path(self, dirpath):
-        os.environ['PATH'] = os.pathsep.join((os.path.join(ORIG_CWD, dirpath),
+        os.environ['PATH'] = os.pathsep.join((os.path.join(ROOT_WD, dirpath),
                                               os.environ['PATH']))
 
     def prepend_local_path(self, dirpath):
@@ -370,7 +385,7 @@ class TestCase:
 
     def import_file(self, src, tgt):
         mkdir_for(tgt)
-        shutil.copy(os.path.join(ORIG_CWD, src), tgt)
+        shutil.copy(os.path.join(ROOT_WD, src), tgt)
 
     def create_file(self, fname, content, encoding='utf-8'):
         mkdir_for(fname)
@@ -409,7 +424,7 @@ class TestCase:
 
         return Result(err, before, after,
                       File(stdout_log), File(stderr_log),
-                      tmpdir)
+                      tmpdir, type(self).__name__)
 
     def _wait_for_new_second(self):
         newest = self._newest_file_time()
@@ -507,9 +522,12 @@ class FsSnapshot:
 class Tmpdir:
     def __init__(self):
         self.top = os.path.abspath("tmp-cmdtest-python/work")
+        self.top_save = self.top + "-save"
         self.logdir = os.path.dirname(self.top)
         self.environ_path = os.environ['PATH']
         self.old_cwds = []
+        self.remove_all_preserve()
+        self.test_method_name = None
 
     def stdout_log(self):
         return os.path.join(self.logdir, "tmp.stdout")
@@ -523,10 +541,23 @@ class Tmpdir:
     def snapshot(self):
         return FsSnapshot(self.top)
 
+    def prepare_for_test(self, test_method_name):
+        self.clear()
+        self.test_method_name = test_method_name
+
     def clear(self):
         if os.path.exists(self.top):
             shutil.rmtree(self.top)
         os.makedirs(self.top)
+
+    def remove_all_preserve(self):
+        if os.path.exists(self.top_save):
+            shutil.rmtree(self.top_save)
+
+    def preserve(self, test_class_name):
+        shutil.move(self.top, os.path.join(self.top_save,
+                                           test_class_name,
+                                           self.test_method_name))
 
     def __enter__(self):
         self.old_cwds.append(os.getcwd())
@@ -551,7 +582,7 @@ class Tmethod:
 
     def run(self, tmpdir, statistics):
         obj = self.tclass.klass(tmpdir, statistics)
-        tmpdir.clear()
+        tmpdir.prepare_for_test(self.name())
         with tmpdir:
             try:
                 obj.setup()
@@ -608,8 +639,29 @@ class Tfile:
 
 #----------------------------------------------------------------------
 
-def parse_otions():
-    parser = argparse.ArgumentParser('jcons')
+# Run cmdtest in given directory
+def cmdtest_in_dir(path):
+    with temp_chdir(path):
+        py_files = glob.glob("CMDTEST_*.py")
+        return test_files(py_files)
+
+def test_files(py_files, selected_methods = set()):
+    statistics = Statistics()
+    tmpdir = Tmpdir()
+    for py_file in py_files:
+        tfile = Tfile(py_file)
+        for tclass in tfile.tclasses():
+            statistics.classes += 1
+            progress(tclass.name())
+            for tmethod in tclass.tmethods():
+                if not selected_methods or tmethod.name() in selected_methods:
+                    statistics.methods += 1
+                    progress(tmethod.name())
+                    tmethod.run(tmpdir, statistics)
+    return statistics
+
+def parse_options():
+    parser = argparse.ArgumentParser('cmdtest')
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="be more verbose")
     parser.add_argument("arg", nargs="*",
@@ -631,19 +683,8 @@ def parse_otions():
     return options, py_files, selected_methods
 
 def main():
-    options, py_files, selected_methods = parse_otions()
-    statistics = Statistics()
-    for py_file in py_files:
-        tfile = Tfile(py_file)
-        tmpdir = Tmpdir()
-        for tclass in tfile.tclasses():
-            statistics.classes += 1
-            progress(tclass.name())
-            for tmethod in tclass.tmethods():
-                if not selected_methods or tmethod.name() in selected_methods:
-                    statistics.methods += 1
-                    progress(tmethod.name())
-                    tmethod.run(tmpdir, statistics)
+    options, py_files, selected_methods = parse_options()
+    statistics = test_files(py_files, selected_methods)
     print()
     print(statistics)
     print()
