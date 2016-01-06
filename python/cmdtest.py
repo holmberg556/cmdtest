@@ -669,18 +669,20 @@ def cmdtest_in_dir(path):
         py_files = glob.glob("CMDTEST_*.py")
         return test_files(py_files)
 
-def test_files(py_files, selected_methods = set()):
+def test_files(py_files, selected_methods=None, quiet=False):
     statistics = Statistics()
     tmpdir = Tmpdir()
     for py_file in py_files:
         tfile = Tfile(py_file)
         for tclass in tfile.tclasses():
             statistics.classes += 1
-            progress(tclass.name())
+            if not quiet:
+                progress(tclass.name())
             for tmethod in tclass.tmethods():
                 if not selected_methods or tmethod.name() in selected_methods:
                     statistics.methods += 1
-                    progress(tmethod.name())
+                    if not quiet:
+                        progress(tmethod.name())
                     tmethod.run(tmpdir, statistics)
     return statistics
 
@@ -688,6 +690,8 @@ def parse_options():
     parser = argparse.ArgumentParser('cmdtest')
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="be more verbose")
+    parser.add_argument("-q", "--quiet", action="store_true",
+                        help="be more quiet")
     parser.add_argument("arg", nargs="*",
                         help="CMDTEST_*.py files / test methods")
     options = parser.parse_args()
@@ -710,10 +714,11 @@ def parse_options():
 
 def main():
     options, py_files, selected_methods = parse_options()
-    statistics = test_files(py_files, selected_methods)
-    print()
-    print(statistics)
-    print()
+    statistics = test_files(py_files, selected_methods, options.quiet)
+    if not options.quiet:
+        print()
+        print(statistics)
+        print()
     exit(0 if statistics.errors == 0 and statistics.fatals == 0 else 1)
 
 if __name__ == '__main__':
