@@ -687,7 +687,9 @@ def parse_options():
     py_files = []
     selected_methods = set()
     for arg in options.arg:
-        if re.match(r'CMDTEST_.*\.py$', arg):
+        if os.path.isdir(arg):
+            py_files.extend(glob.glob('%s/CMDTEST_*.py' % arg))
+        elif re.match(r'CMDTEST_.*\.py$', os.path.basename(arg)):
             py_files.append(arg)
         else:
             selected_methods.add(arg)
