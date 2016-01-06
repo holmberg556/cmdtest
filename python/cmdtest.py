@@ -74,6 +74,13 @@ def subranges(n, arr):
     for i in range(0,len(arr)-n+1):
         yield arr[i:i+n]
 
+def flatten(seq):
+    for item in seq:
+        if isinstance(item, (list,tuple)):
+            yield from flatten(item)
+        else:
+            yield item
+
 def to_list(arg):
     return arg if isinstance(arg, list) else [arg]
 
@@ -390,8 +397,8 @@ class TestCase:
     def create_file(self, fname, content, encoding='utf-8'):
         mkdir_for(fname)
         with open(fname, "w", encoding=encoding) as f:
-            if type(content) == list:
-                for line in content:
+            if isinstance(content, (list,tuple)):
+                for line in flatten(content):
                     print(line, file=f)
             else:
                 f.write(content)
