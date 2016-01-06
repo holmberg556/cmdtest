@@ -384,6 +384,7 @@ class TestCase:
     def __init__(self, tmpdir, statistics):
         self.__tmpdir = tmpdir
         self.__statistics = statistics
+        self.__always_ignored_files = set()
 
     def setup(self):
         pass
@@ -398,6 +399,9 @@ class TestCase:
     def prepend_local_path(self, dirpath):
         os.environ['PATH'] = os.pathsep.join((os.path.join(self.__tmpdir.top, dirpath),
                                               os.environ['PATH']))
+
+    def always_ignore_file(self, fname):
+        self.__always_ignored_files.add(fname)
 
     def import_file(self, src, tgt):
         mkdir_for(tgt)
@@ -425,7 +429,7 @@ class TestCase:
 
     def cmd(self, cmdline):
         tmpdir = self.__tmpdir
-        before = tmpdir.snapshot()
+        before = tmpdir.snapshot(self.__always_ignored_files)
         stdout_log = tmpdir.stdout_log()
         stderr_log = tmpdir.stderr_log()
         self._wait_for_new_second()
@@ -436,7 +440,7 @@ class TestCase:
                 err = subprocess.call(cmdline, stdout=stdout, stderr=stderr, shell=True)
             else:
                 err = 0
-        after = tmpdir.snapshot()
+        after = tmpdir.snapshot(self.__always_ignored_files)
 
         return Result(err, before, after,
                       File(stdout_log), File(stderr_log),
@@ -510,8 +514,9 @@ class FileInfo:
 #----------------------------------------------------------------------
 
 class FsSnapshot:
-    def __init__(self, topdir):
+    def __init__(self, topdir, ignored_files):
         self.topdir = topdir
+        self.ignored_files = ignored_files
         self.bypath = {}
         self._collect_files(DirInfo(topdir))
 
@@ -526,6 +531,8 @@ class FsSnapshot:
 
     def _collect_files(self, dirinfo):
         for entry in dirinfo.entries():
+            if entry.display_path in self.ignored_files:
+                continue
             self.bypath[entry.display_path] = entry
             if isinstance(entry, DirInfo):
                 self._collect_files(entry)
@@ -554,8 +561,8 @@ class Tmpdir:
     def timestamp_file(self):
         return os.path.join(self.logdir, "tmp.timestamp")
 
-    def snapshot(self):
-        return FsSnapshot(self.top)
+    def snapshot(self, ignored_files):
+        return FsSnapshot(self.top, ignored_files)
 
     def prepare_for_test(self, test_method_name):
         self.clear()
