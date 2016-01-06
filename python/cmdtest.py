@@ -111,6 +111,15 @@ def temp_chdir(path):
     finally:
         os.chdir(starting_directory)
 
+@contextlib.contextmanager
+def extra_sys_path(dname):
+    try:
+        old_sys_path = sys.path
+        sys.path.append(dname)
+        yield
+    finally:
+        sys.path = old_sys_path
+
 def progress(*args):
     print("###", "-" * 50, *args)
 
@@ -637,7 +646,8 @@ class Tfile:
 
         self.glob = dict()
         self.glob['TestCase'] = TestCase
-        exec(co, self.glob)
+        with extra_sys_path(os.path.dirname(filename)):
+            exec(co, self.glob)
 
     def tclasses(self):
         for name in sorted(self.glob.keys()):
