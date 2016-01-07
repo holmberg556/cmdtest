@@ -653,6 +653,7 @@ class Tfile:
 
         self.glob = dict()
         self.glob['TestCase'] = TestCase
+        self.glob['__file__'] = os.path.abspath(filename)
         with extra_sys_path(os.path.dirname(filename)):
             exec(co, self.glob)
 
