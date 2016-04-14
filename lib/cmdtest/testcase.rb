@@ -97,6 +97,25 @@ module Cmdtest
     end
 
     #------------------------------
+    # Import directory into the "workdir" from the outside world.
+    # The source is found relative to the current directory when "cmdtest"
+    # was invoked. The target is created inside the "workdir" relative to
+    # the current directory at the time of the call.
+
+    def import_directory(src, tgt)
+      src_path = File.expand_path(src, @_runner.test_files_top)
+      tgt_path = _cwd_path(tgt)
+      FileUtils.mkdir_p(File.dirname(tgt_path))
+      if File.exists?(tgt_path)
+        raise UsageError, "'import_directory' target argument already exist: '#{tgt}'"
+      elsif File.directory?(src_path)
+        FileUtils.cp_r(src_path, tgt_path)
+      else
+        raise UsageError, "'import_directory' argument not a directory: '#{src}'"
+      end
+    end
+
+    #------------------------------
     # Create a file inside the "workdir".
     # The content can be specified either as an Array of lines or as
     # a string with the content of the whole file.
