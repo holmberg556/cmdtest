@@ -26,6 +26,7 @@ require "stringio"
 module Cmdtest
 
   class AssertFailed < RuntimeError ; end
+  class UsageError < RuntimeError ; end
 
   # Base class for testcases.
   # Some attributes and methods are prefixed with an "_" to avoid
@@ -88,7 +89,11 @@ module Cmdtest
       src_path = File.expand_path(src, @_runner.test_files_top)
       tgt_path = _cwd_path(tgt)
       FileUtils.mkdir_p(File.dirname(tgt_path))
-      FileUtils.cp(src_path, tgt_path)
+      if File.file?(src_path)
+        FileUtils.cp(src_path, tgt_path)
+      else
+        raise UsageError, "'import_file' argument not a file: '#{src}'"
+      end
     end
 
     #------------------------------
