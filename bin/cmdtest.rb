@@ -252,8 +252,6 @@ module Cmdtest
 
     attr_reader :opts, :orig_cwd, :method_filter
 
-    ORIG_CWD = Dir.pwd
-
     def initialize(project_dir, incremental, opts)
       @project_dir = project_dir
       @opts = opts
@@ -481,8 +479,6 @@ module Cmdtest
   #----------------------------------------------------------------------
 
   class ProjectDir
-
-    ORIG_CWD = Dir.pwd
 
     def initialize(argv)
       @argv = argv
