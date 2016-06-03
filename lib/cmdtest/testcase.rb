@@ -178,7 +178,7 @@ module Cmdtest
     #------------------------------
 
     def remove_file_tree(filename)
-      FileUtils.rm_rf(_cwd_path(filename))
+      Util.rm_rf(_cwd_path(filename))
     end
 
     #------------------------------

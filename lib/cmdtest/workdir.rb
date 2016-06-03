@@ -35,8 +35,8 @@ module Cmdtest
       @runner = runner
       @path = @runner.tmp_work_dir
       @hardlinkdir = File.join(@runner.tmp_dir, "hardlinks")
-      FileUtils.rm_rf(@path)
-      FileUtils.rm_rf(@hardlinkdir)
+      Util.rm_rf(@path)
+      Util.rm_rf(@hardlinkdir)
       FileUtils.mkdir_p(@path)
       @ignored_files = []
     end
