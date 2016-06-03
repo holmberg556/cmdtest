@@ -200,7 +200,7 @@ module Cmdtest
       @runtime_class, @adm_file, @runner = runtime_class, adm_file, runner
 
       tested = runner.opts.test
-      @adm_methods = @runtime_class.public_instance_methods(false).select do |name|
+      @adm_methods = @runtime_class.public_instance_methods(false).sort.select do |name|
         name =~ /^test_/
       end.map do |name|
         TestMethod.new(name, self, runner)
@@ -533,7 +533,7 @@ module Cmdtest
             exit(1)
           end
         elsif File.directory?(arg)
-          Dir.foreach(arg) do |entry|
+          for entry in Dir.entries(arg).sort
             path = File.join(arg,entry)
             next unless File.file?(path)
             next unless entry =~ /^CMDTEST_.*\.rb$/
