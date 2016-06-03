@@ -47,6 +47,8 @@ require "stringio"
 
 module Cmdtest
 
+  ORIG_CWD = Dir.pwd
+
   #----------------------------------------------------------------------
 
   module LogBaseMixin
@@ -183,6 +185,8 @@ module Cmdtest
           io.puts "BACKTRACE:"
           io.puts e.backtrace.map {|line| "  " + line }
           clog.assert_error(io.string)
+        ensure
+          Dir.chdir(ORIG_CWD)
         end
         obj.teardown
       end
