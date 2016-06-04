@@ -168,9 +168,7 @@ module Cmdtest
     def run(clog, runner)
       clog.notify("testmethod", @method) do
         obj = @adm_class.runtime_class.new(self, clog, runner)
-        if runner.opts.parallel == 1
-          Dir.chdir(obj._work_dir.path)
-        end
+        Dir.chdir(obj._work_dir.path)
         obj.setup
         begin
           obj.send(@method)
