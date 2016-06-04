@@ -185,11 +185,12 @@ module Cmdtest
           io.puts "BACKTRACE:"
           io.puts e.backtrace.map {|line| "  " + line }
           clog.assert_error(io.string)
-        ensure
-          Dir.chdir(ORIG_CWD)
         end
+        Dir.chdir(obj._work_dir.path)
         obj.teardown
       end
+    ensure
+      Dir.chdir(ORIG_CWD)
     end
 
   end
