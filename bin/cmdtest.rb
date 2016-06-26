@@ -169,9 +169,12 @@ module Cmdtest
       clog.notify("testmethod", @method) do
         obj = @adm_class.runtime_class.new(self, clog, runner)
         Dir.chdir(obj._work_dir.path)
-        obj.setup
         begin
+          obj.setup
           obj.send(@method)
+          Dir.chdir(obj._work_dir.path)
+          obj.teardown
+
           clog.assert_success
           runner.method_filter.success(method_id)
         rescue Cmdtest::AssertFailed => e
@@ -184,8 +187,6 @@ module Cmdtest
           io.puts e.backtrace.map {|line| "  " + line }
           clog.assert_error(io.string)
         end
-        Dir.chdir(obj._work_dir.path)
-        obj.teardown
       end
     ensure
       Dir.chdir(ORIG_CWD)
