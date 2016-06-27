@@ -23,6 +23,8 @@ require "fileutils"
 require "set"
 require "stringio"
 
+require "cmdtest/lcs"
+
 module Cmdtest
 
   class AssertFailed < RuntimeError ; end
@@ -385,9 +387,15 @@ module Cmdtest
       expected = files.flatten.sort
       #p [:xxx_files, xxx, actual, expected]
       _assert0 actual == expected do
-        _format_output(xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
-                       actual.inspect + "\n",
-                       expected.inspect + "\n")
+        if @_runner.opts.diff
+          _format_output(xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
+                         actual,
+                         expected)
+        else
+          _format_output(xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
+                         actual.inspect + "\n",
+                         expected.inspect + "\n")
+        end
       end
     end
 
@@ -663,17 +671,26 @@ module Cmdtest
       end
     end
 
-    def _indented_lines(prefix, output)
-      case output
-      when Array
-        lines = output
-      when String
-        lines = output.split(/\n/, -1)
+    def _to_lines(str)
+      if Array === str
+        lines = str
+      else
+        lines = str.split(/\n/, -1)
         if lines[-1] == ""
           lines.pop
         elsif ! lines.empty?
           lines[-1] << "[[missing newline]]"
         end
+      end
+      return lines
+    end
+
+    def _indented_lines(prefix, output)
+      case output
+      when Array
+        lines = output
+      when String
+        lines = _to_lines(output)
       when Regexp
         lines = [output]
       else
@@ -696,8 +713,15 @@ module Cmdtest
     def _format_output(error, actual, expected)
       res = ""
       res << "ERROR: #{error}\n"
-      res << _indented_lines("       actual: ", actual)
-      res << _indented_lines("       expect: ", expected)
+      if @_runner.opts.diff && (Array === expected || String === expected)
+        expected_lines = _to_lines(expected)
+        actual_lines = _to_lines(actual)
+        diff = DiffLCS.new(expected_lines, actual_lines)
+        res << _indented_lines("  ", diff.to_a)
+      else
+        res << _indented_lines("       actual: ", actual)
+        res << _indented_lines("       expect: ", expected)
+      end
       return res
     end
 

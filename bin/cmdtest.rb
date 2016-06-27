@@ -560,6 +560,7 @@ module Cmdtest
       pr.add("",   "--version",      "show version")
       pr.add("-q", "--quiet",        "be more quiet")
       pr.add("-v", "--verbose",      "be more verbose")
+      pr.add("",   "--diff",         "experimental diff output")
       pr.add("",   "--fast",         "run fast without waiting for unique mtime:s")
       pr.add("-j", "--parallel",     "build in parallel",  type: Integer, default: 1, metavar: "N")
       pr.add("",   "--test",         "only run named test", type: [String])
