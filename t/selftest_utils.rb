@@ -50,6 +50,15 @@ module SelftestUtils
     end
   end
 
+  def cmd_cmdtest_diff(*args)
+    cmdtest = "#{TOP}/bin/cmdtest.rb"
+    command = "ruby %s --quiet --diff" % _quote(cmdtest)
+    cmd(command, *args) do
+      comment "running local cmdtest --diff"
+      yield
+    end
+  end
+
   def cmd_cmdtest_verbose(*args)
     cmdtest = "#{TOP}/bin/cmdtest.rb"
     command = "ruby %s %s" % [
