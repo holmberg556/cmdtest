@@ -179,6 +179,7 @@ module Cmdtest
           runner.method_filter.success(method_id)
         rescue Cmdtest::AssertFailed => e
           clog.assert_failure(e.message)
+          runner.method_filter.failure(method_id)
         rescue => e
           io = StringIO.new
           io.puts "CAUGHT EXCEPTION:"
@@ -186,6 +187,7 @@ module Cmdtest
           io.puts "BACKTRACE:"
           io.puts e.backtrace.map {|line| "  " + line }
           clog.assert_error(io.string)
+          runner.method_filter.failure(method_id)
         end
       end
     ensure

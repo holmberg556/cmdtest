@@ -63,6 +63,10 @@ module Cmdtest
       @new_filter[method_id.key] = _get_method_signature(method_id)
     end
 
+    def failure(method_id)
+      @new_filter.delete(method_id.key)
+    end
+
     def _maybe_read_ruby_file(file)
       return if @files_read[file]
       @files_read[file] = true
