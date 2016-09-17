@@ -166,6 +166,7 @@ module Cmdtest
     end
 
     def run(clog, runner)
+      ok = false
       clog.notify("testmethod", @method) do
         obj = @adm_class.runtime_class.new(self, clog, runner)
         Dir.chdir(obj._work_dir.path)
@@ -177,6 +178,7 @@ module Cmdtest
 
           clog.assert_success
           runner.method_filter.success(method_id)
+          ok = true
         rescue Cmdtest::AssertFailed => e
           clog.assert_failure(e.message)
           runner.method_filter.failure(method_id)
@@ -190,6 +192,7 @@ module Cmdtest
           runner.method_filter.failure(method_id)
         end
       end
+      return ok
     ensure
       Dir.chdir(ORIG_CWD)
     end
@@ -428,7 +431,11 @@ module Cmdtest
             for adm_class in adm_file.adm_classes
               clog.notify("testclass", adm_class.runtime_class.display_name) do
                 for adm_method in adm_class.adm_methods
-                  adm_method.run(clog, self)
+                  ok = adm_method.run(clog, self)
+                  if !ok && @opts.stop_on_error
+                    puts "cmdtest: exiting after first error ..."
+                    exit(1)
+                  end
                   if $cmdtest_got_ctrl_c > 0
                     puts "cmdtest: exiting after Ctrl-C ..."
                     exit(1)
@@ -574,6 +581,7 @@ module Cmdtest
       pr.add("",   "--test",         "only run named test", type: [String])
       pr.add("",   "--xml",          "write summary on JUnit format", type: String, metavar: "FILE")
       pr.add("",   "--no-exit-code", "exit with 0 status even after errors")
+      pr.add("",   "--stop-on-error","exit after first error")
       pr.add("-i", "--incremental",  "incremental mode")
       pr.add("",   "--slave",        "run in slave mode", type: String)
       pr.addpos("arg", "testfile or pattern", nargs: 0..999)
@@ -582,6 +590,11 @@ module Cmdtest
 
     def run
       opts = _parse_options
+
+      if opts.stop_on_error && opts.parallel != 1
+        puts "cmdtest: error: --stop-on-error can not be used with --parallel"
+        exit(1)
+      end
 
       _update_cmdtest_level(opts.slave ? 0 : 1)
 
