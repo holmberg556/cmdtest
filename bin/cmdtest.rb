@@ -444,16 +444,14 @@ module Cmdtest
 
     def report_result(error_logger)
       if ! opts.quiet
-        puts
-        puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
-          error_logger.n_failures == 0 && error_logger.n_errors == 0 ? "###" : "---",
-          error_logger.n_classes,
-          error_logger.n_methods,
-          error_logger.n_commands,
-          error_logger.n_failures,
-          error_logger.n_errors,
-        ]
-        puts
+        summary = {
+          "classes"  => error_logger.n_classes,
+          "methods"  => error_logger.n_methods,
+          "commands" => error_logger.n_commands,
+          "failures" => error_logger.n_failures,
+          "errors"   => error_logger.n_errors,
+        }
+        Cmdtest.print_summary(summary)
       end
 
       ok = error_logger.everything_ok?
