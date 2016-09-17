@@ -182,7 +182,6 @@ module Cmdtest
                 puts
             end
             puts("optional arguments:")
-            puts("  -h, --help            show this help message and exit")
             for option in @options
                 str = "  " + option.names()
                 wanted = 22
