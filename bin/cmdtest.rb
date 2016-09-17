@@ -463,7 +463,15 @@ module Cmdtest
 
   #----------------------------------------------------------------------
 
+  START_TIME = Time.now
+
   def self.print_summary(summary)
+    s = (Time.now - START_TIME).to_i
+    m, s = s.divmod(60)
+    h, m = m.divmod(60)
+
+    puts "###"
+    puts "### Finished: %s,  Elapsed: %02d:%02d:%02d" % [Time.now.strftime("%F %T"), h,m,s]
     puts
     puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
       summary["failures"] == 0 && summary["errors"] == 0 ? "###" : "---",
