@@ -114,4 +114,16 @@ class CMDTEST_options < Cmdtest::Testcase
     end
   end
 
+  def test_option_help
+    cmd_cmdtest_verbose "-h" do
+      stdout_equal /^usage: cmdtest /
+      stdout_equal /^\s+-h, --help\s+show this help/
+    end
+
+    cmd_cmdtest_verbose "--help" do
+      stdout_equal /^usage: cmdtest /
+      stdout_equal /^\s+-h, --help\s+show this help/
+    end
+  end
+
 end
