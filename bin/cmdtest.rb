@@ -572,6 +572,7 @@ module Cmdtest
 
     def _parse_options
       pr = @argument_parser = ArgumentParser.new("cmdtest")
+      pr.add("-h", "--help",         "show this help message and exit")
       pr.add("",   "--version",      "show version")
       pr.add("-q", "--quiet",        "be more quiet")
       pr.add("-v", "--verbose",      "be more verbose")
@@ -585,7 +586,13 @@ module Cmdtest
       pr.add("-i", "--incremental",  "incremental mode")
       pr.add("",   "--slave",        "run in slave mode", type: String)
       pr.addpos("arg", "testfile or pattern", nargs: 0..999)
-      return pr.parse_args(ARGV, patterns: [], ruby_s: Util.windows?)
+
+      opts = pr.parse_args(ARGV, patterns: [], ruby_s: Util.windows?)
+      if opts.help
+        pr.print_usage()
+        exit(0)
+      end
+      return opts
     end
 
     def run
