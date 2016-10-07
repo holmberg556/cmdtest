@@ -25,9 +25,9 @@
 # found in the files. The result can be reported in different ways.
 # Most of the testing logic is found in the library files "cmdtest/*.rb".
 
-top_dir = File.dirname(File.dirname(__FILE__))
-lib_dir = File.join(File.expand_path(top_dir), "lib")
-$:.unshift(lib_dir) if File.directory?(File.join(lib_dir, "cmdtest"))
+TOP_DIR = File.expand_path(File.dirname(File.dirname(__FILE__)))
+LIB_DIR = File.join(TOP_DIR, "lib")
+$:.unshift(LIB_DIR) if File.directory?(File.join(LIB_DIR, "cmdtest"))
 
 require "cmdtest/argumentparser"
 require "cmdtest/baselogger"
@@ -48,6 +48,11 @@ require "stringio"
 module Cmdtest
 
   ORIG_CWD = Dir.pwd
+
+  GIT_REV  = 'GIT_REV_STRING'
+  GIT_DATE = 'GIT_DATE_STRING'
+
+  VERSION = '1.4'
 
   #----------------------------------------------------------------------
 
@@ -573,6 +578,7 @@ module Cmdtest
     def _parse_options
       pr = @argument_parser = ArgumentParser.new("cmdtest")
       pr.add("-h", "--help",         "show this help message and exit")
+      pr.add("",   "--shortversion", "show just version number")
       pr.add("",   "--version",      "show version")
       pr.add("-q", "--quiet",        "be more quiet")
       pr.add("-v", "--verbose",      "be more verbose")
@@ -597,6 +603,25 @@ module Cmdtest
 
     def run
       opts = _parse_options
+
+      if opts.shortversion
+        puts VERSION
+        exit(0)
+      elsif opts.version
+        puts "Version:   " + VERSION
+        if File.directory?(File.join(TOP_DIR, ".git"))
+          Dir.chdir(TOP_DIR) do
+            git_rev = `git rev-parse HEAD`
+            git_date = `git show -s --format=%ci HEAD`
+            puts "Revision:  #{git_rev}"
+            puts "Date:      #{git_date}"
+          end
+        else
+          puts "Revision:  #{GIT_REV}"
+          puts "Date:      #{GIT_DATE}"
+        end
+        exit(0)
+      end
 
       if opts.stop_on_error && opts.parallel != 1
         puts "cmdtest: error: --stop-on-error can not be used with --parallel"
