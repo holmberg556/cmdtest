@@ -21,7 +21,7 @@ open(my $g, '>', $outfile) || die "open($outfile)";
 while (my $line = <$f>) {
     for my $entry (@replace) {
         my ($old, $new) = @$entry;
-        $line =~ s/$old/$new/g;
+        $line =~ s/\$$old\$/$new/g;
     }
     print {$g} $line;
 }

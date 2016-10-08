@@ -49,10 +49,11 @@ module Cmdtest
 
   ORIG_CWD = Dir.pwd
 
-  GIT_REV  = 'GIT_REV_STRING'
-  GIT_DATE = 'GIT_DATE_STRING'
+  GIT_REV  = '$GIT_REV_STRING$'
+  GIT_DATE = '$GIT_DATE_STRING$'
+  VERSION  = '$VERSION$'
 
-  VERSION = '1.4'
+  SHORT_VERSION = '1.4'
 
   #----------------------------------------------------------------------
 
@@ -605,10 +606,10 @@ module Cmdtest
       opts = _parse_options
 
       if opts.shortversion
-        puts VERSION
+        puts SHORT_VERSION
         exit(0)
       elsif opts.version
-        puts "Version:   " + VERSION
+        puts "Version:   " + (VERSION =~ /^\$/ ? SHORT_VERSION : VERSION)
         if File.directory?(File.join(TOP_DIR, ".git"))
           Dir.chdir(TOP_DIR) do
             git_rev = `git rev-parse HEAD`

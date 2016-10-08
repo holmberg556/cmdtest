@@ -32,7 +32,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "ruby | ruby-interpreter")
 INCLUDE(CPack)
 
 execute_process(
-  COMMAND git rev-parse HEAD
+  COMMAND git rev-parse --short HEAD
   OUTPUT_VARIABLE GIT_REV
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
@@ -48,7 +48,11 @@ message(STATUS "GIT_DATE = '${GIT_DATE}'")
 
 execute_process(
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMAND ./replace_strings.pl "GIT_REV_STRING=${GIT_REV}" "GIT_DATE_STRING=${GIT_DATE}" bin/cmdtest.rb bin/cmdtest.rb.generated
+  COMMAND ./replace_strings.pl
+  "GIT_REV_STRING=${GIT_REV}"
+  "GIT_DATE_STRING=${GIT_DATE}"
+  "VERSION=${CPACK_PACKAGE_VERSION}"
+  bin/cmdtest.rb bin/cmdtest.rb.generated
   )
 
 
