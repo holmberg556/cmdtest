@@ -94,7 +94,17 @@ module Cmdtest
 
     def _ENV_strs(env)
       # TODO: windows
-      env.keys.sort.map {|k| "export %s='%s'" % [k, env[k]] }
+      env.keys.sort.map do |k|
+        what = env[k][0]
+        case what
+        when :setenv
+          "export %s='%s'" % [k, env[k][1]]
+        when :unsetenv
+          "unset %s" % [k]
+        else
+          raise "internal error"
+        end
+      end
     end
 
     def _chdir_str(dir)
@@ -139,7 +149,7 @@ module Cmdtest
       end
 
       File.open(_tmp_redirect_sh, "w") do |f|
-        f.puts _ENV_strs(@testcase._env)
+        f.puts _ENV_strs(@testcase._env_setenv)
         f.puts
         f.puts _chdir_str(@testcase._cwd)
         f.puts

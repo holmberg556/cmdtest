@@ -66,7 +66,7 @@ module Cmdtest
 
     ORIG_CWD = Dir.pwd
 
-    attr_reader :_work_dir, :_env
+    attr_reader :_work_dir, :_env_setenv
 
     def initialize(test_method, clog, runner)
       @_test_method = test_method
@@ -74,7 +74,7 @@ module Cmdtest
       @_runner = runner
       @_work_dir = Workdir.new(self, runner)
       @_cwd = @_runner.tmp_work_dir
-      @_env = Hash.new
+      @_env_setenv = Hash.new
       @_in_cmd = false
       @_comment_str = nil
       @_env_path = @_runner.orig_env_path
@@ -198,13 +198,13 @@ module Cmdtest
     #------------------------------
 
     def setenv(name, value)
-      @_env[name] = value
+      @_env_setenv[name] = [:setenv, value]
     end
 
     #------------------------------
 
     def unsetenv(name)
-      @_env.delete(name)
+      @_env_setenv[name] = [:unsetenv]
     end
 
     #------------------------------
