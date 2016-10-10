@@ -93,14 +93,21 @@ module Cmdtest
     end
 
     def _ENV_strs(env)
-      # TODO: windows
       env.keys.sort.map do |k|
         what = env[k][0]
         case what
         when :setenv
-          "export %s='%s'" % [k, env[k][1]]
+          if Util.windows?
+            "set %s=%s" % [k, env[k][1]]
+          else
+            "export %s='%s'" % [k, env[k][1]]
+          end
         when :unsetenv
-          "unset %s" % [k]
+          if Util.windows?
+            "set %s=" % [k]
+          else
+            "unset %s" % [k]
+          end
         else
           raise "internal error"
         end
