@@ -427,7 +427,7 @@ class TestCase:
         with open(tgt_file, "w", encoding=tgt_encoding) as f:
             f.write(data)
 
-    def cmd(self, cmdline):
+    def cmd(self, cmdline, *, timeout=None):
         tmpdir = self.__tmpdir
         before = tmpdir.snapshot(self.__always_ignored_files)
         stdout_log = tmpdir.stdout_log()
@@ -437,7 +437,7 @@ class TestCase:
         print("### cmdline:", cmdline)
         with open(stdout_log, "w") as stdout, open(stderr_log, "w") as stderr:
             if cmdline:
-                err = subprocess.call(cmdline, stdout=stdout, stderr=stderr, shell=True)
+                err = subprocess.call(cmdline, stdout=stdout, stderr=stderr, shell=True, timeout=timeout)
             else:
                 err = 0
         after = tmpdir.snapshot(self.__always_ignored_files)
