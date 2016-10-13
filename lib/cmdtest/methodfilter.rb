@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------
 # methodfilter.rb
 #----------------------------------------------------------------------
-# Copyright 2009-2014 Johan Holmberg.
+# Copyright 2009-2016 Johan Holmberg.
 #----------------------------------------------------------------------
 # This file is part of "cmdtest".
 #
@@ -61,6 +61,10 @@ module Cmdtest
 
     def success(method_id)
       @new_filter[method_id.key] = _get_method_signature(method_id)
+    end
+
+    def failure(method_id)
+      @new_filter.delete(method_id.key)
     end
 
     def _maybe_read_ruby_file(file)

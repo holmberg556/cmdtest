@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------
 # workdir.rb
 #----------------------------------------------------------------------
-# Copyright 2002-2014 Johan Holmberg.
+# Copyright 2002-2016 Johan Holmberg.
 #----------------------------------------------------------------------
 # This file is part of "cmdtest".
 #
@@ -35,8 +35,8 @@ module Cmdtest
       @runner = runner
       @path = @runner.tmp_work_dir
       @hardlinkdir = File.join(@runner.tmp_dir, "hardlinks")
-      FileUtils.rm_rf(@path)
-      FileUtils.rm_rf(@hardlinkdir)
+      Util.rm_rf(@path)
+      Util.rm_rf(@hardlinkdir)
       FileUtils.mkdir_p(@path)
       @ignored_files = []
     end
@@ -93,8 +93,25 @@ module Cmdtest
     end
 
     def _ENV_strs(env)
-      # TODO: windows
-      env.keys.sort.map {|k| "export %s='%s'" % [k, env[k]] }
+      env.keys.sort.map do |k|
+        what = env[k][0]
+        case what
+        when :setenv
+          if Util.windows?
+            "set %s=%s" % [k, env[k][1]]
+          else
+            "export %s='%s'" % [k, env[k][1]]
+          end
+        when :unsetenv
+          if Util.windows?
+            "set %s=" % [k]
+          else
+            "unset %s" % [k]
+          end
+        else
+          raise "internal error"
+        end
+      end
     end
 
     def _chdir_str(dir)
@@ -139,7 +156,7 @@ module Cmdtest
       end
 
       File.open(_tmp_redirect_sh, "w") do |f|
-        f.puts _ENV_strs(@testcase._env)
+        f.puts _ENV_strs(@testcase._env_setenv)
         f.puts
         f.puts _chdir_str(@testcase._cwd)
         f.puts

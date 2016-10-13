@@ -190,7 +190,7 @@ the creation of files::
   ...
 
 The list of such helper functions includes:
-``create_file``, ``touch_file``, ``import_file`` and ``ignore_file``.
+``create_file``, ``touch_file``, ``import_file`` , ``import_directory`` and ``ignore_file``.
 Beside these methods the test can of course also contain arbitrary Ruby-code.
 
 
@@ -536,6 +536,13 @@ or in the ``setup`` method.
     when ``cmdtest`` was called. The ``tgt`` is evaluated relative to
     the current directory inside the "work directory" at the time
     of the call.
+
+``import_directory(src, tgt)``
+    Copy a directory tree from outside of the "work directory" to inside.
+    The ``src`` path is evaluated relative to the current directory
+    when ``cmdtest`` was called. The ``tgt`` is evaluated relative to
+    the current directory inside the "work directory" at the time
+    of the call. It is an error if ``tgt`` already exists.
 
 ``prepend_local_path(dir)``
     Prepend the given directory to the ``PATH`` so commands executed via ``cmd``

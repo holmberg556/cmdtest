@@ -1,0 +1,8 @@
+# -*- ruby -*-
+
+ENV["LC_ALL"] = "C" if RUBY_PLATFORM =~ /darwin/
+
+desc "run unit tests"
+task "test" do
+  sh "./cmdtest.py t"
+end

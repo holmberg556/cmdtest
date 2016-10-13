@@ -62,6 +62,7 @@ class CMDTEST_summery < Cmdtest::Testcase
     ]
 
     cmd_cmdtest_verbose do
+      stdout_equal /^--- .* test classes,.*test methods,.*commands,.*errors,.*fatals\.$/
       stdout_equal /. 1 test classes/
       stdout_equal /. 5 test methods/
       stdout_equal /. 8 commands/
@@ -126,6 +127,7 @@ class CMDTEST_summery < Cmdtest::Testcase
     ]
 
     cmd_cmdtest_verbose do
+      stdout_equal /^### .* test classes,.*test methods,.*commands,.*errors,.*fatals\.$/
       stdout_equal /. 1 test classes/
       stdout_equal /. 5 test methods/
       stdout_equal /. 8 commands/

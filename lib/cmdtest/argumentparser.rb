@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------
 # argumentparser.rb
 #----------------------------------------------------------------------
-# Copyright 2015 Johan Holmberg.
+# Copyright 2015-2016 Johan Holmberg.
 #----------------------------------------------------------------------
 # This file is part of "cmdtest".
 #
@@ -133,8 +133,6 @@ module Cmdtest
             @help = false
 
             @args = []
-
-            add("-h", "--help", "show this help message and exit")
         end
 
         def add(sname, name, help, args = {})
@@ -182,7 +180,6 @@ module Cmdtest
                 puts
             end
             puts("optional arguments:")
-            puts("  -h, --help            show this help message and exit")
             for option in @options
                 str = "  " + option.names()
                 wanted = 22
@@ -207,11 +204,6 @@ module Cmdtest
 
             @optind = 0
             while _more_args() && _arg() =~ /^-./
-                if _arg() == "-h"
-                    print_usage()
-                    exit(0)
-                end
-
                 if _arg() == "--"
                     @optind += 1
                     break

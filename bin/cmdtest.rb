@@ -2,7 +2,7 @@
 #----------------------------------------------------------------------
 # cmdtest.rb
 #----------------------------------------------------------------------
-# Copyright 2002-2014 Johan Holmberg.
+# Copyright 2002-2016 Johan Holmberg.
 #----------------------------------------------------------------------
 # This file is part of "cmdtest".
 #
@@ -25,9 +25,9 @@
 # found in the files. The result can be reported in different ways.
 # Most of the testing logic is found in the library files "cmdtest/*.rb".
 
-top_dir = File.dirname(File.dirname(__FILE__))
-lib_dir = File.join(File.expand_path(top_dir), "lib")
-$:.unshift(lib_dir) if File.directory?(File.join(lib_dir, "cmdtest"))
+TOP_DIR = File.expand_path(File.dirname(File.dirname(__FILE__)))
+LIB_DIR = File.join(TOP_DIR, "lib")
+$:.unshift(LIB_DIR) if File.directory?(File.join(LIB_DIR, "cmdtest"))
 
 require "cmdtest/argumentparser"
 require "cmdtest/baselogger"
@@ -46,6 +46,14 @@ require "set"
 require "stringio"
 
 module Cmdtest
+
+  ORIG_CWD = Dir.pwd
+
+  GIT_REV  = '$GIT_REV_STRING$'
+  GIT_DATE = '$GIT_DATE_STRING$'
+  VERSION  = '$VERSION$'
+
+  SHORT_VERSION = '1.4'
 
   #----------------------------------------------------------------------
 
@@ -164,18 +172,22 @@ module Cmdtest
     end
 
     def run(clog, runner)
+      ok = false
       clog.notify("testmethod", @method) do
         obj = @adm_class.runtime_class.new(self, clog, runner)
-        if runner.opts.parallel == 1
-          Dir.chdir(obj._work_dir.path)
-        end
-        obj.setup
+        Dir.chdir(obj._work_dir.path)
         begin
+          obj.setup
           obj.send(@method)
+          Dir.chdir(obj._work_dir.path)
+          obj.teardown
+
           clog.assert_success
           runner.method_filter.success(method_id)
+          ok = true
         rescue Cmdtest::AssertFailed => e
           clog.assert_failure(e.message)
+          runner.method_filter.failure(method_id)
         rescue => e
           io = StringIO.new
           io.puts "CAUGHT EXCEPTION:"
@@ -183,9 +195,12 @@ module Cmdtest
           io.puts "BACKTRACE:"
           io.puts e.backtrace.map {|line| "  " + line }
           clog.assert_error(io.string)
+          runner.method_filter.failure(method_id)
         end
-        obj.teardown
       end
+      return ok
+    ensure
+      Dir.chdir(ORIG_CWD)
     end
 
   end
@@ -200,7 +215,7 @@ module Cmdtest
       @runtime_class, @adm_file, @runner = runtime_class, adm_file, runner
 
       tested = runner.opts.test
-      @adm_methods = @runtime_class.public_instance_methods(false).select do |name|
+      @adm_methods = @runtime_class.public_instance_methods(false).sort.select do |name|
         name =~ /^test_/
       end.map do |name|
         TestMethod.new(name, self, runner)
@@ -247,8 +262,6 @@ module Cmdtest
   class Runner
 
     attr_reader :opts, :orig_cwd, :method_filter
-
-    ORIG_CWD = Dir.pwd
 
     def initialize(project_dir, incremental, opts)
       @project_dir = project_dir
@@ -424,7 +437,11 @@ module Cmdtest
             for adm_class in adm_file.adm_classes
               clog.notify("testclass", adm_class.runtime_class.display_name) do
                 for adm_method in adm_class.adm_methods
-                  adm_method.run(clog, self)
+                  ok = adm_method.run(clog, self)
+                  if !ok && @opts.stop_on_error
+                    puts "cmdtest: exiting after first error ..."
+                    exit(1)
+                  end
                   if $cmdtest_got_ctrl_c > 0
                     puts "cmdtest: exiting after Ctrl-C ..."
                     exit(1)
@@ -440,16 +457,14 @@ module Cmdtest
 
     def report_result(error_logger)
       if ! opts.quiet
-        puts
-        puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
-          error_logger.n_failures == 0 && error_logger.n_errors == 0 ? "###" : "---",
-          error_logger.n_classes,
-          error_logger.n_methods,
-          error_logger.n_commands,
-          error_logger.n_failures,
-          error_logger.n_errors,
-        ]
-        puts
+        summary = {
+          "classes"  => error_logger.n_classes,
+          "methods"  => error_logger.n_methods,
+          "commands" => error_logger.n_commands,
+          "failures" => error_logger.n_failures,
+          "errors"   => error_logger.n_errors,
+        }
+        Cmdtest.print_summary(summary)
       end
 
       ok = error_logger.everything_ok?
@@ -461,7 +476,15 @@ module Cmdtest
 
   #----------------------------------------------------------------------
 
+  START_TIME = Time.now
+
   def self.print_summary(summary)
+    s = (Time.now - START_TIME).to_i
+    m, s = s.divmod(60)
+    h, m = m.divmod(60)
+
+    puts "###"
+    puts "### Finished: %s,  Elapsed: %02d:%02d:%02d" % [Time.now.strftime("%F %T"), h,m,s]
     puts
     puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
       summary["failures"] == 0 && summary["errors"] == 0 ? "###" : "---",
@@ -477,8 +500,6 @@ module Cmdtest
   #----------------------------------------------------------------------
 
   class ProjectDir
-
-    ORIG_CWD = Dir.pwd
 
     def initialize(argv)
       @argv = argv
@@ -533,7 +554,7 @@ module Cmdtest
             exit(1)
           end
         elsif File.directory?(arg)
-          Dir.foreach(arg) do |entry|
+          for entry in Dir.entries(arg).sort
             path = File.join(arg,entry)
             next unless File.file?(path)
             next unless entry =~ /^CMDTEST_.*\.rb$/
@@ -557,22 +578,56 @@ module Cmdtest
 
     def _parse_options
       pr = @argument_parser = ArgumentParser.new("cmdtest")
+      pr.add("-h", "--help",         "show this help message and exit")
+      pr.add("",   "--shortversion", "show just version number")
       pr.add("",   "--version",      "show version")
       pr.add("-q", "--quiet",        "be more quiet")
       pr.add("-v", "--verbose",      "be more verbose")
+      pr.add("",   "--diff",         "experimental diff output")
       pr.add("",   "--fast",         "run fast without waiting for unique mtime:s")
       pr.add("-j", "--parallel",     "build in parallel",  type: Integer, default: 1, metavar: "N")
       pr.add("",   "--test",         "only run named test", type: [String])
       pr.add("",   "--xml",          "write summary on JUnit format", type: String, metavar: "FILE")
       pr.add("",   "--no-exit-code", "exit with 0 status even after errors")
+      pr.add("",   "--stop-on-error","exit after first error")
       pr.add("-i", "--incremental",  "incremental mode")
       pr.add("",   "--slave",        "run in slave mode", type: String)
       pr.addpos("arg", "testfile or pattern", nargs: 0..999)
-      return pr.parse_args(ARGV, patterns: [], ruby_s: Util.windows?)
+
+      opts = pr.parse_args(ARGV, patterns: [], ruby_s: Util.windows?)
+      if opts.help
+        pr.print_usage()
+        exit(0)
+      end
+      return opts
     end
 
     def run
       opts = _parse_options
+
+      if opts.shortversion
+        puts SHORT_VERSION
+        exit(0)
+      elsif opts.version
+        puts "Version:   " + (VERSION =~ /^\$/ ? SHORT_VERSION : VERSION)
+        if File.directory?(File.join(TOP_DIR, ".git"))
+          Dir.chdir(TOP_DIR) do
+            git_rev = `git rev-parse HEAD`
+            git_date = `git show -s --format=%ci HEAD`
+            puts "Revision:  #{git_rev}"
+            puts "Date:      #{git_date}"
+          end
+        else
+          puts "Revision:  #{GIT_REV}"
+          puts "Date:      #{GIT_DATE}"
+        end
+        exit(0)
+      end
+
+      if opts.stop_on_error && opts.parallel != 1
+        puts "cmdtest: error: --stop-on-error can not be used with --parallel"
+        exit(1)
+      end
 
       _update_cmdtest_level(opts.slave ? 0 : 1)
 

@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------
 # util.rb
 #----------------------------------------------------------------------
-# Copyright 2002-2014 Johan Holmberg.
+# Copyright 2002-2016 Johan Holmberg.
 #----------------------------------------------------------------------
 # This file is part of "cmdtest".
 #
@@ -18,6 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with "cmdtest".  If not, see <http://www.gnu.org/licenses/>.
 #----------------------------------------------------------------------
+
+require "fileutils"
 
 module Cmdtest
   class Util
@@ -60,6 +62,12 @@ module Cmdtest
 
     def self.windows?
       RUBY_PLATFORM =~ /mswin32|mingw32/
+    end
+
+    def self.rm_rf(path)
+      if File.exist?(path)
+        FileUtils.rm_r(path) # exception if failing
+      end
     end
 
   end

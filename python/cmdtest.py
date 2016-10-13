@@ -74,6 +74,13 @@ def subranges(n, arr):
     for i in range(0,len(arr)-n+1):
         yield arr[i:i+n]
 
+def flatten(seq):
+    for item in seq:
+        if isinstance(item, (list,tuple)):
+            yield from flatten(item)
+        else:
+            yield item
+
 def to_list(arg):
     return arg if isinstance(arg, list) else [arg]
 
@@ -103,6 +110,15 @@ def temp_chdir(path):
         yield
     finally:
         os.chdir(starting_directory)
+
+@contextlib.contextmanager
+def extra_sys_path(dname):
+    try:
+        old_sys_path = sys.path
+        sys.path.append(dname)
+        yield
+    finally:
+        sys.path = old_sys_path
 
 def progress(*args):
     print("###", "-" * 50, *args)
@@ -368,6 +384,7 @@ class TestCase:
     def __init__(self, tmpdir, statistics):
         self.__tmpdir = tmpdir
         self.__statistics = statistics
+        self.__always_ignored_files = set()
 
     def setup(self):
         pass
@@ -383,6 +400,9 @@ class TestCase:
         os.environ['PATH'] = os.pathsep.join((os.path.join(self.__tmpdir.top, dirpath),
                                               os.environ['PATH']))
 
+    def always_ignore_file(self, fname):
+        self.__always_ignored_files.add(fname)
+
     def import_file(self, src, tgt):
         mkdir_for(tgt)
         shutil.copy(os.path.join(ROOT_WD, src), tgt)
@@ -390,8 +410,8 @@ class TestCase:
     def create_file(self, fname, content, encoding='utf-8'):
         mkdir_for(fname)
         with open(fname, "w", encoding=encoding) as f:
-            if type(content) == list:
-                for line in content:
+            if isinstance(content, (list,tuple)):
+                for line in flatten(content):
                     print(line, file=f)
             else:
                 f.write(content)
@@ -409,7 +429,7 @@ class TestCase:
 
     def cmd(self, cmdline, timeout=None):
         tmpdir = self.__tmpdir
-        before = tmpdir.snapshot()
+        before = tmpdir.snapshot(self.__always_ignored_files)
         stdout_log = tmpdir.stdout_log()
         stderr_log = tmpdir.stderr_log()
         self._wait_for_new_second()
@@ -420,7 +440,7 @@ class TestCase:
                 err = subprocess.call(cmdline, stdout=stdout, stderr=stderr, shell=True, timeout=timeout)
             else:
                 err = 0
-        after = tmpdir.snapshot()
+        after = tmpdir.snapshot(self.__always_ignored_files)
 
         return Result(err, before, after,
                       File(stdout_log), File(stderr_log),
@@ -494,8 +514,9 @@ class FileInfo:
 #----------------------------------------------------------------------
 
 class FsSnapshot:
-    def __init__(self, topdir):
+    def __init__(self, topdir, ignored_files):
         self.topdir = topdir
+        self.ignored_files = ignored_files
         self.bypath = {}
         self._collect_files(DirInfo(topdir))
 
@@ -510,6 +531,8 @@ class FsSnapshot:
 
     def _collect_files(self, dirinfo):
         for entry in dirinfo.entries():
+            if entry.display_path in self.ignored_files:
+                continue
             self.bypath[entry.display_path] = entry
             if isinstance(entry, DirInfo):
                 self._collect_files(entry)
@@ -538,8 +561,8 @@ class Tmpdir:
     def timestamp_file(self):
         return os.path.join(self.logdir, "tmp.timestamp")
 
-    def snapshot(self):
-        return FsSnapshot(self.top)
+    def snapshot(self, ignored_files):
+        return FsSnapshot(self.top, ignored_files)
 
     def prepare_for_test(self, test_method_name):
         self.clear()
@@ -630,7 +653,9 @@ class Tfile:
 
         self.glob = dict()
         self.glob['TestCase'] = TestCase
-        exec(co, self.glob)
+        self.glob['__file__'] = os.path.abspath(filename)
+        with extra_sys_path(os.path.dirname(filename)):
+            exec(co, self.glob)
 
     def tclasses(self):
         for name in sorted(self.glob.keys()):
@@ -645,18 +670,20 @@ def cmdtest_in_dir(path):
         py_files = glob.glob("CMDTEST_*.py")
         return test_files(py_files)
 
-def test_files(py_files, selected_methods = set()):
+def test_files(py_files, selected_methods=None, quiet=False):
     statistics = Statistics()
     tmpdir = Tmpdir()
     for py_file in py_files:
         tfile = Tfile(py_file)
         for tclass in tfile.tclasses():
             statistics.classes += 1
-            progress(tclass.name())
+            if not quiet:
+                progress(tclass.name())
             for tmethod in tclass.tmethods():
                 if not selected_methods or tmethod.name() in selected_methods:
                     statistics.methods += 1
-                    progress(tmethod.name())
+                    if not quiet:
+                        progress(tmethod.name())
                     tmethod.run(tmpdir, statistics)
     return statistics
 
@@ -664,13 +691,17 @@ def parse_options():
     parser = argparse.ArgumentParser('cmdtest')
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="be more verbose")
+    parser.add_argument("-q", "--quiet", action="store_true",
+                        help="be more quiet")
     parser.add_argument("arg", nargs="*",
                         help="CMDTEST_*.py files / test methods")
     options = parser.parse_args()
     py_files = []
     selected_methods = set()
     for arg in options.arg:
-        if re.match(r'CMDTEST_.*\.py$', arg):
+        if os.path.isdir(arg):
+            py_files.extend(glob.glob('%s/CMDTEST_*.py' % arg))
+        elif re.match(r'CMDTEST_.*\.py$', os.path.basename(arg)):
             py_files.append(arg)
         else:
             selected_methods.add(arg)
@@ -684,10 +715,11 @@ def parse_options():
 
 def main():
     options, py_files, selected_methods = parse_options()
-    statistics = test_files(py_files, selected_methods)
-    print()
-    print(statistics)
-    print()
+    statistics = test_files(py_files, selected_methods, options.quiet)
+    if not options.quiet:
+        print()
+        print(statistics)
+        print()
     exit(0 if statistics.errors == 0 and statistics.fatals == 0 else 1)
 
 if __name__ == '__main__':

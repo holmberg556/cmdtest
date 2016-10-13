@@ -38,9 +38,7 @@ class CMDTEST_gcc < Cmdtest::Testcase
   def test_no_arguments
     cmd "#{gcc}" do
       comment "no arguments"
-      stderr_equal [
-        /^.*gcc.*: no input files/,
-      ]
+      stderr_equal /^.*gcc.*: no input files/
       exit_nonzero
     end
   end
@@ -49,26 +47,20 @@ class CMDTEST_gcc < Cmdtest::Testcase
 
   def test_nonexisting_input
     cmd "#{gcc} -c non-existing.c" do
-      stderr_equal [
-        /^.*gcc.*: non-existing.c: No such file/,
-        /^.*gcc.*: no input files/,
-      ]
+      stderr_equal /^.*gcc.*: non-existing.c: No such file/
+      stderr_equal /^.*gcc.*: no input files/
       exit_nonzero
     end
 
     cmd "#{gcc} non-existing.c" do
-      stderr_equal [
-        /^.*gcc.*: non-existing.c: No such file/,
-        /^.*gcc.*: no input files/,
-      ]
+      stderr_equal /^.*gcc.*: non-existing.c: No such file/
+      stderr_equal /^.*gcc.*: no input files/
       exit_nonzero
     end
 
     cmd "#{gcc} non-existing.o" do
-      stderr_equal [
-        /^.*gcc.*: non-existing.o: No such file/,
-        /^.*gcc.*: no input files/,
-      ]
+      stderr_equal /^.*gcc.*: non-existing.o: No such file/
+      stderr_equal /^.*gcc.*: no input files/
       exit_nonzero
     end
   end
@@ -165,7 +157,7 @@ class CMDTEST_gcc < Cmdtest::Testcase
 
     cmd "#{gcc} -o gamma.o -c alpha.c beta.c" do
       comment "-o with two source files give error"
-      stderr_equal /^.*gcc.*: cannot specify -o with -c or -S with multiple files/
+      stderr_equal /^.*gcc.*: cannot specify -o with -c.* with multiple files/
       exit_nonzero
     end
   end

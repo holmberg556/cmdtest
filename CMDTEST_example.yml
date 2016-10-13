@@ -1,0 +1,11 @@
+
+
+- test: simple
+  actions:
+    - create_file:
+        name: foo.txt
+        content: "abc ..."
+    - cmd:
+        cmdline: echo hello
+        stdout: /hello/
+        status: 0

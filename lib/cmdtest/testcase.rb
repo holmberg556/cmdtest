@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------
 # testcase.rb
 #----------------------------------------------------------------------
-# Copyright 2002-2014 Johan Holmberg.
+# Copyright 2002-2016 Johan Holmberg.
 #----------------------------------------------------------------------
 # This file is part of "cmdtest".
 #
@@ -23,9 +23,12 @@ require "fileutils"
 require "set"
 require "stringio"
 
+require "cmdtest/lcs"
+
 module Cmdtest
 
   class AssertFailed < RuntimeError ; end
+  class UsageError < RuntimeError ; end
 
   # Base class for testcases.
   # Some attributes and methods are prefixed with an "_" to avoid
@@ -63,7 +66,7 @@ module Cmdtest
 
     ORIG_CWD = Dir.pwd
 
-    attr_reader :_work_dir, :_env
+    attr_reader :_work_dir, :_env_setenv
 
     def initialize(test_method, clog, runner)
       @_test_method = test_method
@@ -71,7 +74,7 @@ module Cmdtest
       @_runner = runner
       @_work_dir = Workdir.new(self, runner)
       @_cwd = @_runner.tmp_work_dir
-      @_env = Hash.new
+      @_env_setenv = Hash.new
       @_in_cmd = false
       @_comment_str = nil
       @_env_path = @_runner.orig_env_path
@@ -88,7 +91,30 @@ module Cmdtest
       src_path = File.expand_path(src, @_runner.test_files_top)
       tgt_path = _cwd_path(tgt)
       FileUtils.mkdir_p(File.dirname(tgt_path))
-      FileUtils.cp(src_path, tgt_path)
+      if File.file?(src_path)
+        FileUtils.cp(src_path, tgt_path)
+      else
+        raise UsageError, "'import_file' argument not a file: '#{src}'"
+      end
+    end
+
+    #------------------------------
+    # Import directory into the "workdir" from the outside world.
+    # The source is found relative to the current directory when "cmdtest"
+    # was invoked. The target is created inside the "workdir" relative to
+    # the current directory at the time of the call.
+
+    def import_directory(src, tgt)
+      src_path = File.expand_path(src, @_runner.test_files_top)
+      tgt_path = _cwd_path(tgt)
+      FileUtils.mkdir_p(File.dirname(tgt_path))
+      if File.exists?(tgt_path)
+        raise UsageError, "'import_directory' target argument already exist: '#{tgt}'"
+      elsif File.directory?(src_path)
+        FileUtils.cp_r(src_path, tgt_path)
+      else
+        raise UsageError, "'import_directory' argument not a directory: '#{src}'"
+      end
     end
 
     #------------------------------
@@ -154,7 +180,7 @@ module Cmdtest
     #------------------------------
 
     def remove_file_tree(filename)
-      FileUtils.rm_rf(_cwd_path(filename))
+      Util.rm_rf(_cwd_path(filename))
     end
 
     #------------------------------
@@ -172,13 +198,13 @@ module Cmdtest
     #------------------------------
 
     def setenv(name, value)
-      @_env[name] = value
+      @_env_setenv[name] = [:setenv, value]
     end
 
     #------------------------------
 
     def unsetenv(name)
-      @_env.delete(name)
+      @_env_setenv[name] = [:unsetenv]
     end
 
     #------------------------------
@@ -361,9 +387,15 @@ module Cmdtest
       expected = files.flatten.sort
       #p [:xxx_files, xxx, actual, expected]
       _assert0 actual == expected do
-        _format_output(xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
-                       actual.inspect + "\n",
-                       expected.inspect + "\n")
+        if @_runner.opts.diff
+          _format_output(xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
+                         actual,
+                         expected)
+        else
+          _format_output(xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
+                         actual.inspect + "\n",
+                         expected.inspect + "\n")
+        end
       end
     end
 
@@ -639,17 +671,26 @@ module Cmdtest
       end
     end
 
-    def _indented_lines(prefix, output)
-      case output
-      when Array
-        lines = output
-      when String
-        lines = output.split(/\n/, -1)
+    def _to_lines(str)
+      if Array === str
+        lines = str
+      else
+        lines = str.split(/\n/, -1)
         if lines[-1] == ""
           lines.pop
         elsif ! lines.empty?
           lines[-1] << "[[missing newline]]"
         end
+      end
+      return lines
+    end
+
+    def _indented_lines(prefix, output)
+      case output
+      when Array
+        lines = output
+      when String
+        lines = _to_lines(output)
       when Regexp
         lines = [output]
       else
@@ -672,8 +713,15 @@ module Cmdtest
     def _format_output(error, actual, expected)
       res = ""
       res << "ERROR: #{error}\n"
-      res << _indented_lines("       actual: ", actual)
-      res << _indented_lines("       expect: ", expected)
+      if @_runner.opts.diff && (Array === expected || String === expected)
+        expected_lines = _to_lines(expected)
+        actual_lines = _to_lines(actual)
+        diff = DiffLCS.new(expected_lines, actual_lines)
+        res << _indented_lines("  ", diff.to_a)
+      else
+        res << _indented_lines("       actual: ", actual)
+        res << _indented_lines("       expect: ", expected)
+      end
       return res
     end
 
