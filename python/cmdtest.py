@@ -427,7 +427,7 @@ class TestCase:
         with open(tgt_file, "w", encoding=tgt_encoding) as f:
             f.write(data)
 
-    def cmd(self, cmdline, timeout=None):
+    def cmd(self, cmdline, *, timeout=None):
         tmpdir = self.__tmpdir
         before = tmpdir.snapshot(self.__always_ignored_files)
         stdout_log = tmpdir.stdout_log()
