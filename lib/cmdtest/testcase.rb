@@ -320,6 +320,7 @@ module Cmdtest
       _process_before do
         @_comment_str = str
       end
+      _delayed_run_cmd
     end
 
     #------------------------------
