@@ -28,6 +28,7 @@ require "cmdtest/lcs"
 module Cmdtest
 
   class AssertFailed < RuntimeError ; end
+  class TestSkipped < RuntimeError ; end
   class UsageError < RuntimeError ; end
 
   # Base class for testcases.
@@ -352,6 +353,14 @@ module Cmdtest
         _assert diff >= time_interval.begin && diff <= time_interval.end do
           "expected time in interval #{time_interval}"
         end
+      end
+    end
+
+    #------------------------------
+
+    def skip_test(reason)
+      _process_after do
+        raise TestSkipped, "SKIP: " + reason
       end
     end
 

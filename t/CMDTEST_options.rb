@@ -39,7 +39,7 @@ class CMDTEST_options < Cmdtest::Testcase
       stdout_equal /.===== CMDTEST_foo.rb/
       stdout_equal /.----- CMDTEST_foo1$/
       stdout_equal /.\.\.\.\.\. test_foo1$/
-      stdout_equal /test methods, \d+ commands, \d+ errors,/
+      stdout_equal /test methods, \d+ commands, \d+ skipped, \d+ errors,/
     end
   end
 

@@ -41,10 +41,16 @@ module Cmdtest
 
     def testmethod_begin(method)
       @err_assertions = []
+      @err_skip = nil
     end
 
     def testmethod_end(method)
-      if @err_assertions.size > 0
+      if @err_skip != nil
+        message = @err_skip.split(/\n/)[0]
+        type = "skip"
+        text = @err_skip
+        @ts.skip_testcase(_xml_class, method, message, type, text)
+      elsif @err_assertions.size > 0
         message = @err_assertions[0].split(/\n/)[0]
         type = "assert"
         text = @err_assertions.join
@@ -56,6 +62,10 @@ module Cmdtest
 
     def _xml_class
       "CMDTEST." + @testcase_class_name
+    end
+
+    def test_skipped(str)
+      @err_skip = str
     end
 
     def assert_failure(str)

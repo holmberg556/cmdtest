@@ -56,6 +56,9 @@ module Cmdtest
     def cmdline(method, comment)
     end
 
+    def test_skipped(str)
+    end
+
     def assert_failure(str)
     end
 
@@ -69,6 +72,7 @@ module Cmdtest
 
     attr_reader :n_suites, :n_files, :n_classes
     attr_reader :n_methods, :n_commands, :n_failures, :n_errors
+    attr_reader :n_skipped
 
     def initialize(opts)
       super
@@ -78,6 +82,7 @@ module Cmdtest
       @n_classes  = 0
       @n_methods  = 0
       @n_commands = 0
+      @n_skipped  = 0
       @n_failures = 0
       @n_errors   = 0
     end
@@ -100,6 +105,10 @@ module Cmdtest
 
     def cmdline(method, comment)
       @n_commands += 1
+    end
+
+    def test_skipped(msg)
+      @n_skipped += 1
     end
 
     def assert_failure(msg)

@@ -70,7 +70,7 @@ module Cmdtest
 
     #----------
 
-    class ErrTestcase < Testcase
+    class ProblemTestcase < Testcase
 
       def initialize(classname, name, message, type, text)
         @classname = classname
@@ -85,12 +85,28 @@ module Cmdtest
           @classname,
           @name,
         ]
-        f.put '      <failure message="%s" type="%s">%s</failure>', [
+        f.put '      <%s message="%s" type="%s">%s</%s>', [
+          xml_tag,
           @message,
           @type,
           @text,
+          xml_tag,
         ]
         f.put '    </testcase>'
+      end
+    end
+
+    #----------
+
+    class ErrTestcase < ProblemTestcase
+      def xml_tag
+        "failure"
+      end
+    end
+
+    class SkipTestcase < ProblemTestcase
+      def xml_tag
+        "skipped"
       end
     end
 
@@ -116,10 +132,17 @@ module Cmdtest
         testcase
       end
 
+      def skip_testcase(classname, name, message, type, text)
+        testcase = SkipTestcase.new(classname, name, message, type, text)
+        @testcases << testcase
+        testcase
+      end
+
       def write(f)
-        f.put '  <testsuite errors="%d" failures="%d" name="%s" tests="%d" package="%s">', [
+        f.put '  <testsuite errors="%d" failures="%d" skipped="%d" name="%s" tests="%d" package="%s">', [
           0,
           @testcases.grep(ErrTestcase).size,
+          @testcases.grep(SkipTestcase).size,
           @name,
           @testcases.size,
           @package,

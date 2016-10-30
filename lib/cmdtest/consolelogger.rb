@@ -51,6 +51,10 @@ module Cmdtest
       end
     end
 
+    def test_skipped(str)
+      puts str.gsub(/^/, "--- ")
+    end
+
     def assert_failure(str)
       puts str.gsub(/^/, "--- ")
     end

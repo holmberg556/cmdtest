@@ -62,6 +62,10 @@ module Cmdtest
       process_item [:assert_success]
     end
 
+    def test_skipped(str)
+      process_item [:test_skipped, str]
+    end
+
     def assert_failure(str)
       process_item [:assert_failure, str]
     end
@@ -103,6 +107,8 @@ module Cmdtest
       case cmd
       when :assert_success
         # nothing
+      when :test_skipped
+        _distribute("test_skipped", rest)
       when :assert_failure
         _distribute("assert_failure", rest)
       when :assert_error
@@ -185,6 +191,10 @@ module Cmdtest
           clog.assert_success
           runner.method_filter.success(method_id)
           ok = true
+        rescue Cmdtest::TestSkipped => e
+          obj.teardown
+          clog.test_skipped(e.message)
+          runner.method_filter.failure(method_id)
         rescue Cmdtest::AssertFailed => e
           obj.teardown
           clog.assert_failure(e.message)
@@ -418,6 +428,7 @@ module Cmdtest
         "classes" => error_logger.n_classes,
         "methods" => error_logger.n_methods,
         "commands" => error_logger.n_commands,
+        "skipped" => error_logger.n_skipped,
         "failures" => error_logger.n_failures,
         "errors" => error_logger.n_errors,
       }
@@ -462,6 +473,7 @@ module Cmdtest
           "classes"  => error_logger.n_classes,
           "methods"  => error_logger.n_methods,
           "commands" => error_logger.n_commands,
+          "skipped"  => error_logger.n_skipped,
           "failures" => error_logger.n_failures,
           "errors"   => error_logger.n_errors,
         }
@@ -487,11 +499,12 @@ module Cmdtest
     puts "###"
     puts "### Finished: %s,  Elapsed: %02d:%02d:%02d" % [Time.now.strftime("%F %T"), h,m,s]
     puts
-    puts "%s %d test classes, %d test methods, %d commands, %d errors, %d fatals." % [
+    puts "%s %d test classes, %d test methods, %d commands, %d skipped, %d errors, %d fatals." % [
       summary["failures"] == 0 && summary["errors"] == 0 ? "###" : "---",
       summary["classes"],
       summary["methods"],
       summary["commands"],
+      summary["skipped"],
       summary["failures"],
       summary["errors"],
     ]
