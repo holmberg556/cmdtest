@@ -186,6 +186,7 @@ module Cmdtest
           runner.method_filter.success(method_id)
           ok = true
         rescue Cmdtest::AssertFailed => e
+          obj.teardown
           clog.assert_failure(e.message)
           runner.method_filter.failure(method_id)
         rescue => e
