@@ -15,7 +15,6 @@ class CMDTEST_readonly < Cmdtest::Testcase
       "end",
       "Dir.mkdir('a_subdir')",
       "File.open('a_subdir/file1', 'w') {|f| f.puts 123}",
-      "File.chmod(0, 'a_subdir')",
     ]
 
     cmd_cmdtest do
@@ -23,6 +22,8 @@ class CMDTEST_readonly < Cmdtest::Testcase
         "### true.rb",
       ]
     end
+
+    File.chmod(0555, 'tmp-cmdtest-2/top/work/a_subdir')
 
     cmd_cmdtest do
       stderr_equal /Directory not empty/
