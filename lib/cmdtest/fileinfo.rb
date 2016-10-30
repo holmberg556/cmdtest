@@ -25,12 +25,14 @@ module Cmdtest
   class FileInfo
 
     attr_reader :stat, :digest
+    attr_accessor :ignored
 
     def initialize(relpath, topdir)
       @topdir = topdir
       @relpath = relpath
       @path = File.join(topdir, relpath)
       @stat = File.lstat(@path)
+      @ignored = false
 
       if @stat.file?
         md5 = Digest::MD5.new
