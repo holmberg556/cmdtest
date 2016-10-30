@@ -39,6 +39,7 @@ module Cmdtest
       Util.rm_rf(@hardlinkdir)
       FileUtils.mkdir_p(@path)
       @ignored_files = []
+      @non_ignored_files = []
     end
 
     #--------------------
@@ -48,10 +49,14 @@ module Cmdtest
       @ignored_files << file
     end
 
+    def dont_ignore_file(file)
+      @non_ignored_files << file
+    end
+
     #--------------------
 
     def _take_snapshot
-      FsSnapshot.new(@path, @ignored_files)
+      FsSnapshot.new(@path, @ignored_files, @non_ignored_files)
     end
 
     def _shell

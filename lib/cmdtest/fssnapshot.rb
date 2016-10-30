@@ -42,27 +42,32 @@ module Cmdtest
       end
     end
 
-    def initialize(dir, ignored_files)
+    def initialize(dir, ignored_files, non_ignored_files)
       @dir = dir
       @ignored_files = ignored_files
+      @non_ignored_files = non_ignored_files
       @fileinfo_by_path = {}
 
       recursive_find(false, "", @dir) do |ignore, path|
         file_info = FileInfo.new(path, @dir)
         display_path = file_info.display_path
-        ignore2 = ignore || _ignore_file?(display_path)
+        if _match_file?(@non_ignored_files, display_path)
+          ignore2 = false
+        else
+          ignore2 = ignore || _match_file?(@ignored_files, display_path)
+        end
         @fileinfo_by_path[display_path] = file_info
         file_info.ignored = ignore2
         ignore2
       end
     end
 
-    def _ignore_file?(path)
-      @ignored_files.any? do |ignored|
-        if String === ignored && ignored.index("*")
-          File.fnmatch(ignored, path, File::FNM_PATHNAME)
+    def _match_file?(patterns, path)
+      patterns.any? do |pattern|
+        if String === pattern && pattern.index("*")
+          File.fnmatch(pattern, path, File::FNM_PATHNAME)
         else
-          ignored === path
+          pattern === path
         end
       end
     end

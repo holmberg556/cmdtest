@@ -265,6 +265,17 @@ module Cmdtest
     end
 
     #------------------------------
+    # Count the specified file when calculating the "side effects"
+    # of a command, even if a less specific call to 'ignore_files'
+    # exist.
+
+    def dont_ignore_files(*files)
+      for file in files.flatten
+        @_work_dir.dont_ignore_file(file)
+      end
+    end
+
+    #------------------------------
     # Prepend the given directory to the PATH before running commands.
     # The path is evaluated relative to the current directory when 'cmdtest'
     # was started.
