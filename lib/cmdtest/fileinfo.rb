@@ -66,6 +66,6 @@ module Cmdtest
         false
       end
     end
-    
+
   end
 end

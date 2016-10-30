@@ -171,4 +171,3 @@ if $0 == __FILE__
 
   jf.write
 end
-  
