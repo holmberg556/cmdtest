@@ -43,7 +43,7 @@ module SelftestUtils
 
   def cmd_cmdtest(*args)
     cmdtest = "#{TOP}/bin/cmdtest.rb"
-    command = "ruby %s --quiet" % _quote(cmdtest)
+    command = "ruby %s --quiet --no-diff" % _quote(cmdtest)
     cmd(command, *args) do
       comment "running local cmdtest"
       yield

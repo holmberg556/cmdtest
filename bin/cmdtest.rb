@@ -597,7 +597,8 @@ module Cmdtest
       pr.add("",   "--version",      "show version")
       pr.add("-q", "--quiet",        "be more quiet")
       pr.add("-v", "--verbose",      "be more verbose")
-      pr.add("",   "--diff",         "experimental diff output")
+      pr.add("",   "--diff",         "diff output (default)")
+      pr.add("",   "--no-diff",      "old non-diff output")
       pr.add("",   "--fast",         "run fast without waiting for unique mtime:s")
       pr.add("-j", "--parallel",     "build in parallel",  type: Integer, default: 1, metavar: "N")
       pr.add("",   "--test",         "only run named test", type: [String])
@@ -609,6 +610,15 @@ module Cmdtest
       pr.addpos("arg", "testfile or pattern", nargs: 0..999)
 
       opts = pr.parse_args(ARGV, patterns: [], ruby_s: Util.windows?)
+
+      # default '--diff', reversed by --no-diff
+      if opts.diff and opts.no_diff
+        puts "ERROR: both --diff and --no-diff specified"
+        exit(1)
+      elsif ! opts.no_diff
+        opts.diff = true
+      end
+
       if opts.help
         pr.print_usage()
         exit(0)
