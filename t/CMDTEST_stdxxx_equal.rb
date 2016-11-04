@@ -212,6 +212,41 @@ class CMDTEST_stdxxx_equal < Cmdtest::Testcase
     end
 
     #----------------------------------------
+
+    ## methods: test_stdout_equal_DIFF test_stderr_equal_DIFF
+
+    define_method("test_#{stdxxx}_equal_NO_DIFF") do
+
+      create_CMDTEST_foo [
+        "cmd 'echo_#{stdxxx}.rb --lines 11 33 44 55-changed 66 77 88' do",
+        "    #{stdxxx}_equal [ '11', '22', '33', '44', '55', '66', '77' ]",
+        "end",
+      ]
+
+      cmd_cmdtest_no_diff do
+        stdout_equal [
+          "### echo_#{stdxxx}.rb --lines 11 33 44 55-changed 66 77 88",
+          "--- ERROR: wrong #{stdxxx}",
+          "---        actual: 11",
+          "---                33",
+          "---                44",
+          "---                55-changed",
+          "---                66",
+          "---                77",
+          "---                88",
+          "---        expect: 11",
+          "---                22",
+          "---                33",
+          "---                44",
+          "---                55",
+          "---                66",
+          "---                77",
+        ]
+        exit_nonzero
+      end
+    end
+
+    #----------------------------------------
     # stdxxx_not_equal
     #----------------------------------------
 
