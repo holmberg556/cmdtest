@@ -21,7 +21,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
   def test_chdir_NONE
     create_CMDTEST_foo [
       "create_file 'SUBDIR/.flagfile', ''",
-      "system 'pwd'",
+      "puts Dir.pwd",
     ]
     cmd_cmdtest do
       stdout_equal /^\/.*\/top\/work$/
@@ -34,7 +34,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
     create_CMDTEST_foo [
       "create_file 'SUBDIR/.flagfile', ''",
       "chdir 'SUBDIR'",
-      "system 'pwd'",
+      "puts Dir.pwd",
     ]
     cmd_cmdtest do
       stdout_equal /^\/.*\/top\/work\/SUBDIR$/
@@ -47,7 +47,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
     create_CMDTEST_foo [
       "create_file 'SUBDIR/.flagfile', ''",
       "Dir.chdir 'SUBDIR'",
-      "system 'pwd'",
+      "puts Dir.pwd",
     ]
     cmd_cmdtest do
       stdout_equal /^\/.*\/top\/work\/SUBDIR$/
@@ -59,13 +59,13 @@ class CMDTEST_chdir < Cmdtest::Testcase
   def test_chdir_NONE_cmd
     create_CMDTEST_foo [
       "create_file 'SUBDIR/.flagfile', ''",
-      "cmd 'echo PWD=$(pwd)' do",
+      "cmd 'echo_pwd.rb' do",
       "    stdout_equal /^PWD=\\/.*\\/top\\/work$/",
       "end",
     ]
     cmd_cmdtest do
       stdout_equal [
-        "### echo PWD=$(pwd)",
+        "### echo_pwd.rb",
       ]
     end
   end
@@ -75,13 +75,13 @@ class CMDTEST_chdir < Cmdtest::Testcase
     create_CMDTEST_foo [
       "create_file 'SUBDIR/.flagfile', ''",
       "chdir 'SUBDIR'",
-      "cmd 'echo PWD=$(pwd)' do",
+      "cmd 'echo_pwd.rb' do",
       "    stdout_equal /^PWD=\\/.*\\/top\\/work\\/SUBDIR$/",
       "end",
     ]
     cmd_cmdtest do
       stdout_equal [
-        "### echo PWD=$(pwd)",
+        "### echo_pwd.rb",
       ]
     end
   end
@@ -110,7 +110,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
       "Dir.chdir 'SUBDIR'",
       "create_file 'f2.txt', ''",
       "Dir.chdir '..'",
-      "cmd 'find . -type f | sort' do",
+      "cmd 'find_files.rb' do",
       "    stdout_equal [",
       "        './SUBDIR/f0.txt',",
       "        './SUBDIR/f2.txt',",
@@ -120,7 +120,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
     ]
     cmd_cmdtest do
       stdout_equal [
-        "### find . -type f | sort",
+        "### find_files.rb",
       ]
     end
   end

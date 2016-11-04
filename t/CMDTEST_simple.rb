@@ -4,39 +4,39 @@ require "selftest_utils"
 class CMDTEST_simple < Cmdtest::Testcase
 
   include SelftestUtils
-    
+
   #-----------------------------------
 
   def test_get_path
     create_CMDTEST_foo [
       'old = get_path()',
-      'cmd "echo $PATH > old.path" do',
+      'cmd "echo_path.rb > old.path" do',
       '    created_files "old.path"',
       'end',
       'set_path("extra/dir", *old)',
-      'cmd "echo $PATH > new.path" do',
+      'cmd "echo_path.rb > new.path" do',
       '    created_files "new.path"',
       'end',
-      'cmd "diff -q old.path new.path" do',
+      'cmd "diff.rb old.path new.path" do',
       '    exit_nonzero',
       '    stdout_equal /differ/',
       'end',
 
       'set_path(*old)',
-      'cmd "echo $PATH > restored.path" do',
+      'cmd "echo_path.rb > restored.path" do',
       '    created_files "restored.path"',
       'end',
-      'cmd "diff -q old.path restored.path" do',
+      'cmd "diff.rb old.path restored.path" do',
       'end',
     ]
 
     cmd_cmdtest do
       stdout_equal [
-        "### echo $PATH > old.path",
-        "### echo $PATH > new.path",
-        "### diff -q old.path new.path",
-        "### echo $PATH > restored.path",
-        "### diff -q old.path restored.path",
+        "### echo_path.rb > old.path",
+        "### echo_path.rb > new.path",
+        "### diff.rb old.path new.path",
+        "### echo_path.rb > restored.path",
+        "### diff.rb old.path restored.path",
       ]
     end
   end
@@ -70,7 +70,7 @@ class CMDTEST_simple < Cmdtest::Testcase
   def test_try_to_run_non_existing_command_LINUX
     #
     return unless ! windows?
-        
+
     create_CMDTEST_foo [
       'cmd "non-existing" do',
       '    exit_nonzero',
