@@ -24,7 +24,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
       "puts Dir.pwd",
     ]
     cmd_cmdtest do
-      stdout_equal /^\/.*\/top\/work$/
+      stdout_equal /^(?:\w:)?\/.*\/top\/work$/
 
     end
   end
@@ -37,7 +37,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
       "puts Dir.pwd",
     ]
     cmd_cmdtest do
-      stdout_equal /^\/.*\/top\/work\/SUBDIR$/
+      stdout_equal /^(?:\w:)?\/.*\/top\/work\/SUBDIR$/
 
     end
   end
@@ -50,7 +50,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
       "puts Dir.pwd",
     ]
     cmd_cmdtest do
-      stdout_equal /^\/.*\/top\/work\/SUBDIR$/
+      stdout_equal /^(?:\w:)?\/.*\/top\/work\/SUBDIR$/
 
     end
   end
@@ -60,7 +60,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
     create_CMDTEST_foo [
       "create_file 'SUBDIR/.flagfile', ''",
       "cmd 'echo_pwd.rb' do",
-      "    stdout_equal /^PWD=\\/.*\\/top\\/work$/",
+      "    stdout_equal /^PWD=(?:\\w:)?\\/.*\\/top\\/work$/",
       "end",
     ]
     cmd_cmdtest do
@@ -76,7 +76,7 @@ class CMDTEST_chdir < Cmdtest::Testcase
       "create_file 'SUBDIR/.flagfile', ''",
       "chdir 'SUBDIR'",
       "cmd 'echo_pwd.rb' do",
-      "    stdout_equal /^PWD=\\/.*\\/top\\/work\\/SUBDIR$/",
+      "    stdout_equal /^PWD=(?:\\w:)?\\/.*\\/top\\/work\\/SUBDIR$/",
       "end",
     ]
     cmd_cmdtest do
