@@ -6,10 +6,14 @@ class CMDTEST_readonly < Cmdtest::Testcase
   include SelftestUtils
 
   def teardown
-    File.chmod(0755, 'tmp-cmdtest-2/top/work/a_subdir')
+    if ! Cmdtest::Util.windows?
+      File.chmod(0755, 'tmp-cmdtest-2/top/work/a_subdir')
+    end
   end
 
   def test_readonly
+    return if Cmdtest::Util.windows?
+
     create_CMDTEST_foo [
       "cmd 'true.rb' do",
       "end",
@@ -30,5 +34,6 @@ class CMDTEST_readonly < Cmdtest::Testcase
       exit_nonzero
     end
   end
+
 
 end
