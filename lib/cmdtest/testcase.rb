@@ -487,6 +487,30 @@ module Cmdtest
       :other_error
     end
 
+    # Assert file encoding
+    def file_encoding(file, enc, bom: nil)
+      _process_after do
+        bytes = nil
+        File.open(file, 'rb') do |f|
+          bytes = f.read
+        end
+        str = bytes.force_encoding(enc)
+        valid = str.valid_encoding?
+        _assert valid do
+          "file not in encoding: #{file}, #{enc}"
+        end
+        if valid && bom != nil
+          has_bom = str.size >= 1 && str.codepoints[0] == 0xfeff
+          _assert ! (! bom && has_bom) do
+            "file has unexpected BOM: #{file}"
+          end
+          _assert ! (bom && ! has_bom) do
+            "file hasn't expected BOM: #{file}"
+          end
+        end
+      end
+    end
+
     # Assert file equal to specific value.
     def file_equal(file, expected)
       _file_equal_aux(true, file, expected)
