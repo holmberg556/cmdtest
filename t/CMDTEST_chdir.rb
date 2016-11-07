@@ -91,13 +91,13 @@ class CMDTEST_chdir < Cmdtest::Testcase
     create_CMDTEST_foo [
       "create_file 'SUBDIR/.flagfile', ''",
       "Dir.chdir 'SUBDIR'",
-      "cmd 'echo PWD=$(pwd)' do",
-      "    stdout_equal /^PWD=\\/.*\\/top\\/work\\/SUBDIR$/",
+      "cmd 'echo_pwd.rb' do",
+      "    stdout_equal /^PWD=(?:\\w:)?\\/.*\\/top\\/work\\/SUBDIR$/",
       "end",
     ]
     cmd_cmdtest do
       stdout_equal [
-        "### echo PWD=$(pwd)",
+        "### echo_pwd.rb",
       ]
     end
   end
