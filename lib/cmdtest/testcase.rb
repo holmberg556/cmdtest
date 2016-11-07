@@ -359,9 +359,7 @@ module Cmdtest
     #------------------------------
 
     def skip_test(reason)
-      _process_after do
-        raise TestSkipped, "SKIP: " + reason
-      end
+      raise TestSkipped, "SKIP: " + reason
     end
 
     #------------------------------
