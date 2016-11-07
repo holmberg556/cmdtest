@@ -27,8 +27,16 @@ require "find"
 module Cmdtest
   class FsSnapshot
 
+    def _dir_entries(dir, &block)
+      if Cmdtest::Util.windows?
+        Dir.entries(dir, encoding: 'UTF-8', &block)
+      else
+        Dir.entries(dir, &block)
+      end
+    end
+
     def recursive_find(ignore, prefix, dir, &block)
-      for entry in Dir.entries(dir)
+      for entry in _dir_entries(dir)
         next if entry == "."
         next if entry == ".."
         path = File.join(dir, entry)
