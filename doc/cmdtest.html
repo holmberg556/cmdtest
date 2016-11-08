@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.11: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.12: http://docutils.sourceforge.net/" />
 <title>Cmdtest User Guide</title>
 <style type="text/css">
 
@@ -340,6 +340,7 @@ be made about the side effects performed by a command:</p>
 <li>the content of standard error</li>
 <li>newly created/removed/changed files, or other changes to the
 filesystem</li>
+<li>encoding of a file (eg. UTF-8)</li>
 </ul>
 </div>
 <div class="section" id="a-simple-example">
@@ -480,8 +481,8 @@ end
 command should be described as an assertion in the do-block. The list
 of possible assertions includes: <tt class="docutils literal">exit_zero</tt>, <tt class="docutils literal">exit_nonzero</tt>,
 <tt class="docutils literal">exit_status</tt>, <tt class="docutils literal">created_files</tt>, <tt class="docutils literal">changed_files</tt>, <tt class="docutils literal">removed_files</tt>,
-<tt class="docutils literal">written_files</tt>, <tt class="docutils literal">affected_files</tt>, <tt class="docutils literal">file_equal</tt>, <tt class="docutils literal">stdout_equal</tt>
-and <tt class="docutils literal">stderr_equal</tt>.</p>
+<tt class="docutils literal">written_files</tt>, <tt class="docutils literal">affected_files</tt>, <tt class="docutils literal">file_equal</tt>, <tt class="docutils literal">file_encoding</tt>,
+<tt class="docutils literal">stdout_equal</tt> and <tt class="docutils literal">stderr_equal</tt>.</p>
 <p>In addition to the assertions there are other helper-functions to set
 up the &quot;environment&quot; for the commands and assertions. An example is
 the creation of files:</p>
@@ -499,6 +500,16 @@ end
 <p>The list of such helper functions includes:
 <tt class="docutils literal">create_file</tt>, <tt class="docutils literal">touch_file</tt>, <tt class="docutils literal">import_file</tt> , <tt class="docutils literal">import_directory</tt> and <tt class="docutils literal">ignore_file</tt>.
 Beside these methods the test can of course also contain arbitrary Ruby-code.</p>
+<p>Some test are not applicable under all circumstances. A test can for example be Linux specific.
+Then the function <tt class="docutils literal">skip_test</tt> can be used, like this:</p>
+<pre class="literal-block">
+def test_linux_stuff
+  if RUBY_PLATFORM !~ /linux/
+    skip_test &quot;not on linux&quot;
+  end
+  ... the actual tests ...
+end
+</pre>
 </div>
 <div class="section" id="work-directory">
 <h1><a class="toc-backref" href="#id6">Work directory</a></h1>
@@ -622,8 +633,9 @@ $ cmdtest examples /stdin/ /stdout/
 <p>The available options can be seen by using the <tt class="docutils literal"><span class="pre">-h</span></tt> option:</p>
 <pre class="literal-block">
 $ cmdtest -h
-usage: cmdtest [-h] [--version] [-q] [-v] [--fast] [-j N] [--test TEST]
-               [--xml FILE] [--no-exit-code] [-i] [--slave SLAVE]
+usage: cmdtest [-h] [--shortversion] [--version] [-q] [-v] [--diff] [--no-diff]
+               [--fast] [-j N] [--test TEST] [--xml FILE] [--no-exit-code]
+               [--stop-on-error] [-i] [--slave SLAVE]
                [arg [arg ...]]
 
 positional arguments:
@@ -631,15 +643,18 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -h, --help            show this help message and exit
+  --shortversion        show just version number
   --version             show version
-  -q, --quiet           be more quiet by skipping some non-essential output
+  -q, --quiet           be more quiet
   -v, --verbose         be more verbose
+  --diff                diff output (default)
+  --no-diff             old non-diff output
   --fast                run fast without waiting for unique mtime:s
   -j N, --parallel N    build in parallel
   --test TEST           only run named test
   --xml FILE            write summary on JUnit format
   --no-exit-code        exit with 0 status even after errors
+  --stop-on-error       exit after first error
   -i, --incremental     incremental mode
   --slave SLAVE         run in slave mode
 </pre>
@@ -755,6 +770,10 @@ case special (when the file is created).</dd>
 See &quot;stdout_equal&quot; for how &quot;content&quot; can be specified.</dd>
 <dt><tt class="docutils literal">file_not_equal(file, content)</tt></dt>
 <dd>Like <tt class="docutils literal">file_equal</tt> but with inverted test.</dd>
+<dt><tt class="docutils literal">file_encoding(file, enc, bom: nil)</tt></dt>
+<dd>Assert that the file uses encoding <tt class="docutils literal">enc</tt>. This is verified by reading
+the file using that encoding. The optional <tt class="docutils literal">bom</tt> argument can be used
+to assert the existence/non-existence of a Unicode BOM.</dd>
 <dt><tt class="docutils literal">stderr_equal(content)</tt></dt>
 <dd>Assert that the standard error of the command matches the given content.
 See &quot;stdout_equal&quot; for how &quot;content&quot; can be specified.</dd>
@@ -796,6 +815,12 @@ The content can be specified either as an array of lines or as
 a string with the content of the whole file.
 The filename is evaluated relative to the current directory at the
 time of the call.</dd>
+<dt><tt class="docutils literal">dont_ignore_files(file1, <span class="pre">...,</span> fileN)</tt></dt>
+<dd>Don't ignore the specified files when looking for differences in the filesystem.
+This overrides a previous call to <tt class="docutils literal">ignore_files</tt>.
+If a previous call to <tt class="docutils literal">ignore_files</tt> ignored a whole directory tree, the call to
+<tt class="docutils literal">dont_ignore_files</tt> can reverse the effect for specific files inside that
+directory tree.</dd>
 <dt><tt class="docutils literal">ignore_file(file)</tt></dt>
 <dd>Ignore the specified file when looking for differences in the filesystem.
 A subdirectory can be ignored by giving a trailing &quot;/&quot; to the name.</dd>
@@ -833,6 +858,14 @@ by later calls to <tt class="docutils literal">cmd</tt>.</dd>
 <dd>Set <tt class="docutils literal">PATH</tt> to the given directories, so commands executed via <tt class="docutils literal">cmd</tt>
 are looked up using the modified <tt class="docutils literal">PATH</tt>. This method sets the whole <tt class="docutils literal">PATH</tt>
 rather than modifying it (in contrast to <tt class="docutils literal">prepend_path</tt> and <tt class="docutils literal">prepend_local_path</tt>).</dd>
+<dt><tt class="docutils literal">skip_test(reason)</tt></dt>
+<dd>If a test method should not be run for some reason (eg. wrong platform),
+this can be signaled to <tt class="docutils literal">cmdtest</tt> by calling
+<tt class="docutils literal">skip_test</tt> at the beginning of the test method. The argument
+should mention why the test is skipped.  Such tests will be
+reported as &quot;skipped&quot;, and also show up in the JUnit format XML
+files (the intention is that this should work like the &quot;assume-functions&quot;
+in recent versions of JUnit).</dd>
 <dt><tt class="docutils literal">touch_file(filename)</tt></dt>
 <dd>&quot;touch&quot; a file inside the &quot;work directory&quot;.
 The filename is evaluated relative to the current directory at the
@@ -865,7 +898,7 @@ time of the call.</dd>
 <div class="footer">
 <hr class="footer" />
 <a class="reference external" href="cmdtest.txt">View document source</a>.
-Generated on: 2016-04-14.
+Generated on: 2016-11-08.
 Generated by <a class="reference external" href="http://docutils.sourceforge.net/">Docutils</a> from <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> source.
 
 </div>

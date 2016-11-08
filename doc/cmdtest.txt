@@ -25,6 +25,8 @@ be made about the side effects performed by a command:
 - newly created/removed/changed files, or other changes to the
   filesystem
 
+- encoding of a file (eg. UTF-8)
+
 A simple example
 ----------------
 
@@ -172,8 +174,8 @@ The idea is that all differences in behaviour from the trivial ``true``
 command should be described as an assertion in the do-block. The list
 of possible assertions includes: ``exit_zero``, ``exit_nonzero``,
 ``exit_status``, ``created_files``, ``changed_files``, ``removed_files``,
-``written_files``, ``affected_files``, ``file_equal``, ``stdout_equal``
-and ``stderr_equal``.
+``written_files``, ``affected_files``, ``file_equal``, ``file_encoding``,
+``stdout_equal`` and ``stderr_equal``.
 
 In addition to the assertions there are other helper-functions to set
 up the "environment" for the commands and assertions. An example is
@@ -193,6 +195,15 @@ The list of such helper functions includes:
 ``create_file``, ``touch_file``, ``import_file`` , ``import_directory`` and ``ignore_file``.
 Beside these methods the test can of course also contain arbitrary Ruby-code.
 
+Some test are not applicable under all circumstances. A test can for example be Linux specific.
+Then the function ``skip_test`` can be used, like this::
+
+  def test_linux_stuff
+    if RUBY_PLATFORM !~ /linux/
+      skip_test "not on linux"
+    end
+    ... the actual tests ...
+  end
 
 Work directory
 --------------
@@ -331,8 +342,9 @@ Options
 The available options can be seen by using the ``-h`` option::
 
   $ cmdtest -h
-  usage: cmdtest [-h] [--version] [-q] [-v] [--fast] [-j N] [--test TEST]
-                 [--xml FILE] [--no-exit-code] [-i] [--slave SLAVE]
+  usage: cmdtest [-h] [--shortversion] [--version] [-q] [-v] [--diff] [--no-diff]
+                 [--fast] [-j N] [--test TEST] [--xml FILE] [--no-exit-code]
+                 [--stop-on-error] [-i] [--slave SLAVE]
                  [arg [arg ...]]
 
   positional arguments:
@@ -340,17 +352,21 @@ The available options can be seen by using the ``-h`` option::
 
   optional arguments:
     -h, --help            show this help message and exit
-    -h, --help            show this help message and exit
+    --shortversion        show just version number
     --version             show version
-    -q, --quiet           be more quiet by skipping some non-essential output
+    -q, --quiet           be more quiet
     -v, --verbose         be more verbose
+    --diff                diff output (default)
+    --no-diff             old non-diff output
     --fast                run fast without waiting for unique mtime:s
     -j N, --parallel N    build in parallel
     --test TEST           only run named test
     --xml FILE            write summary on JUnit format
     --no-exit-code        exit with 0 status even after errors
+    --stop-on-error       exit after first error
     -i, --incremental     incremental mode
     --slave SLAVE         run in slave mode
+
 
 Commandline Examples
 ++++++++++++++++++++
@@ -476,6 +492,11 @@ These methods should only be used inside a ``cmd`` block.
 ``file_not_equal(file, content)``
     Like ``file_equal`` but with inverted test.
 
+``file_encoding(file, enc, bom: nil)``
+    Assert that the file uses encoding ``enc``. This is verified by reading
+    the file using that encoding. The optional ``bom`` argument can be used
+    to assert the existence/non-existence of a Unicode BOM.
+
 ``stderr_equal(content)``
     Assert that the standard error of the command matches the given content.
     See "stdout_equal" for how "content" can be specified.
@@ -523,6 +544,13 @@ or in the ``setup`` method.
     The filename is evaluated relative to the current directory at the
     time of the call.
 
+``dont_ignore_files(file1, ..., fileN)``
+    Don't ignore the specified files when looking for differences in the filesystem.
+    This overrides a previous call to ``ignore_files``.
+    If a previous call to ``ignore_files`` ignored a whole directory tree, the call to
+    ``dont_ignore_files`` can reverse the effect for specific files inside that
+    directory tree.
+
 ``ignore_file(file)``
     Ignore the specified file when looking for differences in the filesystem.
     A subdirectory can be ignored by giving a trailing "/" to the name.
@@ -568,6 +596,15 @@ or in the ``setup`` method.
     Set ``PATH`` to the given directories, so commands executed via ``cmd``
     are looked up using the modified ``PATH``. This method sets the whole ``PATH``
     rather than modifying it (in contrast to ``prepend_path`` and ``prepend_local_path``).
+
+``skip_test(reason)``
+    If a test method should not be run for some reason (eg. wrong platform),
+    this can be signaled to ``cmdtest`` by calling
+    ``skip_test`` at the beginning of the test method. The argument
+    should mention why the test is skipped.  Such tests will be
+    reported as "skipped", and also show up in the JUnit format XML
+    files (the intention is that this should work like the "assume-functions"
+    in recent versions of JUnit).
 
 ``touch_file(filename)``
     "touch" a file inside the "work directory".
