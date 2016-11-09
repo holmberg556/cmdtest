@@ -41,7 +41,7 @@ module Cmdtest
         next if entry == ".."
         path = File.join(dir, entry)
         relpath = prefix + entry
-        if File.directory?(path)
+        if ! File.symlink?(path) && File.directory?(path)
           ignore2 = yield ignore, relpath
           recursive_find(ignore2, relpath + "/", path, &block)
         else
