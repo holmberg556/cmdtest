@@ -184,10 +184,10 @@ module Cmdtest
       system(str) # TODO: really ignore exit status !?
       after = _take_snapshot
       CmdEffects.new($?,
-                     File.read(_tmp_stdout_log),
-                     File.read(_tmp_stderr_log),
+                     Util.read_file("STDOUT", _tmp_stdout_log),
+                     Util.read_file("STDERR", _tmp_stderr_log),
                      before, after)
     end
-
   end
+
 end

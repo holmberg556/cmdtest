@@ -70,5 +70,29 @@ module Cmdtest
       end
     end
 
+    def self.read_file(stdxxx, fname)
+      bytes = nil
+      File.open(fname, 'rb') do |f|
+        bytes = f.read
+      end
+      return FileContent.new(stdxxx, bytes)
+    end
   end
+
+  class FileContent
+    def initialize(name, bytes)
+      @name = name
+      @bytes = bytes
+    end
+
+    def text(encoding)
+      extern_text = @bytes.dup
+      extern_text.force_encoding(encoding)
+      if ! extern_text.valid_encoding?
+        raise AssertFailed, "ERROR: unexpected encoding: #{@name} not '#{encoding}'"
+      end
+      return extern_text.encode('utf-8')
+    end
+  end
+
 end

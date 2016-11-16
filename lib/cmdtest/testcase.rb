@@ -80,6 +80,21 @@ module Cmdtest
       @_comment_str = nil
       @_env_path = @_runner.orig_env_path
       @_t1 = @_t2 = 0
+      @_output_encoding = 'ascii'
+    end
+
+    def output_encoding(encoding)
+      if block_given?
+        saved_encoding = @_output_encoding
+        begin
+          @_output_encoding = encoding
+          yield
+        ensure
+          @_output_encoding = saved_encoding
+        end
+      else
+        @_output_encoding = encoding
+      end
     end
 
     #------------------------------
@@ -473,11 +488,11 @@ module Cmdtest
 
     #------------------------------
 
-    def _read_file(file)
+    def _read_file(what, file)
       if File.directory?(_cwd_path(file)) && Util.windows?
         :is_directory
       else
-        File.read(_cwd_path(file))
+        Util.read_file(what, _cwd_path(file))
       end
     rescue Errno::ENOENT
       :no_such_file
@@ -522,7 +537,8 @@ module Cmdtest
 
     def _file_equal_aux(positive, file, expected)
       _process_after do
-        actual = _read_file(file)
+        what = "file '#{file}'"
+        actual = _read_file(what, file)
         case actual
         when :no_such_file
           _assert false do
@@ -537,7 +553,7 @@ module Cmdtest
             "error reading file: '#{file}'"
           end
         else
-          _xxx_equal("file '#{file}'", positive, actual, expected)
+          _xxx_equal(what, positive, actual.text(@_output_encoding), expected)
         end
       end
     end
@@ -646,7 +662,7 @@ module Cmdtest
     def _stdxxx_equal_aux(stdxxx, positive, expected)
       _process_after do
         @_checked[stdxxx] = true
-        actual = @_effects.send(stdxxx)
+        actual = @_effects.send(stdxxx).text(@_output_encoding)
         _xxx_equal(stdxxx, positive, actual, expected)
       end
     end
