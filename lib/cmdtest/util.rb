@@ -91,7 +91,21 @@ module Cmdtest
       if ! extern_text.valid_encoding?
         raise AssertFailed, "ERROR: unexpected encoding: #{@name} not '#{encoding}'"
       end
-      return extern_text.encode('utf-8')
+      str = extern_text.encode('utf-8')
+      if Util.windows?
+        has_nl   = str.gsub("\n", "") != str
+        has_crnl = str.gsub("\r\n", "") != str
+
+        if has_nl && ! has_crnl
+          raise AssertFailed, "ERROR: UNIX line ending: #{@name}"
+        elsif str.gsub("\r", "").gsub("\n", "") == str.gsub("\r\n", "")
+          return str.gsub("\r\n", "\n")
+        else
+          raise AssertFailed, "ERROR: mixed line ending: #{@name}"
+        end
+      else
+        return str
+      end
     end
   end
 
