@@ -593,7 +593,7 @@ module Cmdtest
     def _stdxxx_contain_aux(stdxxx, positive, expected)
       _process_after do
         @_checked[stdxxx] = true
-        actual = @_effects.send(stdxxx)
+        actual = @_effects.send(stdxxx).text(@_output_encoding)
         _xxx_contain(stdxxx, positive, actual, expected)
       end
     end
