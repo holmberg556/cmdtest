@@ -489,10 +489,13 @@ module Cmdtest
     #------------------------------
 
     def _read_file(what, file)
-      if File.directory?(_cwd_path(file)) && Util.windows?
+      path = _cwd_path(file)
+      if Util.windows? && File.directory?(path)
+        :is_directory
+      elsif (RUBY_PLATFORM =~ /java/) && File.directory?(path)
         :is_directory
       else
-        Util.read_file(what, _cwd_path(file))
+        Util.read_file(what, path)
       end
     rescue Errno::ENOENT
       :no_such_file
