@@ -41,9 +41,13 @@ module SelftestUtils
     return Cmdtest::Util::quote_path(str)
   end
 
+  def ruby
+    ENV["CMDTEST_RUBY"] || "ruby"
+  end
+
   def cmd_cmdtest(*args)
     cmdtest = "#{TOP}/bin/cmdtest.rb"
-    command = "ruby %s --quiet --no-diff" % _quote(cmdtest)
+    command = "#{ruby} %s --quiet --no-diff" % _quote(cmdtest)
     cmd(command, *args) do
       comment "running local cmdtest"
       yield
@@ -52,7 +56,7 @@ module SelftestUtils
 
   def cmd_cmdtest_diff(*args)
     cmdtest = "#{TOP}/bin/cmdtest.rb"
-    command = "ruby %s --quiet --diff" % _quote(cmdtest)
+    command = "#{ruby} %s --quiet --diff" % _quote(cmdtest)
     cmd(command, *args) do
       comment "running local cmdtest --diff"
       yield
@@ -61,7 +65,7 @@ module SelftestUtils
 
   def cmd_cmdtest_no_diff(*args)
     cmdtest = "#{TOP}/bin/cmdtest.rb"
-    command = "ruby %s --quiet --no-diff" % _quote(cmdtest)
+    command = "#{ruby} %s --quiet --no-diff" % _quote(cmdtest)
     cmd(command, *args) do
       comment "running local cmdtest --no-diff"
       yield
@@ -70,7 +74,7 @@ module SelftestUtils
 
   def cmd_cmdtest_verbose(*args)
     cmdtest = "#{TOP}/bin/cmdtest.rb"
-    command = "ruby %s %s" % [
+    command = "#{ruby} %s %s" % [
       _quote(cmdtest),
       args.join(" "),
     ]
