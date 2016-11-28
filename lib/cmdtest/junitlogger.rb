@@ -35,28 +35,37 @@ module Cmdtest
     end
 
     def testclass_begin(testcase_class_name)
+      @testclass_t1 = Time.now
       @testcase_class_name = testcase_class_name
       @ts = @jf.new_testsuite("CMDTEST", testcase_class_name)
+    end
+
+    def testclass_end(testcase_class_name)
+      @testclass_t2 = Time.now
+      @ts.duration = @testclass_t2 - @testclass_t1
     end
 
     def testmethod_begin(method)
       @err_assertions = []
       @err_skip = nil
+      @t1 = Time.now
     end
 
     def testmethod_end(method)
+      @t2 = Time.now
+      @duration = @t2 - @t1
       if @err_skip != nil
         message = @err_skip.split(/\n/)[0]
         type = "skip"
         text = @err_skip
-        @ts.skip_testcase(_xml_class, method, message, type, text)
+        @ts.skip_testcase(@duration, _xml_class, method, message, type, text)
       elsif @err_assertions.size > 0
         message = @err_assertions[0].split(/\n/)[0]
         type = "assert"
         text = @err_assertions.join
-        @ts.err_testcase(_xml_class, method, message, type, text)
+        @ts.err_testcase(@duration, _xml_class, method, message, type, text)
       else
-        @ts.ok_testcase(_xml_class, method)
+        @ts.ok_testcase(@duration, _xml_class, method)
       end
     end
 

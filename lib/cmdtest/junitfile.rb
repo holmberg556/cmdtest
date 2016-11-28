@@ -49,9 +49,10 @@ module Cmdtest
 
     class Testcase
       def write(f)
-        f.put '    <testcase classname="%s" name="%s"/>', [
+        f.put '    <testcase classname="%s" name="%s" time="%.3f"/>', [
           @classname,
           @name,
+          @duration,
         ]
       end
     end
@@ -60,7 +61,8 @@ module Cmdtest
 
     class OkTestcase < Testcase
 
-      def initialize(classname, name)
+      def initialize(duration, classname, name)
+        @duration  = duration
         @classname = classname
         @name      = name
         @message = @type = @text = nil
@@ -72,7 +74,8 @@ module Cmdtest
 
     class ProblemTestcase < Testcase
 
-      def initialize(classname, name, message, type, text)
+      def initialize(duration, classname, name, message, type, text)
+        @duration  = duration
         @classname = classname
         @name      = name
         @message   = message
@@ -81,9 +84,10 @@ module Cmdtest
       end
 
       def write(f)
-        f.put '    <testcase classname="%s" name="%s">', [
+        f.put '    <testcase classname="%s" name="%s" time="%.3f">', [
           @classname,
           @name,
+          @duration,
         ]
         f.put '      <%s message="%s" type="%s">%s</%s>', [
           xml_tag,
@@ -114,37 +118,41 @@ module Cmdtest
 
     class Testsuite
 
+      attr_accessor :duration
+
       def initialize(package, name)
         @package = package
         @name = name
         @testcases = []
+        @duration = 0.0
       end
 
-      def ok_testcase(classname, name)
-        testcase = OkTestcase.new(classname, name)
+      def ok_testcase(duration, classname, name)
+        testcase = OkTestcase.new(duration, classname, name)
         @testcases << testcase
         testcase
       end
 
-      def err_testcase(classname, name, message, type, text)
-        testcase = ErrTestcase.new(classname, name, message, type, text)
+      def err_testcase(duration, classname, name, message, type, text)
+        testcase = ErrTestcase.new(duration, classname, name, message, type, text)
         @testcases << testcase
         testcase
       end
 
-      def skip_testcase(classname, name, message, type, text)
-        testcase = SkipTestcase.new(classname, name, message, type, text)
+      def skip_testcase(duration, classname, name, message, type, text)
+        testcase = SkipTestcase.new(duration, classname, name, message, type, text)
         @testcases << testcase
         testcase
       end
 
       def write(f)
-        f.put '  <testsuite errors="%d" failures="%d" skipped="%d" name="%s" tests="%d" package="%s">', [
+        f.put '  <testsuite errors="%d" failures="%d" skipped="%d" name="%s" tests="%d" time="%.3f" package="%s">', [
           0,
           @testcases.grep(ErrTestcase).size,
           @testcases.grep(SkipTestcase).size,
           @name,
           @testcases.size,
+          @duration,
           @package,
         ]
         for testcase in @testcases
@@ -184,13 +192,13 @@ end
 if $0 == __FILE__
   jf = Cmdtest::JunitFile.new("jh.xml")
   ts = jf.new_testsuite("foo")
-  ts.ok_testcase("jh.Foo", "test_a")
-  ts.ok_testcase("jh.Foo", "test_b")
+  ts.ok_testcase(1.0, "jh.Foo", "test_a")
+  ts.ok_testcase(1.0, "jh.Foo", "test_b")
 
-  ts.err_testcase("jh.Foo", "test_c", "2 > 1", "assert", "111\n222\n333\n")
+  ts.err_testcase(1.0, "jh.Foo", "test_c", "2 > 1", "assert", "111\n222\n333\n")
 
   ts = jf.new_testsuite("bar")
-  ts.ok_testcase("jh.Bar", "test_x")
+  ts.ok_testcase(1.0, "jh.Bar", "test_x")
 
   jf.write
 end
