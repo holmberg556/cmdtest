@@ -53,7 +53,7 @@ module Cmdtest
     def testmethod_end(method)
     end
 
-    def cmdline(method, comment)
+    def cmdline(cmdline_arg, comment)
     end
 
     def test_skipped(str)
@@ -103,7 +103,7 @@ module Cmdtest
       @n_methods += 1
     end
 
-    def cmdline(method, comment)
+    def cmdline(cmdline_arg, comment)
       @n_commands += 1
     end
 
