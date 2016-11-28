@@ -48,7 +48,13 @@ module Cmdtest
     def testmethod_begin(method)
       @err_assertions = []
       @err_skip = nil
+      @progress = []
       @t1 = Time.now
+    end
+
+    def cmdline(cmdline_arg, comment)
+      @progress << ">>> cmdline: #{cmdline_arg}\n"
+      @progress << ">>> comment: #{comment}\n" if comment != nil
     end
 
     def testmethod_end(method)
@@ -62,7 +68,7 @@ module Cmdtest
       elsif @err_assertions.size > 0
         message = @err_assertions[0].split(/\n/)[0]
         type = "assert"
-        text = @err_assertions.join
+        text = [@progress + @err_assertions].join
         @ts.err_testcase(@duration, _xml_class, method, message, type, text)
       else
         @ts.ok_testcase(@duration, _xml_class, method)
