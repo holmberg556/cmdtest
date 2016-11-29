@@ -1,0 +1,91 @@
+
+User visible changes
+====================
+
+The changes below have been manually extracted from the repository logs ("git log").
+The intention is to continue to update this file as changes are made in the future.
+Bug-fixes are normally not mentioned.
+
+For actual documentation of new features, see the manual.
+
+20161128::
+
+    add executed commands to JUnit error output,
+    so the information is more useful in Jenkins
+
+    add 'time=n.nnn' attribute in JUnit output, used by Jenkins
+
+20161116::
+
+    improve line ending detection
+    
+    detect mixed line ending on Windows
+
+    introduce 'output_encoding' method
+    
+20161107::
+
+    new 'file_encoding' assert method
+
+    handle Unicode filenames on Windows
+    
+20161104::
+
+    command line option --diff by default, new --no-diff option
+
+    update version number 1.4 -> 1.5, with 'skip_test' ...
+
+20161031::
+
+    add method 'skip_test'
+
+20161030::
+
+    'teardown' should run after AssertFailed too
+
+    new method 'dont_ignore_files', overriding 'ignore_files'
+
+20161010::
+
+    implement methods setenv/unsetenv for Windows too
+
+20161008::
+
+    improve --version option output
+    
+20160917::
+
+    add --stop-on-error option to stop after first error.
+
+    report finishing wall time + elapsed time
+
+20160628::
+
+    new command line optiopn --diff, using an LCS algorithm (like diff)
+
+20160626::
+
+    handle exception in setup/teardown
+    
+20160414::
+
+    introduce method 'import_directory'
+
+20160106::
+
+    new command line option --quiet
+    
+    accept directory command line argument,
+    then all CMDTEST_*.py files in the directory will be added
+
+20150817::
+
+    parallel command line option -jN using parallel(1) on Linux
+    
+20150729::
+
+    ignore_file method now accepts shell glob (*, **)
+    
+2015xxxx::
+
+    for older changes see the repository log ("git log")
