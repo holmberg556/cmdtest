@@ -10,7 +10,7 @@ execute_process(
 
 execute_process(
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMAND date +%Y%m%d
+  COMMAND date +%Y%m%d.%H%M
   OUTPUT_VARIABLE CMDTEST_DATE
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
