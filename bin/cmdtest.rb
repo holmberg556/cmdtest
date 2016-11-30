@@ -57,42 +57,7 @@ module Cmdtest
 
   #----------------------------------------------------------------------
 
-  module LogBaseMixin
-    def assert_success
-      process_item [:assert_success]
-    end
-
-    def test_skipped(str)
-      process_item [:test_skipped, str]
-    end
-
-    def assert_failure(str)
-      process_item [:assert_failure, str]
-    end
-
-    def assert_error(str)
-      process_item [:assert_error, str]
-    end
-
-    def notify(method, *args)
-      if block_given?
-        _notify_once(method + "_begin", *args)
-        yield
-        _notify_once(method + "_end", *args)
-      else
-        _notify_once(method, *args)
-      end
-    end
-
-    def _notify_once(method, *args)
-      process_item [:call, method, args]
-    end
-  end
-
-  #----------------------------------------------------------------------
-
   class LogClient
-    include LogBaseMixin
 
     def initialize
       @listeners = []
@@ -102,29 +67,22 @@ module Cmdtest
       @listeners << listener
     end
 
-    def process_item(e)
-      cmd, *rest = e
-      case cmd
-      when :assert_success
-        # nothing
-      when :test_skipped
-        _distribute("test_skipped", rest)
-      when :assert_failure
-        _distribute("assert_failure", rest)
-      when :assert_error
-        _distribute("assert_error", rest)
-      when :call
-        method, args = rest
-        _distribute(method, args)
+    def _call(m, args)
+      @listeners.each {|listener| listener.send(m, *args) }
+    end
+
+    def method_missing(m, *args)
+      if block_given?
+        _call("#{m}_begin", args)
+        yield
+        _call("#{m}_end", args)
       else
-        raise "unknown command"
+        _call(m, args)
       end
     end
 
-    def _distribute(method, args)
-      for listener in @listeners
-        listener.send(method, *args)
-      end
+    def assert_success
+      # nop
     end
 
   end
@@ -179,7 +137,7 @@ module Cmdtest
 
     def run(clog, runner)
       ok = false
-      clog.notify("testmethod", @method) do
+      clog.testmethod(@method) do
         obj = @adm_class.runtime_class.new(self, clog, runner)
         Dir.chdir(obj._work_dir.path)
         begin
@@ -443,11 +401,11 @@ module Cmdtest
 
   class RunnerSerial < Runner
     def _loop(clog)
-      clog.notify("testsuite") do
+      clog.testsuite do
         for adm_file in @adm_files
-          clog.notify("testfile", adm_file.path) do
+          clog.testfile(adm_file.path) do
             for adm_class in adm_file.adm_classes
-              clog.notify("testclass", adm_class.runtime_class.display_name) do
+              clog.testclass(adm_class.runtime_class.display_name) do
                 for adm_method in adm_class.adm_methods
                   ok = adm_method.run(clog, self)
                   if !ok && @opts.stop_on_error
