@@ -36,7 +36,12 @@ module Cmdtest
       end
 
       def _quote(arg)
-        arg.gsub(/&/, "&amp;").gsub(/</, "&lt;").gsub(/>/, "&gt;")
+        arg.
+          gsub(/&/, "&amp;").
+          gsub(/"/, "&quot;").
+          gsub(/'/, "&apos;").
+          gsub(/</, "&lt;").
+          gsub(/>/, "&gt;")
       end
 
       def close
