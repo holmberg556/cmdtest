@@ -93,10 +93,17 @@ module Cmdtest
           xml_tag,
           @message,
           @type,
-          @text,
+          _asciify(@text),
           xml_tag,
         ]
         f.put '    </testcase>'
+      end
+
+      def _asciify(str)
+        res = str.gsub(/[\x00-\x09\x0b-\x1f]/) do |x|
+          "^" + (x.ord + 64).chr
+        end
+        return res
       end
     end
 
