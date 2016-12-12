@@ -665,12 +665,13 @@ class Tfile:
 #----------------------------------------------------------------------
 
 # Run cmdtest in given directory
-def cmdtest_in_dir(path):
+def cmdtest_in_dir(path, *, py_files=None, selected_classes=None, selected_methods=None, quiet=False):
     with temp_chdir(path):
-        py_files = glob.glob("CMDTEST_*.py")
-        return test_files(py_files)
+        if not py_files:
+            py_files = glob.glob("CMDTEST_*.py")
+        return test_files(py_files, selected_classes=selected_classes, selected_methods=selected_methods, quiet=quiet)
 
-def test_files(py_files, selected_methods=None, quiet=False):
+def test_files(py_files, *, selected_classes=None, selected_methods=None, quiet=False):
     statistics = Statistics()
     tmpdir = Tmpdir()
     for py_file in py_files:
@@ -679,12 +680,13 @@ def test_files(py_files, selected_methods=None, quiet=False):
             statistics.classes += 1
             if not quiet:
                 progress(tclass.name())
-            for tmethod in tclass.tmethods():
-                if not selected_methods or tmethod.name() in selected_methods:
-                    statistics.methods += 1
-                    if not quiet:
-                        progress(tmethod.name())
-                    tmethod.run(tmpdir, statistics)
+            if not selected_classes or tclass.name() in selected_classes:
+                for tmethod in tclass.tmethods():
+                    if not selected_methods or tmethod.name() in selected_methods:
+                        statistics.methods += 1
+                        if not quiet:
+                            progress(tmethod.name())
+                        tmethod.run(tmpdir, statistics)
     return statistics
 
 def parse_options():
@@ -715,7 +717,7 @@ def parse_options():
 
 def main():
     options, py_files, selected_methods = parse_options()
-    statistics = test_files(py_files, selected_methods, options.quiet)
+    statistics = test_files(py_files, selected_methods=selected_methods, quiet=options.quiet)
     if not options.quiet:
         print()
         print(statistics)
