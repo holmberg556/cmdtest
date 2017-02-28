@@ -492,6 +492,10 @@ module Cmdtest
 
     private
 
+    def _sorted_glob(str)
+      Dir.glob(str).sort
+    end
+
     def _fs_test_filenames
       if ! @argv.empty?
         files = _expand_files_or_dirs(@argv)
@@ -502,13 +506,13 @@ module Cmdtest
         return files
       end
 
-      try = Dir.glob("t/CMDTEST_*.rb")
+      try = _sorted_glob("t/CMDTEST_*.rb")
       return try if ! try.empty?
 
-      try = Dir.glob("test/CMDTEST_*.rb")
+      try = _sorted_glob("test/CMDTEST_*.rb")
       return try if ! try.empty?
 
-      try = Dir.glob("CMDTEST_*.rb")
+      try = _sorted_glob("CMDTEST_*.rb")
       return try if ! try.empty?
 
       puts "ERROR: no CMDTEST_*.rb files found"
