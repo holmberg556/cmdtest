@@ -17,7 +17,7 @@ task "readme-html" do
   sh "rst2html.py -gds --stylesheet doc/rst.css README.rst README.html"
 end
 
-desc "generate DEB pacakge"
+desc "generate DEB package"
 task "generate-debian-package" do
   sh "rm -rf build"
   sh "mkdir build"
