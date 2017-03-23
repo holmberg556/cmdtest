@@ -81,7 +81,7 @@ install(
   doc/cmdtest.html
   COPYING.txt
   README.html
-  DESTINATION share/doc/rake
+  DESTINATION share/doc/cmdtest
   )
 
 install(
