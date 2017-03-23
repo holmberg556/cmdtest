@@ -19,7 +19,13 @@ end
 
 desc "generate DEB package"
 task "generate-debian-package" do
+  date = ENV["CMDTEST_DATE"] || Time.now.strftime("%Y%m%d.%H%M")
+
   sh "rm -rf build"
   sh "mkdir build"
-  sh "cd build && cmake .. && make package"
+  sh "cd build && cmake -DCMDTEST_DATE=#{date} .. && make package"
+
+  sh "rm -rf build_simple"
+  sh "mkdir build_simple"
+  sh "cd build_simple && cmake -DCMDTEST_DATE=#{date} -DCMDTEST_SIMPLE=YES .. && make package"
 end

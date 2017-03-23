@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(cmdtest)
 
+set( CMDTEST_DATE "" CACHE STRING "date string" )
+set( CMDTEST_SIMPLE NO CACHE BOOL "simple packaging" )
+
 execute_process(
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMAND ruby bin/cmdtest.rb --shortversion
@@ -8,16 +11,15 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
-execute_process(
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMAND date +%Y%m%d.%H%M
-  OUTPUT_VARIABLE CMDTEST_DATE
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-set(CPACK_GENERATOR "STGZ;TGZ;TZ;ZIP")
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-  set(CPACK_GENERATOR "DEB;${CPACK_GENERATOR}")
+if( CMDTEST_DATE )
+  # from command line
+else()
+  execute_process(
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND date +%Y%m%d.%H%M
+    OUTPUT_VARIABLE CMDTEST_DATE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
 endif()
 
 set(CPACK_PACKAGE_VERSION "${CMDTEST_VERSION}.${CMDTEST_DATE}")
@@ -28,6 +30,16 @@ set(CPACK_PACKAGE_DESCRIPTION "Cmdtest, xUnit style testing of commands ...")
 
 set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "all")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "ruby | ruby-interpreter")
+
+if( CMDTEST_SIMPLE )
+  set(CPACK_GENERATOR "TGZ;ZIP")
+  set(CPACK_PACKAGE_FILE_NAME "cmdtest-${CPACK_PACKAGE_VERSION}-SIMPLE")
+else()
+  set(CPACK_GENERATOR "STGZ;TGZ;TZ;ZIP")
+  if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+    set(CPACK_GENERATOR "DEB;${CPACK_GENERATOR}")
+  endif()
+endif()
 
 INCLUDE(CPack)
 
@@ -56,8 +68,7 @@ execute_process(
   )
 
 
-install(
-  FILES
+set( LIB_FILES
   lib/cmdtest/argumentparser.rb
   lib/cmdtest/baselogger.rb
   lib/cmdtest/cmdeffects.rb
@@ -73,20 +84,41 @@ install(
   lib/cmdtest/testcase.rb
   lib/cmdtest/util.rb
   lib/cmdtest/workdir.rb
-  DESTINATION lib/ruby/vendor_ruby/cmdtest
   )
 
-install(
-  FILES
-  doc/cmdtest.html
-  COPYING.txt
-  README.html
-  DESTINATION share/doc/cmdtest
-  )
+if( CMDTEST_SIMPLE )
+  install(
+    FILES ${LIB_FILES}
+    DESTINATION lib/cmdtest
+    )
 
-install(
-  PROGRAMS
-  bin/cmdtest.rb.generated
-  DESTINATION bin
-  RENAME cmdtest
-  )
+  install(
+    PROGRAMS
+    bin/cmdtest.rb.generated
+    DESTINATION bin
+    RENAME cmdtest.rb
+    )
+
+else()
+  install(
+    FILES ${LIB_FILES}
+    DESTINATION lib/ruby/vendor_ruby/cmdtest
+    )
+
+  install(
+    FILES
+    doc/cmdtest.html
+    COPYING.txt
+    README.html
+    DESTINATION share/doc/cmdtest
+    )
+
+  install(
+    PROGRAMS
+    bin/cmdtest.rb.generated
+    DESTINATION bin
+    RENAME cmdtest
+    )
+
+endif()
+
