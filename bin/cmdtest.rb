@@ -184,7 +184,7 @@ module Cmdtest
       @runtime_class, @adm_file, @runner = runtime_class, adm_file, runner
 
       tested = runner.opts.test
-      @adm_methods = @runtime_class.public_instance_methods(false).sort.select do |name|
+      @adm_methods = @runtime_class.public_instance_methods(true).sort.select do |name|
         name =~ /^test_/
       end.map do |name|
         TestMethod.new(name, self, runner)
