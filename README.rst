@@ -56,4 +56,4 @@ Cmdtest_ was created by Johan Holmberg <holmberg556 at gmail dot com>.
 .. _Cmdtest:          https://bitbucket.org/holmberg556/cmdtest
 .. _Cons:             http://www.dsmit.com/cons/
 
-.. _`Cmdtest User Guide`:     http://holmberg556.bitbucket.org/cmdtest/doc/cmdtest.html
+.. _`Cmdtest User Guide`:     http://holmberg556.bitbucket.io/cmdtest/doc/cmdtest.html
