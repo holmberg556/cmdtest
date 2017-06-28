@@ -23,6 +23,8 @@
 # Example of testing GCC command line interface using "cmdtest".
 #
 
+ENV['LC_ALL'] = 'C'
+
 class CMDTEST_gcc < Cmdtest::Testcase
 
   def gcc
