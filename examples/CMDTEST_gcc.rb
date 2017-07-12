@@ -432,7 +432,47 @@ class CMDTEST_gcc < Cmdtest::Testcase
 
   #----------------------------------------
 
-  def test_gcc_vs_gxx_linking
+  def test_MD_MT_MF
+
+    Dir.mkdir "obj"
+    Dir.mkdir "other_dir"
+
+    create_file "src/foo.h", [
+      '#define HELLO "hello\n"',
+    ]
+    create_file "src/foo.c", [
+      '#include <stdio.h>',
+      '#include "foo.h"',
+      'int main() { printf(HELLO); return 0; }',
+    ]
+
+    cmd "#{gcc} -c src/foo.c -o obj/bar.o" do
+      comment "normal compile"
+      written_files "obj/bar.o"
+    end
+
+    cmd "#{gcc} -MD -c src/foo.c -o obj/bar.o" do
+      comment "using -MD (generate dependency file)"
+      written_files "obj/bar.o", "obj/bar.d"
+    end
+
+    cmd "#{gcc} -MD -MF other_dir/other_name.d -c src/foo.c -o obj/bar.o" do
+      comment "using -MD and -MF (name dependency file)"
+      written_files "obj/bar.o", "other_dir/other_name.d"
+      file_equal "other_dir/other_name.d", /^obj\/bar.o: /
+    end
+
+    cmd "#{gcc} -MD -MT xxxxxx -MF other_dir/other_name.d -c src/foo.c -o obj/bar.o" do
+      comment "using -MD -MF and -MT (name target in dependency file)"
+      written_files "obj/bar.o", "other_dir/other_name.d"
+      file_equal "other_dir/other_name.d", /^xxxxxx: /
+    end
+
+  end
+
+  #----------------------------------------
+
+  def XXX_test_gcc_vs_gxx_linking
 
     simple_cxx = [
       "#include <iostream>",
