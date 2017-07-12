@@ -432,8 +432,7 @@ class CMDTEST_gcc < Cmdtest::Testcase
 
   #----------------------------------------
 
-  def test_MD_MT_MF
-
+  def setup_MD_MF_MT
     Dir.mkdir "obj"
     Dir.mkdir "other_dir"
 
@@ -445,6 +444,10 @@ class CMDTEST_gcc < Cmdtest::Testcase
       '#include "foo.h"',
       'int main() { printf(HELLO); return 0; }',
     ]
+  end
+
+  def test_MD_MF
+    setup_MD_MF_MT
 
     cmd "#{gcc} -c src/foo.c -o obj/bar.o" do
       comment "normal compile"
@@ -461,6 +464,12 @@ class CMDTEST_gcc < Cmdtest::Testcase
       written_files "obj/bar.o", "other_dir/other_name.d"
       file_equal "other_dir/other_name.d", /^obj\/bar.o: /
     end
+  end
+
+  #----------------------------------------
+
+  def test_MT
+    setup_MD_MF_MT
 
     cmd "#{gcc} -MD -MT xxxxxx -MF other_dir/other_name.d -c src/foo.c -o obj/bar.o" do
       comment "using -MD -MF and -MT (name target in dependency file)"
