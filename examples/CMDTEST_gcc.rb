@@ -32,7 +32,7 @@ class CMDTEST_gcc < Cmdtest::Testcase
   end
 
   def gxx
-    ENV["CMDTEST_GXX_TO_TEST"] || "g++"
+    gcc.sub(/gcc$/, "g++")
   end
 
   #----------------------------------------
