@@ -78,20 +78,20 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
 
     cmd "#{ruby} script.rb" do
       exit_nonzero
-      stderr_equal /no such file to load/
+      stderr_equal /LoadError/
     end
 
     cmd "#{ruby} -I some/dir1 script.rb" do
       stdout_equal [
-        "This is ./some/dir1/req1.rb",
-        "This is ./some/dir1/req2.rb",
+        /^This is .*\/some\/dir1\/req1.rb/,
+        /^This is .*\/some\/dir1\/req2.rb/,
       ]
     end
 
     cmd "#{ruby} -I some/dir2 -I some/dir1 script.rb" do
       stdout_equal [
-        "This is ./some/dir2/req1.rb",
-        "This is ./some/dir1/req2.rb",
+        /^This is .*\/some\/dir2\/req1.rb/,
+        /^This is .*\/some\/dir1\/req2.rb/,
       ]
     end
   end
@@ -249,17 +249,19 @@ class CMDTEST_ruby_options < Cmdtest::Testcase
 
   def test_option_d
     create_file "script.rb", [
-      'p $DEBUG',
+      'puts "DEBUG = #{$DEBUG}"',
     ]
 
     # with -d
     cmd "#{ruby} -d script.rb" do
-      stdout_equal "true\n"
+      stdout_equal /DEBUG = true/
+      stderr_equal /^/
     end
 
     # without -d
     cmd "#{ruby} script.rb" do
-      stdout_equal "false\n"
+      stdout_equal /DEBUG = false/
+      stderr_equal /^/
     end
   end
 
