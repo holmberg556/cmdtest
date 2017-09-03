@@ -4,7 +4,7 @@ ENV["LC_ALL"] = "C" if RUBY_PLATFORM =~ /darwin/
 
 desc "run regression tests"
 task "test" do
-  sh "ruby -w run-regression.rb"
+  sh "cmdtest t"
 end
 
 desc "generate HTML manual"
