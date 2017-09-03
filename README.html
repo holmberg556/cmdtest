@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.13.1: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.12: http://docutils.sourceforge.net/" />
 <title>Cmdtest - a program for testing executable programs</title>
 <style type="text/css">
 
 /*
 :Author: David Goodger (goodger@python.org)
-:Id: $Id: html4css1.css 5631 2008-08-24 13:01:23Z goodger $
+:Id: $Id: html4css1.css 7614 2013-02-21 15:55:51Z milde $
 :Copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -47,6 +47,10 @@ blockquote.epigraph {
 dl.docutils dd {
   margin-bottom: 0.5em }
 
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
 /* Uncomment (and remove this text!) to get bold-faced definition list terms
 dl.docutils dt {
   font-weight: bold }
@@ -73,7 +77,7 @@ div.tip p.admonition-title {
 
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
-div.warning p.admonition-title {
+div.warning p.admonition-title, .code .error {
   color: red ;
   font-weight: bold ;
   font-family: sans-serif }
@@ -157,11 +161,38 @@ h2.subtitle {
 hr.docutils {
   width: 75% }
 
-img.align-left {
-  clear: left }
+img.align-left, .figure.align-left, object.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
 
-img.align-right {
-  clear: right }
+img.align-right, .figure.align-right, object.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
 
 ol.simple, ul.simple {
   margin-bottom: 1em }
@@ -218,18 +249,18 @@ pre.address {
   margin-top: 0 ;
   font: inherit }
 
-tt.literal {
-  color: #b33;
-}
-
-pre.literal-block, pre.doctest-block {
+pre.literal-block, pre.doctest-block, pre.math, pre.code {
   margin-left: 2em ;
-  x-background-color: #ddd;
-  background-color: #fec;
-  padding: 0.5em;
-  outline-style: dashed;
-  outline-width: 0.1em;
   margin-right: 2em }
+
+pre.code .ln { color: grey; } /* line numbers */
+pre.code, code { background-color: #eeeeee }
+pre.code .comment, code .comment { color: #5C6576 }
+pre.code .keyword, code .keyword { color: #3B0D06; font-weight: bold }
+pre.code .literal.string, code .literal.string { color: #0C5404 }
+pre.code .name.builtin, code .name.builtin { color: #352B84 }
+pre.code .deleted, code .deleted { background-color: #DEB0A1}
+pre.code .inserted, code .inserted { background-color: #A3D289}
 
 span.classifier {
   font-family: sans-serif ;
@@ -282,6 +313,21 @@ table.docutils th.field-name, table.docinfo th.docinfo-name {
   white-space: nowrap ;
   padding-left: 0 }
 
+/* "booktabs" style (no vertical lines) */
+table.docutils.booktabs {
+  border: 0px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  border-collapse: collapse;
+}
+table.docutils.booktabs * {
+  border: 0px;
+}
+table.docutils.booktabs th {
+  border-bottom: thin solid;
+  text-align: left;
+}
+
 h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
 h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
   font-size: 100% }
@@ -306,15 +352,26 @@ It is generated from the file <tt class="docutils literal">cmdtest.txt</tt> whic
 <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> format. There is also an <tt class="docutils literal">examples</tt> directory with
 some real-world examples of using <a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a>.</p>
 </div>
+<div class="section" id="testing-cmdtest">
+<h1>Testing cmdtest</h1>
+<p><a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a> is tested with itself, like this:</p>
+<pre class="literal-block">
+cmdtest t
+</pre>
+<p>This tests <tt class="docutils literal">bin/cmdtest.rb</tt> using the <tt class="docutils literal">cmdtest</tt> found in the PATH.
+It runs a number of tests in the directory <tt class="docutils literal">t</tt>.
+The <tt class="docutils literal">cmdtest</tt> used to test should normally be a stable version
+different from the one tested.</p>
+</div>
 <div class="section" id="installation">
 <h1>Installation</h1>
 <p>No installation is needed to use <a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a>. The file <tt class="docutils literal">cmdtest.rb</tt> can
 be executed directly from where it is checked out or unpacked. But the
 program can also be installed. Use the following command:</p>
 <pre class="literal-block">
-$ git clone https://bitbucket.org/holmberg556/cmdtest.git
-$ cd cmdtest
-$ ruby setup.rb            # sudo may be needed
+git clone https://bitbucket.org/holmberg556/cmdtest.git
+cd cmdtest
+ruby setup.rb            # sudo may be needed
 </pre>
 <p>For details about options to <tt class="docutils literal">setup.rb</tt> use <tt class="docutils literal">ruby setup.rb <span class="pre">--help</span></tt>
 or see &lt;<a class="reference external" href="http://i.loveruby.net/en/projects/setup/doc/usage.html">http://i.loveruby.net/en/projects/setup/doc/usage.html</a>&gt;.</p>
@@ -338,13 +395,6 @@ comfortable with. So I started to develop my own tool, and the result was
 <h1>Author</h1>
 <p><a class="reference external" href="https://bitbucket.org/holmberg556/cmdtest">Cmdtest</a> was created by Johan Holmberg &lt;holmberg556 at gmail dot com&gt;.</p>
 </div>
-</div>
-<div class="footer">
-<hr class="footer" />
-<a class="reference external" href="README.rst">View document source</a>.
-Generated on: 2017-04-14.
-Generated by <a class="reference external" href="http://docutils.sourceforge.net/">Docutils</a> from <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> source.
-
 </div>
 </body>
 </html>

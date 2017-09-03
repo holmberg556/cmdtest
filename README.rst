@@ -15,6 +15,18 @@ It is generated from the file ``cmdtest.txt`` which is written in
 reStructuredText_ format. There is also an ``examples`` directory with
 some real-world examples of using Cmdtest_.
 
+Testing cmdtest
+---------------
+
+Cmdtest_ is tested with itself, like this::
+
+  cmdtest t
+
+This tests ``bin/cmdtest.rb`` using the ``cmdtest`` found in the PATH.
+It runs a number of tests in the directory ``t``.
+The ``cmdtest`` used to test should normally be a stable version
+different from the one tested.
+
 Installation
 ------------
 
@@ -22,9 +34,9 @@ No installation is needed to use Cmdtest_. The file ``cmdtest.rb`` can
 be executed directly from where it is checked out or unpacked. But the
 program can also be installed. Use the following command::
 
-  $ git clone https://bitbucket.org/holmberg556/cmdtest.git
-  $ cd cmdtest
-  $ ruby setup.rb            # sudo may be needed
+  git clone https://bitbucket.org/holmberg556/cmdtest.git
+  cd cmdtest
+  ruby setup.rb            # sudo may be needed
 
 For details about options to ``setup.rb`` use ``ruby setup.rb --help``
 or see <http://i.loveruby.net/en/projects/setup/doc/usage.html>.
