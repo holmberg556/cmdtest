@@ -102,7 +102,7 @@ class CMDTEST_simple < Cmdtest::Testcase
     end
 
     # existing directory
-    cmd "mkdir aaa" do
+    cmd "env LC_ALL=C mkdir aaa" do
       exit_nonzero
       stderr_equal /File exists/
     end
