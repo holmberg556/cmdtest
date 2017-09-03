@@ -20,7 +20,7 @@ Testing cmdtest
 
 Cmdtest_ is tested with itself, like this::
 
-  cmdtest t
+  rake test
 
 This tests ``bin/cmdtest.rb`` using the ``cmdtest`` found in the PATH.
 It runs a number of tests in the directory ``t``.
