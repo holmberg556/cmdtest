@@ -81,6 +81,7 @@ module Cmdtest
       @_env_path = @_runner.orig_env_path
       @_t1 = @_t2 = 0
       @_output_encoding = 'ascii'
+      @_output_newline = Util.windows? ? "\r\n" : "\n"
     end
 
     def output_encoding(encoding)
@@ -94,6 +95,20 @@ module Cmdtest
         end
       else
         @_output_encoding = encoding
+      end
+    end
+
+    def output_newline(newline)
+      if block_given?
+        saved_newline = @_output_newline
+        begin
+          @_output_newline = newline
+          yield
+        ensure
+          @_output_newline = saved_newline
+        end
+      else
+        @_output_newline = newline
       end
     end
 
@@ -556,7 +571,7 @@ module Cmdtest
             "error reading file: '#{file}'"
           end
         else
-          _xxx_equal(what, positive, actual.text(@_output_encoding), expected)
+          _xxx_equal(what, positive, actual.text(@_output_encoding, @_output_newline), expected)
         end
       end
     end
@@ -596,7 +611,7 @@ module Cmdtest
     def _stdxxx_contain_aux(stdxxx, positive, expected)
       _process_after do
         @_checked[stdxxx] = true
-        actual = @_effects.send(stdxxx).text(@_output_encoding)
+        actual = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
         _xxx_contain(stdxxx, positive, actual, expected)
       end
     end
@@ -665,7 +680,7 @@ module Cmdtest
     def _stdxxx_equal_aux(stdxxx, positive, expected)
       _process_after do
         @_checked[stdxxx] = true
-        actual = @_effects.send(stdxxx).text(@_output_encoding)
+        actual = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
         _xxx_equal(stdxxx, positive, actual, expected)
       end
     end

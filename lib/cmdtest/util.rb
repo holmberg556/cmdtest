@@ -85,7 +85,7 @@ module Cmdtest
       @bytes = bytes
     end
 
-    def text(encoding)
+    def text(encoding, newline)
       extern_text = @bytes.dup
       extern_text.force_encoding(encoding)
       if ! extern_text.valid_encoding?
@@ -96,7 +96,8 @@ module Cmdtest
       n_crnl = str.scan("\r\n").size
       n_windows = n_crnl
       n_unix = n_nl - n_crnl
-      if Util.windows?
+      case newline
+      when "\r\n"
         if n_unix > 0 && n_windows == 0
           raise AssertFailed, "ERROR: UNIX line ending: #{@name}"
         elsif n_unix > 0 && n_windows > 0
@@ -104,7 +105,7 @@ module Cmdtest
         else
           return str.gsub("\r\n", "\n")
         end
-      else
+      when "\n"
         if n_unix == 0 && n_windows > 0
           raise AssertFailed, "ERROR: Windows line ending: #{@name}"
         elsif n_unix > 0 && n_windows > 0
@@ -112,6 +113,14 @@ module Cmdtest
         else
           return str
         end
+      when :consistent
+        if n_unix > 0 && n_windows > 0
+          raise AssertFailed, "ERROR: mixed line ending: #{@name}"
+        else
+          return str.gsub("\r\n", "\n")
+        end
+      else
+        raise RuntimeError, "unkown newline type: #{newline.inspect}"
       end
     end
   end

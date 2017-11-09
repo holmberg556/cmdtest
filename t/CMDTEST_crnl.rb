@@ -72,4 +72,145 @@ class CMDTEST_crnl < Cmdtest::Testcase
     end
   end
 
+  def test_crnl_EXPECTED
+    create_CMDTEST_foo [
+      'cmd "echo_crnl.rb 1:rn 2:rn" do',
+      '    comment "windows line endings"',
+      '    output_newline "\r\n" do',
+      '      stdout_equal "1\n2\n"',
+      '    end',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### windows line endings",
+      ]
+    end
+  end
+
+  def test_crnl_NOT_EXPECTED
+    create_CMDTEST_foo [
+      'cmd "echo_crnl.rb 1:rn 2:rn" do',
+      '    comment "windows line endings"',
+      '    output_newline "\n" do',
+      '      stdout_equal "1\n2\n"',
+      '    end',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### windows line endings",
+        "--- ERROR: Windows line ending: STDOUT",
+      ]
+      exit_nonzero
+    end
+  end
+
+  def test_nl_EXPECTED
+    create_CMDTEST_foo [
+      'cmd "echo_crnl.rb 1:n 2:n" do',
+      '    comment "linux line endings"',
+      '    output_newline "\n" do',
+      '      stdout_equal "1\n2\n"',
+      '    end',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### linux line endings",
+      ]
+    end
+  end
+
+  def test_nl_NOT_EXPECTED
+    create_CMDTEST_foo [
+      'cmd "echo_crnl.rb 1:n 2:n" do',
+      '    comment "linux line endings"',
+      '    output_newline "\r\n" do',
+      '      stdout_equal "1\n2\n"',
+      '    end',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### linux line endings",
+        "--- ERROR: UNIX line ending: STDOUT",
+      ]
+      exit_nonzero
+    end
+  end
+
+  def test_unknown_OUTPUT_NEWLINE
+    create_CMDTEST_foo [
+      'cmd "echo_crnl.rb 1:n 2:n" do',
+      '    comment "linux line endings"',
+      '    output_newline "foobar" do',
+      '      stdout_equal "1\n2\n"',
+      '    end',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal /unkown newline type: "foobar"/
+      exit_nonzero
+    end
+  end
+
+  def test_CONSISTENT_EXPECTED_nl
+    create_CMDTEST_foo [
+      'cmd "echo_crnl.rb 1:n 2:n" do',
+      '    comment "consistent line endings"',
+      '    output_newline :consistent do',
+      '      stdout_equal "1\n2\n"',
+      '    end',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### consistent line endings",
+      ]
+    end
+  end
+
+  def test_CONSISTENT_EXPECTED_crnl
+    create_CMDTEST_foo [
+      'cmd "echo_crnl.rb 1:rn 2:rn" do',
+      '    comment "consistent line endings"',
+      '    output_newline :consistent do',
+      '      stdout_equal "1\n2\n"',
+      '    end',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### consistent line endings",
+      ]
+    end
+  end
+
+  def test_CONSISTENT_EXPECTED_mixed
+    create_CMDTEST_foo [
+      'cmd "echo_crnl.rb 1:rn 2:n" do',
+      '    comment "consistent line endings"',
+      '    output_newline :consistent do',
+      '      stdout_equal "1\n2\n"',
+      '    end',
+      'end',
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### consistent line endings",
+        "--- ERROR: mixed line ending: STDOUT",
+      ]
+      exit_nonzero
+    end
+  end
+
 end
