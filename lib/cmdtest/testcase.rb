@@ -555,7 +555,7 @@ module Cmdtest
 
     def _file_equal_aux(positive, file, expected)
       _process_after do
-        what = "file '#{file}'"
+        what = "content of file '#{file}'"
         actual = _read_file(what, file)
         case actual
         when :no_such_file

@@ -40,7 +40,7 @@ class CMDTEST_file_not_equal < Cmdtest::Testcase
     cmd_cmdtest do
       stdout_equal [
         "### true.rb",
-        "--- ERROR: wrong file 'foo'",
+        "--- ERROR: wrong content of file 'foo'",
         "---        actual: hello",
         "---        expect: hello",
       ]
