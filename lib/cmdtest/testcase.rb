@@ -606,7 +606,25 @@ module Cmdtest
       _stdxxx_equal_aux("stderr", false, expected)
     end
 
+    # Yield stdout to user, expecting 'assert' call.
+    def stdout_check(&block)
+      _stdxxx_check_aux("stdout", &block)
+    end
+
+    # Yield stderr to user, expecting 'assert' call.
+    def stderr_check(&block)
+      _stdxxx_check_aux("stderr", &block)
+    end
+
     # helper methods
+
+    def _stdxxx_check_aux(stdxxx)
+      _process_after do
+        @_checked[stdxxx] = true
+        str = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
+        yield _str_as_lines(str)
+      end
+    end
 
     def _stdxxx_contain_aux(stdxxx, positive, expected)
       _process_after do
