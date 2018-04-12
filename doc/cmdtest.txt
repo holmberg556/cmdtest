@@ -611,6 +611,20 @@ or in the ``setup`` method.
     The filename is evaluated relative to the current directory at the
     time of the call.
 
+``stdout_check()``
+    Will "callback" to the test script, giving the user a chance to inpect STDOUT,
+    and maybe call "assert". Example::
+
+      cmd "seq 0 5 100" do
+        stdout_check do |lines|
+          assert lines.include?(55), "no line '55'"
+        end
+      end
+
+``stdout_check()``
+    Will "callback" to the test script, giving the user a chance to inpect STDERR,
+    and maybe call "assert" (see ``stdout_check()`` above).
+
 Deprecated helper functions
 +++++++++++++++++++++++++++
 
