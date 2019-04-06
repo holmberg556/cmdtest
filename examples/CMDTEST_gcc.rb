@@ -468,6 +468,24 @@ class CMDTEST_gcc < Cmdtest::Testcase
 
   #----------------------------------------
 
+  def test_MD_vs_MMD
+    setup_MD_MF_MT
+
+    cmd "#{gcc} -MD -c src/foo.c -o obj/bar.o" do
+      comment "using -MD (with system headers)"
+      written_files "obj/bar.o", "obj/bar.d"
+      file_equal "obj/bar.d", /stdio\.h/
+    end
+
+    cmd "#{gcc} -MMD -c src/foo.c -o obj/bar.o" do
+      comment "using -MMD (without system headers)"
+      written_files "obj/bar.o", "obj/bar.d"
+      file_not_equal "obj/bar.d", /stdio\.h/
+    end
+  end
+
+  #----------------------------------------
+
   def test_MT
     setup_MD_MF_MT
 
