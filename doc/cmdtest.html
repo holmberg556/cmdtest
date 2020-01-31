@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.14: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.15.2: http://docutils.sourceforge.net/" />
 <title>Cmdtest User Guide</title>
 <style type="text/css">
 
@@ -306,20 +306,24 @@ ul.auto-toc {
 <li><a class="reference internal" href="#work-directory" id="id6">Work directory</a></li>
 <li><a class="reference internal" href="#specifying-files-directories" id="id7">Specifying files / directories</a></li>
 <li><a class="reference internal" href="#path-handling" id="id8">PATH handling</a></li>
-<li><a class="reference internal" href="#matching-standard-output-content" id="id9">Matching standard output content</a></li>
-<li><a class="reference internal" href="#invoking-cmdtest" id="id10">Invoking <tt class="docutils literal">cmdtest</tt></a><ul>
-<li><a class="reference internal" href="#options" id="id11">Options</a></li>
-<li><a class="reference internal" href="#commandline-examples" id="id12">Commandline Examples</a></li>
+<li><a class="reference internal" href="#matching-standard-output-content" id="id9">Matching standard output content</a><ul>
+<li><a class="reference internal" href="#unusual-newlines" id="id10">Unusual newlines</a></li>
+<li><a class="reference internal" href="#unusual-text-encoding" id="id11">Unusual text encoding</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#reference-part" id="id13">Reference Part</a><ul>
-<li><a class="reference internal" href="#cmd" id="id14">cmd</a></li>
-<li><a class="reference internal" href="#assertions-exit-status" id="id15">Assertions - exit status</a></li>
-<li><a class="reference internal" href="#assertions-files" id="id16">Assertions - files</a></li>
-<li><a class="reference internal" href="#assertions-stdout-stderr-file-content" id="id17">Assertions - stdout/stderr/file content</a></li>
-<li><a class="reference internal" href="#assertions-misc" id="id18">Assertions - misc</a></li>
-<li><a class="reference internal" href="#helper-functions" id="id19">Helper functions</a></li>
-<li><a class="reference internal" href="#deprecated-helper-functions" id="id20">Deprecated helper functions</a></li>
+<li><a class="reference internal" href="#invoking-cmdtest" id="id12">Invoking <tt class="docutils literal">cmdtest</tt></a><ul>
+<li><a class="reference internal" href="#options" id="id13">Options</a></li>
+<li><a class="reference internal" href="#commandline-examples" id="id14">Commandline Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reference-part" id="id15">Reference Part</a><ul>
+<li><a class="reference internal" href="#cmd" id="id16">cmd</a></li>
+<li><a class="reference internal" href="#assertions-exit-status" id="id17">Assertions - exit status</a></li>
+<li><a class="reference internal" href="#assertions-files" id="id18">Assertions - files</a></li>
+<li><a class="reference internal" href="#assertions-stdout-stderr-file-content" id="id19">Assertions - stdout/stderr/file content</a></li>
+<li><a class="reference internal" href="#assertions-misc" id="id20">Assertions - misc</a></li>
+<li><a class="reference internal" href="#helper-functions" id="id21">Helper functions</a></li>
+<li><a class="reference internal" href="#deprecated-helper-functions" id="id22">Deprecated helper functions</a></li>
 </ul>
 </li>
 </ul>
@@ -590,9 +594,57 @@ end
 <li>as an array of lines where some lines should match a regexp rather than be compared
 for string equality</li>
 </ol>
+<div class="section" id="unusual-newlines">
+<h2><a class="toc-backref" href="#id10">Unusual newlines</a></h2>
+<p>Some programs produce text output with unusual newlines for the
+current platform, for example <tt class="docutils literal">&quot;\n&quot;</tt> on Windows or <tt class="docutils literal">&quot;\r\n&quot;</tt> on
+Linux. The following test will give an error on Linux:</p>
+<pre class="literal-block">
+$ cat CMDTEST_newline.rb
+class CMDTEST_newline &lt; Cmdtest::Testcase
+  def test_newline
+    cmd 'echo -n &quot;hello\r\nworld\r\n&quot;' do
+      exit_zero
+      stdout_equal [ &quot;hello&quot;, &quot;world&quot; ]
+    end
+  end
+end
+$
+$ cmdtest -q CMDTEST_newline.rb
+### echo -n &quot;hello\r\nworld\r\n&quot;
+--- ERROR: Windows line ending: STDOUT
+</pre>
+<p>To cope with this situation, it is possible ot use the command
+<tt class="docutils literal">output_newline</tt> like this:</p>
+<pre class="literal-block">
+cmd 'echo -n &quot;hello\r\nworld\r\n&quot;' do
+  exit_zero
+  output_newline &quot;\r\n&quot; do
+    stdout_equal [ &quot;hello&quot;, &quot;world&quot; ]
+  end
+end
+</pre>
+<p>The argument to <tt class="docutils literal">output_newline</tt> can be one of <tt class="docutils literal">&quot;\n&quot;</tt>, <tt class="docutils literal">&quot;\r\n&quot;</tt>,
+or <tt class="docutils literal">:consistent</tt>. The last one means either newline is ok, as long
+as all lines use the same newline.</p>
+<p>The call can use a do-block as in the example above. A plain method
+call without do-block can also be used, and then the new setting is in
+effect until it is set again, or the test method ends.</p>
+</div>
+<div class="section" id="unusual-text-encoding">
+<h2><a class="toc-backref" href="#id11">Unusual text encoding</a></h2>
+<p>In the same manner as for newline, the encoding can be something other
+than the default (in this case <tt class="docutils literal">&quot;ascii&quot;</tt>). For example:</p>
+<pre class="literal-block">
+output_encoding &quot;utf-8&quot; do
+  ...
+end
+</pre>
+<p>The argument should be an encoding name known to Ruby.</p>
+</div>
 </div>
 <div class="section" id="invoking-cmdtest">
-<h1><a class="toc-backref" href="#id10">Invoking <tt class="docutils literal">cmdtest</tt></a></h1>
+<h1><a class="toc-backref" href="#id12">Invoking <tt class="docutils literal">cmdtest</tt></a></h1>
 <p><tt class="docutils literal">cmdtest</tt> can be called without any arguments at all. It will then look
 for <tt class="docutils literal"><span class="pre">CMDTEST_*.rb</span></tt> files in the following places:</p>
 <ol class="arabic simple">
@@ -629,7 +681,7 @@ $ cmdtest examples /stdin/ /stdout/
 </pre>
 <p>For more examples of command line usage, see the section <a class="reference internal" href="#commandline-examples">Commandline Examples</a> below.</p>
 <div class="section" id="options">
-<h2><a class="toc-backref" href="#id11">Options</a></h2>
+<h2><a class="toc-backref" href="#id13">Options</a></h2>
 <p>The available options can be seen by using the <tt class="docutils literal"><span class="pre">-h</span></tt> option:</p>
 <pre class="literal-block">
 $ cmdtest -h
@@ -660,7 +712,7 @@ optional arguments:
 </pre>
 </div>
 <div class="section" id="commandline-examples">
-<h2><a class="toc-backref" href="#id12">Commandline Examples</a></h2>
+<h2><a class="toc-backref" href="#id14">Commandline Examples</a></h2>
 <p>This section is a collection of examples of how Cmdtest can be used.</p>
 <pre class="literal-block">
 $ cmdtest
@@ -691,9 +743,9 @@ servers such as <a class="reference external" href="http://jenkins-ci.org">Jenki
 </div>
 </div>
 <div class="section" id="reference-part">
-<h1><a class="toc-backref" href="#id13">Reference Part</a></h1>
+<h1><a class="toc-backref" href="#id15">Reference Part</a></h1>
 <div class="section" id="cmd">
-<h2><a class="toc-backref" href="#id14">cmd</a></h2>
+<h2><a class="toc-backref" href="#id16">cmd</a></h2>
 <p>The <tt class="docutils literal">cmd</tt> method is the central method of the whole Cmdtest framework.
 It should always be called with a block like this:</p>
 <pre class="literal-block">
@@ -720,7 +772,7 @@ end
 <p>See also the example in the <a class="reference internal" href="#structure-of-a-test-method">Structure of a test-method</a> section above.</p>
 </div>
 <div class="section" id="assertions-exit-status">
-<h2><a class="toc-backref" href="#id15">Assertions - exit status</a></h2>
+<h2><a class="toc-backref" href="#id17">Assertions - exit status</a></h2>
 <p>These methods should only be used inside a <tt class="docutils literal">cmd</tt> block.</p>
 <dl class="docutils">
 <dt><tt class="docutils literal">exit_nonzero</tt></dt>
@@ -735,7 +787,7 @@ exit-related methods have been called.</dd>
 </dl>
 </div>
 <div class="section" id="assertions-files">
-<h2><a class="toc-backref" href="#id16">Assertions - files</a></h2>
+<h2><a class="toc-backref" href="#id18">Assertions - files</a></h2>
 <p>These methods should only be used inside a <tt class="docutils literal">cmd</tt> block.</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">affected_files(file1,...,fileN)</span></tt></dt>
@@ -762,7 +814,7 @@ case special (when the file is created).</dd>
 </dl>
 </div>
 <div class="section" id="assertions-stdout-stderr-file-content">
-<h2><a class="toc-backref" href="#id17">Assertions - stdout/stderr/file content</a></h2>
+<h2><a class="toc-backref" href="#id19">Assertions - stdout/stderr/file content</a></h2>
 <p>These methods should only be used inside a <tt class="docutils literal">cmd</tt> block.</p>
 <dl class="docutils">
 <dt><tt class="docutils literal">file_equal(file, content)</tt></dt>
@@ -791,7 +843,7 @@ For more details and examples see the section <a class="reference internal" href
 </dl>
 </div>
 <div class="section" id="assertions-misc">
-<h2><a class="toc-backref" href="#id18">Assertions - misc</a></h2>
+<h2><a class="toc-backref" href="#id20">Assertions - misc</a></h2>
 <p>These methods should only be used inside a <tt class="docutils literal">cmd</tt> block.</p>
 <dl class="docutils">
 <dt><tt class="docutils literal">assert(flag, msg=nil)</tt></dt>
@@ -803,7 +855,7 @@ interval given as argument.</dd>
 </dl>
 </div>
 <div class="section" id="helper-functions">
-<h2><a class="toc-backref" href="#id19">Helper functions</a></h2>
+<h2><a class="toc-backref" href="#id21">Helper functions</a></h2>
 <p>These methods should only be used outside a <tt class="docutils literal">cmd</tt> block in a test method,
 or in the <tt class="docutils literal">setup</tt> method.</p>
 <dl class="docutils">
@@ -887,7 +939,7 @@ and maybe call &quot;assert&quot; (see <tt class="docutils literal">stdout_check
 </dl>
 </div>
 <div class="section" id="deprecated-helper-functions">
-<h2><a class="toc-backref" href="#id20">Deprecated helper functions</a></h2>
+<h2><a class="toc-backref" href="#id22">Deprecated helper functions</a></h2>
 <dl class="docutils">
 <dt><tt class="docutils literal">dir_mkdir(file)</tt></dt>
 <dd>Deprecated, use <tt class="docutils literal">Dir.mkdir</tt> instead.</dd>
@@ -912,7 +964,7 @@ and maybe call &quot;assert&quot; (see <tt class="docutils literal">stdout_check
 <div class="footer">
 <hr class="footer" />
 <a class="reference external" href="cmdtest.txt">View document source</a>.
-Generated on: 2018-04-12.
+Generated on: 2020-01-31.
 Generated by <a class="reference external" href="http://docutils.sourceforge.net/">Docutils</a> from <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> source.
 
 </div>

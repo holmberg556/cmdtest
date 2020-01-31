@@ -294,6 +294,57 @@ In the example we see how the content can be specified:
 4) as an array of lines where some lines should match a regexp rather than be compared
    for string equality
 
+Unusual newlines
+++++++++++++++++
+
+Some programs produce text output with unusual newlines for the
+current platform, for example ``"\n"`` on Windows or ``"\r\n"`` on
+Linux. The following test will give an error on Linux::
+
+  $ cat CMDTEST_newline.rb
+  class CMDTEST_newline < Cmdtest::Testcase
+    def test_newline
+      cmd 'echo -n "hello\r\nworld\r\n"' do
+        exit_zero
+        stdout_equal [ "hello", "world" ]
+      end
+    end
+  end
+  $
+  $ cmdtest -q CMDTEST_newline.rb
+  ### echo -n "hello\r\nworld\r\n"
+  --- ERROR: Windows line ending: STDOUT
+
+To cope with this situation, it is possible ot use the command
+``output_newline`` like this::
+
+  cmd 'echo -n "hello\r\nworld\r\n"' do
+    exit_zero
+    output_newline "\r\n" do
+      stdout_equal [ "hello", "world" ]
+    end
+  end
+
+The argument to ``output_newline`` can be one of ``"\n"``, ``"\r\n"``,
+or ``:consistent``. The last one means either newline is ok, as long
+as all lines use the same newline.
+
+The call can use a do-block as in the example above. A plain method
+call without do-block can also be used, and then the new setting is in
+effect until it is set again, or the test method ends.
+
+Unusual text encoding
++++++++++++++++++++++
+
+In the same manner as for newline, the encoding can be something other
+than the default (in this case ``"ascii"``). For example::
+
+  output_encoding "utf-8" do
+    ...
+  end
+
+The argument should be an encoding name known to Ruby.
+
 Invoking ``cmdtest``
 --------------------
 
