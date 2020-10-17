@@ -99,26 +99,29 @@ module Cmdtest
       case newline
       when "\r\n"
         if n_unix > 0 && n_windows == 0
-          raise AssertFailed, "ERROR: UNIX line ending: #{@name}"
+          err = "UNIX line ending: #{@name}"
         elsif n_unix > 0 && n_windows > 0
-          raise AssertFailed, "ERROR: mixed line ending: #{@name}"
+          err = "mixed line ending: #{@name}"
         else
-          return str.gsub("\r\n", "\n")
+          err = nil
         end
+        return str.gsub("\r\n", "\n"), err
       when "\n"
         if n_unix == 0 && n_windows > 0
-          raise AssertFailed, "ERROR: Windows line ending: #{@name}"
+          err = "Windows line ending: #{@name}"
         elsif n_unix > 0 && n_windows > 0
-          raise AssertFailed, "ERROR: mixed line ending: #{@name}"
+          err = "mixed line ending: #{@name}"
         else
-          return str
+          err = nil
         end
+        return str, err
       when :consistent
         if n_unix > 0 && n_windows > 0
-          raise AssertFailed, "ERROR: mixed line ending: #{@name}"
+          err = "mixed line ending: #{@name}"
         else
-          return str.gsub("\r\n", "\n")
+          err = nil
         end
+        return str.gsub("\r\n", "\n"), err
       else
         raise RuntimeError, "unkown newline type: #{newline.inspect}"
       end

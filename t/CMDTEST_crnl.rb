@@ -25,6 +25,11 @@ class CMDTEST_crnl < Cmdtest::Testcase
         stdout_equal [
           "### windows line endings",
           "--- ERROR: Windows line ending: STDOUT",
+          "--- ERROR: wrong stdout",
+          "---        actual: 1\\r",
+          "---                2\\r",
+          "---        expect: 1",
+          "---                2",
         ]
         exit_nonzero
       end
@@ -67,6 +72,10 @@ class CMDTEST_crnl < Cmdtest::Testcase
       stdout_equal [
         "### mixed line endings",
         "--- ERROR: mixed line ending: STDOUT",
+        "--- ERROR: wrong stdout",
+        "---        actual: 1",
+        "---                2\\r",
+        "---        expect: [[empty]]",
       ]
       exit_nonzero
     end
@@ -103,6 +112,11 @@ class CMDTEST_crnl < Cmdtest::Testcase
       stdout_equal [
         "### windows line endings",
         "--- ERROR: Windows line ending: STDOUT",
+        "--- ERROR: wrong stdout",
+        "---        actual: 1\\r",
+        "---                2\\r",
+        "---        expect: 1",
+        "---                2",
       ]
       exit_nonzero
     end

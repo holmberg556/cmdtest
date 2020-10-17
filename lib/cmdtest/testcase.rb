@@ -571,7 +571,11 @@ module Cmdtest
             "error reading file: '#{file}'"
           end
         else
-          _xxx_equal(what, positive, actual.text(@_output_encoding, @_output_newline), expected)
+          actual_text, err = actual.text(@_output_encoding, @_output_newline)
+          _assert err == nil do
+            err
+          end
+          _xxx_equal(what, positive, actual_text, expected)
         end
       end
     end
@@ -621,7 +625,10 @@ module Cmdtest
     def _stdxxx_check_aux(stdxxx)
       _process_after do
         @_checked[stdxxx] = true
-        str = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
+        str, err = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
+        _assert err == nil do
+          err
+        end
         yield _str_as_lines(str)
       end
     end
@@ -629,7 +636,10 @@ module Cmdtest
     def _stdxxx_contain_aux(stdxxx, positive, expected)
       _process_after do
         @_checked[stdxxx] = true
-        actual = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
+        actual, err = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
+        _assert err == nil do
+          err
+        end
         _xxx_contain(stdxxx, positive, actual, expected)
       end
     end
@@ -698,7 +708,10 @@ module Cmdtest
     def _stdxxx_equal_aux(stdxxx, positive, expected)
       _process_after do
         @_checked[stdxxx] = true
-        actual = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
+        actual, err = @_effects.send(stdxxx).text(@_output_encoding, @_output_newline)
+        _assert err == nil do
+          err
+        end
         _xxx_equal(stdxxx, positive, actual, expected)
       end
     end
@@ -758,7 +771,7 @@ module Cmdtest
     def _show_line(arg)
       case arg
       when String
-        arg
+        arg.gsub("\r", "\\r")
       when Regexp
         arg.inspect
       else
