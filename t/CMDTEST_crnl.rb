@@ -222,7 +222,12 @@ class CMDTEST_crnl < Cmdtest::Testcase
       stdout_equal [
         "### consistent line endings",
         "--- ERROR: mixed line ending: STDOUT",
-      ]
+        "--- ERROR: wrong stdout",
+        "---        actual: 1\\r",
+        "---                2",
+        "---        expect: 1",
+        "---                2",
+        ]
       exit_nonzero
     end
   end
