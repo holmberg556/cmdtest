@@ -100,12 +100,15 @@ module Cmdtest
       when "\r\n"
         if n_unix > 0 && n_windows == 0
           err = "UNIX line ending: #{@name}"
+          str = str.gsub("\r\n", "\n")
         elsif n_unix > 0 && n_windows > 0
           err = "mixed line ending: #{@name}"
+          # keep 'str'
         else
           err = nil
+          str = str.gsub("\r\n", "\n")
         end
-        return str.gsub("\r\n", "\n"), err
+        return str, err
       when "\n"
         if n_unix == 0 && n_windows > 0
           err = "Windows line ending: #{@name}"
@@ -118,10 +121,12 @@ module Cmdtest
       when :consistent
         if n_unix > 0 && n_windows > 0
           err = "mixed line ending: #{@name}"
+          # keep 'str'
         else
           err = nil
+          str = str.gsub("\r\n", "\n")
         end
-        return str.gsub("\r\n", "\n"), err
+        return str, err
       else
         raise RuntimeError, "unkown newline type: #{newline.inspect}"
       end
