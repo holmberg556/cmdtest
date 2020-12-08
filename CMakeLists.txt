@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.19)
 project(cmdtest)
 
 set( CMDTEST_DATE "" CACHE STRING "date string" )
@@ -9,6 +9,7 @@ execute_process(
   COMMAND ruby bin/cmdtest.rb --shortversion
   OUTPUT_VARIABLE CMDTEST_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE
+  COMMAND_ERROR_IS_FATAL ANY
   )
 
 if( CMDTEST_DATE )
@@ -19,6 +20,7 @@ else()
     COMMAND date +%Y%m%d.%H%M
     OUTPUT_VARIABLE CMDTEST_DATE
     OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
     )
 endif()
 
@@ -47,12 +49,14 @@ execute_process(
   COMMAND git rev-parse --short HEAD
   OUTPUT_VARIABLE GIT_REV
   OUTPUT_STRIP_TRAILING_WHITESPACE
+  COMMAND_ERROR_IS_FATAL ANY
   )
 
 execute_process(
   COMMAND git show -s --format=%ci HEAD
   OUTPUT_VARIABLE GIT_DATE
   OUTPUT_STRIP_TRAILING_WHITESPACE
+  COMMAND_ERROR_IS_FATAL ANY
   )
 
 message(STATUS "GIT_REV  = '${GIT_REV}'")
@@ -65,6 +69,8 @@ execute_process(
   "GIT_DATE_STRING=${GIT_DATE}"
   "VERSION=${CPACK_PACKAGE_VERSION}"
   bin/cmdtest.rb bin/cmdtest.rb.generated
+
+  COMMAND_ERROR_IS_FATAL ANY
   )
 
 
