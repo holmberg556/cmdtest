@@ -74,7 +74,7 @@ class CMDTEST_ignore_file < Cmdtest::Testcase
   def test_ignore_file_IGNORED_IN_SUBDIR
     create_CMDTEST_foo [
       "ignore_file 'dir/bbb'",
-      "dir_mkdir 'dir'",
+      "Dir.mkdir 'dir'",
       "",
       "cmd 'touch.rb aaa bbb dir/aaa dir/bbb' do",
       "  created_files 'aaa', 'bbb', 'dir/aaa'",
@@ -95,7 +95,7 @@ class CMDTEST_ignore_file < Cmdtest::Testcase
   def test_ignore_file_PATH_MATTERS
     create_CMDTEST_foo [
       "ignore_file 'bbb'",
-      "dir_mkdir 'dir'",
+      "Dir.mkdir 'dir'",
       "",
       "cmd 'touch.rb aaa bbb dir/aaa dir/bbb' do",
       "  created_files 'aaa', 'dir/aaa', 'dir/bbb'",
@@ -117,7 +117,7 @@ class CMDTEST_ignore_file < Cmdtest::Testcase
     create_CMDTEST_foo [
       "ignore_file 'bbb*'",
       "ignore_file '**/ccc'",
-      "dir_mkdir 'dir'",
+      "Dir.mkdir 'dir'",
       "",
       "cmd 'touch.rb aaa bbb1 bbb2 ccc dir/aaa dir/bbb1 dir/bbb2 dir/ccc' do",
       "  created_files 'aaa', 'dir/aaa', 'dir/bbb1', 'dir/bbb2'",

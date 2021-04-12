@@ -211,7 +211,7 @@ class CMDTEST_file_equal < Cmdtest::Testcase
   def test_file_equal_FILE_IS_DIRECTORY
 
     create_CMDTEST_foo [
-      "dir_mkdir 'foo'",
+      "Dir.mkdir 'foo'",
       "",
       "cmd 'true.rb' do",
       "    file_equal 'foo', ''",

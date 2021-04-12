@@ -55,7 +55,7 @@ class CMDTEST_import_file < Cmdtest::Testcase
     create_file "file2.txt", "This is file2.txt\n"
 
     create_CMDTEST_foo [
-      "dir_mkdir('dir')",
+      "Dir.mkdir('dir')",
       "chdir('dir')",
       "import_file 'file1.txt', 'qwerty1.txt'",
       "import_file 'file2.txt', 'subdir/qwerty2.txt'",
