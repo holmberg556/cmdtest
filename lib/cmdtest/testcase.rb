@@ -932,6 +932,7 @@ module Cmdtest
     #------------------------------
 
     def cmd(cmdline)
+      @_work_dir.push_ignored_files
       if Array === cmdline
         cmdline = _args_to_quoted_string(cmdline)
       end
@@ -956,6 +957,8 @@ module Cmdtest
         str = str.gsub(/actual: \S+\/tmp-command\.sh/, "actual: COMMAND.sh")
         raise AssertFailed, str
       end
+    ensure
+      @_work_dir.pop_ignored_files
     end
 
   end

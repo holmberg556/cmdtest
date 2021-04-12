@@ -40,6 +40,9 @@ module Cmdtest
       FileUtils.mkdir_p(@path)
       @ignored_files = []
       @non_ignored_files = []
+
+      @ignored_files_stack = []
+      @non_ignored_files_stack = []
     end
 
     #--------------------
@@ -51,6 +54,18 @@ module Cmdtest
 
     def dont_ignore_file(file)
       @non_ignored_files << file
+    end
+
+    #--------------------
+
+    def push_ignored_files
+      @ignored_files_stack.push(@ignored_files.dup)
+      @non_ignored_files_stack.push(@non_ignored_files.dup)
+    end
+
+    def pop_ignored_files
+      @ignored_files = @ignored_files_stack.pop
+      @non_ignored_files = @non_ignored_files_stack.pop
     end
 
     #--------------------
