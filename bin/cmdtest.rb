@@ -53,7 +53,7 @@ module Cmdtest
   GIT_DATE = '$GIT_DATE_STRING$'
   VERSION  = '$VERSION$'
 
-  SHORT_VERSION = '1.7'
+  SHORT_VERSION = '1.8'
 
   #----------------------------------------------------------------------
 
