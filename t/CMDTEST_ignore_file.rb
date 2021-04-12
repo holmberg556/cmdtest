@@ -151,4 +151,24 @@ class CMDTEST_ignore_file < Cmdtest::Testcase
     end
   end
 
+  #----------------------------------------
+  # a trailing slash ignores a whole directory tree
+
+  def test_ignore_file_REGEXP
+    create_CMDTEST_foo [
+      "ignore_file /\.o$/",
+      "Dir.mkdir 'subdir1'",
+      "",
+      "cmd 'touch.rb x.cpp x.o y.cpp y.o subdir1/z.cpp subdir1/z.o' do",
+      "  created_files 'subdir1/z.cpp', 'x.cpp', 'y.cpp'",
+      "end",
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        "### touch.rb x.cpp x.o y.cpp y.o subdir1/z.cpp subdir1/z.o",
+      ]
+    end
+  end
+
 end
