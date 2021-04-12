@@ -222,7 +222,7 @@ Cmdtest implements parallel execution of test methods by running several
 Methods such as ``File.open`` and ``Dir.chdir`` that depend on the
 "current directory" can be used in the test methods, since each slave
 is a process of its own (an earlier version of Cmdtest used Ruby threads
-and adviced against using such methods).
+and advised against using such methods).
 
 Specifying files / directories
 ------------------------------
@@ -315,7 +315,7 @@ Linux. The following test will give an error on Linux::
   ### echo -n "hello\r\nworld\r\n"
   --- ERROR: Windows line ending: STDOUT
 
-To cope with this situation, it is possible ot use the command
+To cope with this situation, it is possible to use the command
 ``output_newline`` like this::
 
   cmd 'echo -n "hello\r\nworld\r\n"' do
@@ -586,6 +586,13 @@ Helper functions
 These methods should only be used outside a ``cmd`` block in a test method,
 or in the ``setup`` method.
 
+``comment(msg)``
+    Normally the command executed by a ``cmd`` call, will be shown on
+    STDOUT (after the usual "###" prefix). But one can also replace
+    the string written by calling the ``comment`` method inside the
+    do-block of a ``cmd`` call. Then the ``comment`` call should occur
+    before method calls inspecting the result of the executed command.
+
 ``create_file(filename, content)``
     Create a file inside the "work directory".
     If the filename contains a directory part, intermediate directories are
@@ -602,12 +609,19 @@ or in the ``setup`` method.
     ``dont_ignore_files`` can reverse the effect for specific files inside that
     directory tree.
 
-``ignore_file(file)``
-    Ignore the specified file when looking for differences in the filesystem.
-    A subdirectory can be ignored by giving a trailing "/" to the name.
+``ignore_file(file)`` Ignore the specified file when looking for
+    differences in the filesystem.  A subdirectory can be ignored by
+    giving a trailing "/" to the name.
+
+    ``ignore_file`` is typically used at the beginning of a test
+    method, before any calls to ``cmd``.  But ``ignore_file`` can also
+    be used at the beginning of a ``cmd`` do block before method calls
+    inspecting the result of the executed command.
+    In this case the effect of the call is local to just that do block.
 
 ``ignore_files(file1, ..., fileN)``
     Ignore the specified files when looking for differences in the filesystem.
+    See ``ignore_file`` for details.
 
 ``import_file(src, tgt)``
     Copy a file from outside of the "work directory" to inside.
