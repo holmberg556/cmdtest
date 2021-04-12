@@ -82,7 +82,7 @@ module Cmdtest
 
     def _collect_method_signatures(file, path)
       method_signatures = {}
-      lines = File.readlines(path)
+      lines = File.readlines(path, encoding: "ASCII-8BIT")
       klass  = klass_indent  = klass_i  = nil
       methods = method_indent = method_i = nil
 
