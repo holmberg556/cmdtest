@@ -545,10 +545,11 @@ ignore_file &quot;build&quot;         # the file &quot;build&quot;
 </pre>
 <p>As can be seen in the example above, the <tt class="docutils literal">ignore_file</tt> method is
 special, because an ignored directory means that all files below the directory are
-ignored too. Another peculiarity with <tt class="docutils literal">ignore_file</tt> is that the
-argument can be a Regexp:</p>
+ignored too. Other peculiarities of <tt class="docutils literal">ignore_file</tt> are that the
+argument can be a Regexp or shell wildcards:</p>
 <pre class="literal-block">
-ignore_file /\.o$/          # all files *.o
+ignore_file /\.o$/          # all files *.o (in subdirs too)
+ignore_file &quot;**/*.o&quot;        # all files *.o (in subdirs too)
 </pre>
 <p>This is quite natural, since the &quot;job&quot; of <tt class="docutils literal">ignore_file</tt> is to single
 out a subset of all files.</p>
@@ -879,9 +880,12 @@ This overrides a previous call to <tt class="docutils literal">ignore_files</tt>
 If a previous call to <tt class="docutils literal">ignore_files</tt> ignored a whole directory tree, the call to
 <tt class="docutils literal">dont_ignore_files</tt> can reverse the effect for specific files inside that
 directory tree.</dd>
-<dt><tt class="docutils literal">ignore_file(file)</tt> Ignore the specified file when looking for</dt>
-<dd><p class="first">differences in the filesystem.  A subdirectory can be ignored by
-giving a trailing &quot;/&quot; to the name.</p>
+<dt><tt class="docutils literal">ignore_file(file)</tt></dt>
+<dd><p class="first">Ignore the specified file when looking for differences in the
+filesystem.  A subdirectory and anything in it can be ignored by
+giving a trailing &quot;/&quot; to the name. Shell wildcard can be used (<tt class="docutils literal">&quot;*&quot;</tt>
+and <tt class="docutils literal"><span class="pre">&quot;**&quot;</span></tt>).  A Regexp argument is matched against the path of
+files.</p>
 <p class="last"><tt class="docutils literal">ignore_file</tt> is typically used at the beginning of a test
 method, before any calls to <tt class="docutils literal">cmd</tt>.  But <tt class="docutils literal">ignore_file</tt> can also
 be used at the beginning of a <tt class="docutils literal">cmd</tt> do block before method calls

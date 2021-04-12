@@ -240,10 +240,11 @@ argument with a trailing "/" denotes a directory::
 
 As can be seen in the example above, the ``ignore_file`` method is
 special, because an ignored directory means that all files below the directory are
-ignored too. Another peculiarity with ``ignore_file`` is that the
-argument can be a Regexp::
+ignored too. Other peculiarities of ``ignore_file`` are that the
+argument can be a Regexp or shell wildcards::
 
-    ignore_file /\.o$/          # all files *.o
+    ignore_file /\.o$/          # all files *.o (in subdirs too)
+    ignore_file "**/*.o"        # all files *.o (in subdirs too)
 
 This is quite natural, since the "job" of ``ignore_file`` is to single
 out a subset of all files.
@@ -609,9 +610,12 @@ or in the ``setup`` method.
     ``dont_ignore_files`` can reverse the effect for specific files inside that
     directory tree.
 
-``ignore_file(file)`` Ignore the specified file when looking for
-    differences in the filesystem.  A subdirectory can be ignored by
-    giving a trailing "/" to the name.
+``ignore_file(file)``
+    Ignore the specified file when looking for differences in the
+    filesystem.  A subdirectory and anything in it can be ignored by
+    giving a trailing "/" to the name. Shell wildcard can be used (``"*"``
+    and ``"**"``).  A Regexp argument is matched against the path of
+    files.
 
     ``ignore_file`` is typically used at the beginning of a test
     method, before any calls to ``cmd``.  But ``ignore_file`` can also
