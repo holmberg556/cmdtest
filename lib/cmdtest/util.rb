@@ -85,6 +85,10 @@ module Cmdtest
       @bytes = bytes
     end
 
+    def bytes
+      @bytes
+    end
+
     def text(encoding, newline)
       extern_text = @bytes.dup
       extern_text.force_encoding(encoding)
