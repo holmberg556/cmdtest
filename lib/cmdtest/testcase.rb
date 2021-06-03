@@ -879,10 +879,10 @@ module Cmdtest
       @_effects = @_work_dir.run_cmd(@_cmdline, @_env_path)
       @_t2 = Time.now
 
-      if @_effects.stdout.bytes =~ /CMDTEST_SKIP: (.*)/
+      if @_effects.stdout.bytes =~ /^CMDTEST_SKIP: (.*)/
         skip_test $1
       end
-      if @_effects.stderr.bytes =~ /CMDTEST_SKIP: (.*)/
+      if @_effects.stderr.bytes =~ /^CMDTEST_SKIP: (.*)/
         skip_test $1
       end
 
