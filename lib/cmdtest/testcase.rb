@@ -880,10 +880,10 @@ module Cmdtest
       @_t2 = Time.now
 
       if @_effects.stdout.bytes =~ /^CMDTEST_SKIP: (.*)/
-        skip_test $1
+        skip_test $1.gsub(/\r$/, "")
       end
       if @_effects.stderr.bytes =~ /^CMDTEST_SKIP: (.*)/
-        skip_test $1
+        skip_test $1.gsub(/\r$/, "")
       end
 
       @_checked_status = false
