@@ -205,6 +205,15 @@ Then the function ``skip_test`` can be used, like this::
     ... the actual tests ...
   end
 
+If an external program tested by Cmdtest detects that the test should
+have been skipped, it can signal this back to Cmdtest by writing
+something like this on stdout or stderr::
+
+  CMDTEST_SKIP: reason for skipping test
+
+The text ``"CMDTEST_SKIP"`` must occur at the start of a line in
+stdout/stderr to be recognized as a "skip order" to Cmdtest.
+
 Work directory
 --------------
 
