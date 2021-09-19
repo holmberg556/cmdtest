@@ -436,11 +436,13 @@ module Cmdtest
       #p [:xxx_files, xxx, actual, expected]
       _assert0 actual == expected do
         if @_runner.opts.diff
-          _format_output(xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
+          _format_output("ERROR",
+                         xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
                          actual,
                          expected)
         else
-          _format_output(xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
+          _format_output("ERROR",
+                         xxx.to_s.gsub(/_/, " ").gsub(/modified/, "changed"),
                          actual.inspect + "\n",
                          expected.inspect + "\n")
         end
@@ -717,7 +719,7 @@ module Cmdtest
 
     def _xxx_equal(xxx, positive, actual, expected)
       _assert0 _output_match(positive, actual, expected) do
-        _format_output "wrong #{xxx}", actual, expected
+        _format_output "ERROR", "wrong #{xxx}", actual, expected
       end
     end
 
@@ -817,9 +819,9 @@ module Cmdtest
       end.join("")
     end
 
-    def _format_output(error, actual, expected)
+    def _format_output(level, error, actual, expected)
       res = ""
-      res << "ERROR: #{error}\n"
+      res << "#{level}: #{error}\n"
       if @_runner.opts.diff && (Array === expected || String === expected)
         expected_lines = _to_lines(expected)
         actual_lines = _to_lines(actual)
@@ -827,7 +829,9 @@ module Cmdtest
         res << _indented_lines("  ", diff.to_a)
       else
         res << _indented_lines("       actual: ", actual)
-        res << _indented_lines("       expect: ", expected)
+        if expected != nil
+          res << _indented_lines("       expect: ", expected)
+        end
       end
       return res
     end
@@ -933,6 +937,42 @@ module Cmdtest
 
     def _wait_for_new_second
       Util.wait_for_new_second(@_runner.tmp_dir, @_runner.tmp_work_dir)
+    end
+
+    #------------------------------
+
+    def shell(cmdline)
+      if Array === cmdline
+        cmdline = _args_to_quoted_string(cmdline)
+      end
+      @_cmdline = cmdline
+      @_nerrors = 0
+      @_io = StringIO.new
+
+      @_clog.cmdline("shell: " + @_cmdline, nil)
+      @_effects = @_work_dir.run_cmd(@_cmdline, @_env_path)
+      status = @_effects.exit_status
+      if status != 0
+        _assert false do
+          "expected zero exit status, got #{status}"
+        end
+
+        actual_text, err = @_effects.stdout.text(@_output_encoding, @_output_newline)
+        _assert0 false do
+          _format_output "INFO", "the stdout", actual_text, nil
+        end
+
+        actual_text, err = @_effects.stderr.text(@_output_encoding, @_output_newline)
+        _assert0 false do
+          _format_output "INFO", "the stderr", actual_text, nil
+        end
+      end
+
+      if @_nerrors > 0
+        str = @_io.string
+        str = str.gsub(/actual: \S+\/tmp-command\.sh/, "actual: COMMAND.sh")
+        raise AssertFailed, str
+      end
     end
 
     #------------------------------
