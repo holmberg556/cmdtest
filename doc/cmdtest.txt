@@ -214,6 +214,60 @@ something like this on stdout or stderr::
 The text ``"CMDTEST_SKIP"`` must occur at the start of a line in
 stdout/stderr to be recognized as a "skip order" to Cmdtest.
 
+cmd vs shell
+------------
+
+Sometimes one or more commands need to be run, before the interesting parts
+are tested. Suppose for example that we want to test that a program
+returning 17 from ``main()`` will exit with that status::
+
+    create_file "exit17.c", [
+        "extern int status;",
+        "int main() { return status; }\n",
+    ]
+    create_file "status.c", [
+        "int status = 17;",
+    ]
+    cmd "gcc -c exit17.c status.c" do
+        created_files "exit17.o", "status.o"
+    end
+    cmd "gcc -o exit17 exit17.o status.o" do
+        created_files "exit17"
+    end
+    cmd "./exit17" do
+        exit_status 17
+    end
+
+The fact that the files ``exit17.o``, ``status.o`` and ``exit17`` are created in the two
+first steps are uninteresting here. To make it easier to create such an
+initial setup, one can use the command ``shell`` instead or ``cmd``::
+
+    create_file "exit17.c", [
+        "extern int status;",
+        "int main() { return status; }\n",
+    ]
+    create_file "status.c", [
+        "int status = 17;",
+    ]
+    shell "gcc -c exit17.c status.c"
+    shell "gcc -o exit17 exit17.o status.o"
+    cmd "./exit17" do
+        exit_status 17
+    end
+
+The ``shell`` command does not care about the "side effects" of the
+command, as long as the command terminates with zero exit status. But
+if such a command fails, it will output its stdout/stderr. If for example
+the variable "status" above was misspelled in ``status.c`` one could get::
+
+    --- ERROR: expected zero exit status, got 1
+    --- INFO: the stdout
+    ---        actual: [[empty]]
+    --- INFO: the stderr
+    ---        actual: /usr/bin/ld: exit17.o: in function `main':
+    ---                exit17.c:(.text+0xa): undefined reference to `status'
+    ---                collect2: error: ld returned 1 exit status
+
 Work directory
 --------------
 
@@ -491,6 +545,22 @@ some kind of assertion::
 
 See also the example in the `Structure of a test-method`_ section above.
 
+status
+++++++
+
+The ``status`` method is similar to ``cmd``, but with some important
+differences:
+
+- ``status`` only cares about the exit status
+
+- stdout/stderr and any created files are ignored
+
+- it is called without any "Ruby do block"
+
+- if the exit status is non-zero, stdout/stderr is reported for
+  information purposes
+
+For more details see `cmd vs shell`_.
 
 Assertions - exit status
 ++++++++++++++++++++++++
