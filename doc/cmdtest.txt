@@ -545,13 +545,13 @@ some kind of assertion::
 
 See also the example in the `Structure of a test-method`_ section above.
 
-status
-++++++
+shell
++++++
 
-The ``status`` method is similar to ``cmd``, but with some important
+The ``shell`` method is similar to ``cmd``, but with some important
 differences:
 
-- ``status`` only cares about the exit status
+- ``shell`` only cares about the exit status
 
 - stdout/stderr and any created files are ignored
 
