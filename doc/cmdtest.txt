@@ -767,7 +767,7 @@ or in the ``setup`` method.
     time of the call.
 
 ``stdout_check()``
-    Will "callback" to the test script, giving the user a chance to inpect STDOUT,
+    Will "callback" to the test script, giving the user a chance to inspect STDOUT,
     and maybe call "assert". Example::
 
       cmd "seq 0 5 100" do
@@ -777,7 +777,7 @@ or in the ``setup`` method.
       end
 
 ``stdout_check()``
-    Will "callback" to the test script, giving the user a chance to inpect STDERR,
+    Will "callback" to the test script, giving the user a chance to inspect STDERR,
     and maybe call "assert" (see ``stdout_check()`` above).
 
 Deprecated helper functions
