@@ -29,6 +29,7 @@ module Cmdtest
   class Workdir
 
     attr_reader :path, :hardlinkdir
+    attr_accessor :ignored_files, :non_ignored_files
 
     def initialize(testcase, runner)
       @testcase = testcase
@@ -40,32 +41,6 @@ module Cmdtest
       FileUtils.mkdir_p(@path)
       @ignored_files = []
       @non_ignored_files = []
-
-      @ignored_files_stack = []
-      @non_ignored_files_stack = []
-    end
-
-    #--------------------
-    # called by user (indirectly)
-
-    def ignore_file(file)
-      @ignored_files << file
-    end
-
-    def dont_ignore_file(file)
-      @non_ignored_files << file
-    end
-
-    #--------------------
-
-    def push_ignored_files
-      @ignored_files_stack.push(@ignored_files.dup)
-      @non_ignored_files_stack.push(@non_ignored_files.dup)
-    end
-
-    def pop_ignored_files
-      @ignored_files = @ignored_files_stack.pop
-      @non_ignored_files = @non_ignored_files_stack.pop
     end
 
     #--------------------

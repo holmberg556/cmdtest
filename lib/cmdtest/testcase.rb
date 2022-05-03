@@ -82,7 +82,25 @@ module Cmdtest
       @_t1 = @_t2 = 0
       @_output_encoding = 'ascii'
       @_output_newline = Util.windows? ? "\r\n" : "\n"
+
+      @_ignored_files_stack = []
+      @_non_ignored_files_stack = []
     end
+
+    #--------------------
+    # push/pop settings that can be local to a cmd() block
+    # or global in method
+
+    def in_cmd_scope
+      @_ignored_files_stack.push(@_work_dir.ignored_files.dup)
+      @_non_ignored_files_stack.push(@_work_dir.non_ignored_files.dup)
+      yield
+    ensure
+      @_work_dir.ignored_files = @_ignored_files_stack.pop
+      @_work_dir.non_ignored_files = @_non_ignored_files_stack.pop
+    end
+
+    #--------------------
 
     def output_encoding(encoding)
       if block_given?
@@ -282,7 +300,7 @@ module Cmdtest
     # of a command.
 
     def ignore_file(file)
-      @_work_dir.ignore_file(file)
+      @_work_dir.ignored_files << file
     end
 
     #------------------------------
@@ -291,7 +309,7 @@ module Cmdtest
 
     def ignore_files(*files)
       for file in files.flatten
-        @_work_dir.ignore_file(file)
+        @_work_dir.ignored_files << file
       end
     end
 
@@ -302,7 +320,7 @@ module Cmdtest
 
     def dont_ignore_files(*files)
       for file in files.flatten
-        @_work_dir.dont_ignore_file(file)
+        @_work_dir.non_ignored_files << file
       end
     end
 
@@ -978,33 +996,32 @@ module Cmdtest
     #------------------------------
 
     def cmd(cmdline)
-      @_work_dir.push_ignored_files
-      if Array === cmdline
-        cmdline = _args_to_quoted_string(cmdline)
+      in_cmd_scope() do
+        if Array === cmdline
+          cmdline = _args_to_quoted_string(cmdline)
+        end
+        _wait_for_new_second
+        _update_hardlinks
+        @_cmdline = cmdline
+        @_cmd_done = false
+
+        yield
+        _delayed_run_cmd
+
+        exit_zero       if ! @_checked_status
+        stdout_equal "" if ! @_checked["stdout"]
+        stderr_equal "" if ! @_checked["stderr"]
+
+        created_files  []    if ! @_checked_files_set.include?( :created )
+        modified_files []    if ! @_checked_files_set.include?( :modified )
+        removed_files  []    if ! @_checked_files_set.include?( :removed )
+
+        if @_nerrors > 0
+          str = @_io.string
+          str = str.gsub(/actual: \S+\/tmp-command\.sh/, "actual: COMMAND.sh")
+          raise AssertFailed, str
+        end
       end
-      _wait_for_new_second
-      _update_hardlinks
-      @_cmdline = cmdline
-      @_cmd_done = false
-
-      yield
-      _delayed_run_cmd
-
-      exit_zero       if ! @_checked_status
-      stdout_equal "" if ! @_checked["stdout"]
-      stderr_equal "" if ! @_checked["stderr"]
-
-      created_files  []    if ! @_checked_files_set.include?( :created )
-      modified_files []    if ! @_checked_files_set.include?( :modified )
-      removed_files  []    if ! @_checked_files_set.include?( :removed )
-
-      if @_nerrors > 0
-        str = @_io.string
-        str = str.gsub(/actual: \S+\/tmp-command\.sh/, "actual: COMMAND.sh")
-        raise AssertFailed, str
-      end
-    ensure
-      @_work_dir.pop_ignored_files
     end
 
   end
