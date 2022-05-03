@@ -171,4 +171,57 @@ class CMDTEST_ignore_file < Cmdtest::Testcase
     end
   end
 
+  #----------------------------------------
+  # ignore_file() inside cmd() should only affect the block
+
+  def test_ignore_file_IN_BLOCK
+    create_CMDTEST_foo [
+      "cmd 'touch.rb aaa bbb' do",
+      "  ignore_file 'bbb'",
+      "  written_files 'aaa'",
+      "end",
+      "",
+      "cmd 'touch.rb aaa bbb' do",
+      "  written_files 'aaa', 'bbb'",
+      "end",
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        '### touch.rb aaa bbb',
+        '### touch.rb aaa bbb',
+      ]
+    end
+  end
+
+  #----------------------------------------
+  # ignore_file() inside cmd() should only affect the block,
+  # with global ignore_file() in effect first
+
+  def test_ignore_file_IN_BLOCK_2
+    create_CMDTEST_foo [
+      "ignore_file 'bbb'",
+      "cmd 'touch.rb aaa bbb ccc' do",
+      "  written_files 'aaa', 'ccc'",
+      "end",
+      "",
+      "cmd 'touch.rb aaa bbb ccc' do",
+      "  ignore_file 'aaa'",
+      "  written_files 'ccc'",
+      "end",
+      "",
+      "cmd 'touch.rb aaa bbb ccc' do",
+      "  written_files 'aaa', 'ccc'",
+      "end",
+    ]
+
+    cmd_cmdtest do
+      stdout_equal [
+        '### touch.rb aaa bbb ccc',
+        '### touch.rb aaa bbb ccc',
+        '### touch.rb aaa bbb ccc',
+      ]
+    end
+  end
+
 end
