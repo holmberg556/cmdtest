@@ -11,7 +11,7 @@ class CMDTEST_ignore_output < Cmdtest::Testcase
 
   def test_ignore_output_GLOBAL
     create_CMDTEST_foo [
-      "ignore_output()",
+      "ignore_stdout_stderr()",
       "",
       "cmd 'echo.rb some-ignored-output-1' do",
       "end",
@@ -31,7 +31,7 @@ class CMDTEST_ignore_output < Cmdtest::Testcase
     create_CMDTEST_foo [
       "",
       "cmd 'echo.rb some-ignored-output-1' do",
-      "  ignore_output()",
+      "  ignore_stdout_stderr()",
       "end",
       "cmd 'echo.rb some-ignored-output-2' do",
       "end",
@@ -53,7 +53,7 @@ class CMDTEST_ignore_output < Cmdtest::Testcase
     create_CMDTEST_foo [
       "",
       "cmd 'echo.rb some-ignored-output-1 && false.rb' do",
-      "  ignore_output()",
+      "  ignore_stdout_stderr()",
       "end",
     ]
 

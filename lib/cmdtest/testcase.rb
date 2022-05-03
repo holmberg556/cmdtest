@@ -86,8 +86,8 @@ module Cmdtest
       @_ignored_files_stack = []
       @_non_ignored_files_stack = []
 
-      @_ignore_output = false
-      @_ignore_output_stack = []
+      @_ignore_stdout_stderr = false
+      @_ignore_stdout_stderr_stack = []
     end
 
     #--------------------
@@ -97,12 +97,12 @@ module Cmdtest
     def in_cmd_scope
       @_ignored_files_stack.push(@_work_dir.ignored_files.dup)
       @_non_ignored_files_stack.push(@_work_dir.non_ignored_files.dup)
-      @_ignore_output_stack.push(@_ignore_output)
+      @_ignore_stdout_stderr_stack.push(@_ignore_stdout_stderr)
       yield
     ensure
       @_work_dir.ignored_files = @_ignored_files_stack.pop
       @_work_dir.non_ignored_files = @_non_ignored_files_stack.pop
-      @_ignore_output = @_ignore_output_stack.pop
+      @_ignore_stdout_stderr = @_ignore_stdout_stderr_stack.pop
     end
 
     #--------------------
@@ -332,8 +332,8 @@ module Cmdtest
     #------------------------------
     # Ignore stdout/stderr on successful commands.
 
-    def ignore_output()
-      @_ignore_output = true
+    def ignore_stdout_stderr()
+      @_ignore_stdout_stderr = true
     end
 
     #------------------------------
@@ -1025,15 +1025,15 @@ module Cmdtest
         _delayed_run_cmd
 
         exit_zero       if ! @_checked_status
-        stdout_equal "" if ! @_checked["stdout"] && ! @_ignore_output
-        stderr_equal "" if ! @_checked["stderr"] && ! @_ignore_output
+        stdout_equal "" if ! @_checked["stdout"] && ! @_ignore_stdout_stderr
+        stderr_equal "" if ! @_checked["stderr"] && ! @_ignore_stdout_stderr
 
         created_files  []    if ! @_checked_files_set.include?( :created )
         modified_files []    if ! @_checked_files_set.include?( :modified )
         removed_files  []    if ! @_checked_files_set.include?( :removed )
 
         if @_nerrors > 0
-          if @_ignore_output
+          if @_ignore_stdout_stderr
             if ! @_status_as_expected
               actual_text, err = @_effects.stdout.text(@_output_encoding, @_output_newline)
               _assert0 false do
