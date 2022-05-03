@@ -85,6 +85,9 @@ module Cmdtest
 
       @_ignored_files_stack = []
       @_non_ignored_files_stack = []
+
+      @_ignore_output = false
+      @_ignore_output_stack = []
     end
 
     #--------------------
@@ -94,10 +97,12 @@ module Cmdtest
     def in_cmd_scope
       @_ignored_files_stack.push(@_work_dir.ignored_files.dup)
       @_non_ignored_files_stack.push(@_work_dir.non_ignored_files.dup)
+      @_ignore_output_stack.push(@_ignore_output)
       yield
     ensure
       @_work_dir.ignored_files = @_ignored_files_stack.pop
       @_work_dir.non_ignored_files = @_non_ignored_files_stack.pop
+      @_ignore_output = @_ignore_output_stack.pop
     end
 
     #--------------------
@@ -325,6 +330,13 @@ module Cmdtest
     end
 
     #------------------------------
+    # Ignore stdout/stderr on successful commands.
+
+    def ignore_output()
+      @_ignore_output = true
+    end
+
+    #------------------------------
     # Prepend the given directory to the PATH before running commands.
     # The path is evaluated relative to the current directory when 'cmdtest'
     # was started.
@@ -415,7 +427,8 @@ module Cmdtest
       _process_after do
         @_checked_status = true
         status = @_effects.exit_status
-        _assert status == 0 do
+        @_status_as_expected = (status == 0)
+        _assert @_status_as_expected do
           "expected zero exit status, got #{status}"
         end
       end
@@ -427,7 +440,8 @@ module Cmdtest
       _process_after do
         @_checked_status = true
         status = @_effects.exit_status
-        _assert status != 0 do
+        @_status_as_expected = (status != 0)
+        _assert @_status_as_expected do
           "expected nonzero exit status"
         end
       end
@@ -439,7 +453,8 @@ module Cmdtest
       _process_after do
         @_checked_status = true
         status = @_effects.exit_status
-        _assert status == expected_status do
+        @_status_as_expected = (status == expected_status)
+        _assert @_status_as_expected do
           "expected #{expected_status} exit status, got #{status}"
         end
       end
@@ -908,6 +923,7 @@ module Cmdtest
       end
 
       @_checked_status = false
+      @_status_as_expected = nil
 
       @_checked = {}
       @_checked["stdout"] = false
@@ -1009,14 +1025,28 @@ module Cmdtest
         _delayed_run_cmd
 
         exit_zero       if ! @_checked_status
-        stdout_equal "" if ! @_checked["stdout"]
-        stderr_equal "" if ! @_checked["stderr"]
+        stdout_equal "" if ! @_checked["stdout"] && ! @_ignore_output
+        stderr_equal "" if ! @_checked["stderr"] && ! @_ignore_output
 
         created_files  []    if ! @_checked_files_set.include?( :created )
         modified_files []    if ! @_checked_files_set.include?( :modified )
         removed_files  []    if ! @_checked_files_set.include?( :removed )
 
         if @_nerrors > 0
+          if @_ignore_output
+            if ! @_status_as_expected
+              actual_text, err = @_effects.stdout.text(@_output_encoding, @_output_newline)
+              _assert0 false do
+                _format_output "INFO", "the stdout", actual_text, nil
+              end
+
+              actual_text, err = @_effects.stderr.text(@_output_encoding, @_output_newline)
+              _assert0 false do
+                _format_output "INFO", "the stderr", actual_text, nil
+              end
+            end
+          end
+
           str = @_io.string
           str = str.gsub(/actual: \S+\/tmp-command\.sh/, "actual: COMMAND.sh")
           raise AssertFailed, str
