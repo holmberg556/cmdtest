@@ -706,6 +706,13 @@ or in the ``setup`` method.
     Ignore the specified files when looking for differences in the filesystem.
     See ``ignore_file`` for details.
 
+``ignore_stdout_stderr()``
+    Ignore the stdout and stderr from the command.
+    If the exit status of the command is unexpected, the actual
+    stdout and stderr is still shown, prefixed with "INFO", since
+    the output can contain some interesting hints why the exit status
+    was unexpected.
+
 ``import_file(src, tgt)``
     Copy a file from outside of the "work directory" to inside.
     The ``src`` path is evaluated relative to the current directory
