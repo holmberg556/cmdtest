@@ -162,7 +162,7 @@ module Cmdtest
       src_path = File.expand_path(src, @_runner.test_files_top)
       tgt_path = _cwd_path(tgt)
       FileUtils.mkdir_p(File.dirname(tgt_path))
-      if File.exists?(tgt_path)
+      if File.exist?(tgt_path)
         raise UsageError, "'import_directory' target argument already exist: '#{tgt}'"
       elsif File.directory?(src_path)
         FileUtils.cp_r(src_path, tgt_path)
