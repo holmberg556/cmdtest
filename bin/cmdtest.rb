@@ -113,6 +113,10 @@ module Cmdtest
       @method, @adm_class, @runner = method, adm_class, runner
     end
 
+    def name
+      @method.to_s
+    end
+
     def to_s
       class_name = @adm_class.runtime_class.name.sub(/^.*::/, "")
       "<<TestMethod: #{class_name}.#{@method}>>"
